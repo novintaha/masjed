@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a6b4a">
+<title>سامانه مسجد آقا منیر</title>
+<link rel="manifest" href='data:application/manifest+json,{"name":"سامانه مسجد آقا منیر","short_name":"مسجد منیر","start_url":".","display":"standalone","background_color":"#fdf8f0","theme_color":"#1a6b4a","dir":"rtl","lang":"fa","icons":[{"src":"https://i.ibb.co/S2b6YjQ/unnamed.jpg","sizes":"512x512","type":"image/jpeg","purpose":"any"}]}'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مسجد منیر">
+<link rel="apple-touch-icon" href="https://i.ibb.co/S2b6YjQ/unnamed.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Vazirmatn',sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:#fdf8f0;min-height:100vh;color:#2c1810;padding:12px;line-height:1.6}
+.hidden{display:none!important}
+.app{max-width:900px;margin:0 auto}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;outline:none}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes slideRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(200,150,62,.4)}50%{box-shadow:0 0 40px rgba(200,150,62,.8)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes shimmer{0%{background-position:-1000px 0}100%{background-position:1000px 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bounceIn{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes bannerPop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+@keyframes trophy{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.15)}}
+@keyframes wave{0%,100%{height:15px;opacity:.5}50%{height:50px;opacity:1}}
+@keyframes fadeOut{to{opacity:0;transform:translateY(-20px)}}
+.splash{position:fixed;inset:0;background:linear-gradient(135deg,#1a6b4a,#0f3d2a);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s}
+.splash.hide{opacity:0;pointer-events:none}
+.splash-icon{font-size:4em;margin-bottom:16px;animation:float 2s infinite}
+.splash-title{color:#fff;font-size:1.5em;font-weight:800;margin-bottom:8px}
+.splash-sub{color:#e0c87a;font-size:.9em;margin-bottom:30px}
+.splash-loader{width:60px;height:60px;border:4px solid rgba(255,255,255,.2);border-top-color:#e0c87a;border-radius:50%;animation:spin 1s linear infinite}
+.hdr{background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff;padding:20px;border-radius:18px;text-align:center;margin-bottom:12px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.hdr h1{font-size:1.4em;font-weight:800;margin-bottom:4px}
+.hdr .sub{font-size:.8em;color:#e0c87a}
+.chip{display:inline-block;background:rgba(255,255,255,.15);border:1px solid #e0c87a;color:#e0c87a;border-radius:12px;padding:3px 12px;font-size:.75em;margin-top:8px;font-weight:700}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid #e8dcc8;animation:fadeIn .4s ease both}
+.card h3{font-size:1em;color:#0f3d2a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #f0e8d5;font-weight:800;display:flex;align-items:center;gap:8px}
+input,select,textarea{padding:11px 14px;border:2px solid #e0d5c0;border-radius:12px;background:#fdf8f0;font-size:.9em;width:100%;transition:all .25s}
+input:focus,select:focus,textarea:focus{border-color:#1a6b4a;background:#fff;box-shadow:0 0 0 3px rgba(26,107,74,.1)}
+textarea{resize:vertical;min-height:70px}
+.btn{padding:11px 18px;border-radius:12px;font-weight:700;font-size:.9em;transition:all .25s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff}
+.btn-gold{background:linear-gradient(135deg,#c8963e,#8b6914);color:#fff}
+.btn-danger{background:#b5343a;color:#fff}
+.btn-outline{background:#fff;border:2px solid #1a6b4a;color:#1a6b4a}
+.btn-ghost{background:transparent;color:#1a6b4a;padding:8px 12px}
+.btn-sm{padding:7px 12px;font-size:.78em}
+.btn-lg{padding:13px 20px;font-size:1em}
+.btn-xl{width:100%;padding:15px;font-size:1.05em;border-radius:14px}
+.btn-success{background:linear-gradient(135deg,#2d8f65,#1a6b4a);color:#fff;font-weight:800}
+.btn.armed{background:#b5343a!important;color:#fff!important}
+.start-box{max-width:500px;margin:20px auto;background:#fff;border-radius:22px;padding:24px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.1);animation:scaleIn .5s cubic-bezier(.175,.885,.32,1.275)}
+.start-img{width:140px;height:140px;border-radius:70px 70px 20px 20px;border:4px solid #e0c87a;margin:0 auto 16px;object-fit:cover;animation:float 3s ease-in-out infinite;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.start-title{font-size:1.5em;font-weight:800;color:#0f3d2a;margin-bottom:4px}
+.start-sub{font-size:.88em;color:#5c4030;margin-bottom:14px}
+.credit{font-size:.72em;color:#888;padding:8px 14px;background:#fdf8f0;border-radius:10px;margin-bottom:18px}
+.credit b{color:#1a6b4a}
+.credit .phone{direction:ltr;display:inline-block;font-weight:700}
+.branch-tabs{display:flex;gap:6px;margin-bottom:14px}
+.branch-tab{flex:1;padding:12px;border-radius:12px;background:#fdf8f0;border:2px solid #e0d5c0;font-weight:700;font-size:.9em;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:6px}
+.branch-tab.active{background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff;border-color:#1a6b4a}
+.role-btn{display:flex;align-items:center;gap:14px;width:100%;padding:14px;background:#fdf8f0;border:2px solid #e0d5c0;border-radius:14px;margin-bottom:10px;text-align:right;transition:all .3s}
+.role-btn:active{border-color:#1a6b4a;background:#fff}
+.role-btn .ri{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.4em;flex-shrink:0}
+.role-btn.rg .ri{background:linear-gradient(135deg,#c8963e,#8b6914)}
+.role-btn.ri2 .ri{background:linear-gradient(135deg,#2a9d8f,#1a6b4a)}
+.role-btn .rb{flex:1}
+.role-btn .rt{font-weight:800;font-size:1em;margin-bottom:2px}
+.role-btn .rd{font-size:.75em;color:#888}
+.role-btn .arr{color:#888;font-size:1.2em}
+.search-results{max-height:250px;overflow-y:auto;border:2px solid #e0d5c0;border-radius:12px;background:#fff;margin-bottom:10px}
+.mosque-item{padding:12px 14px;border-bottom:1px solid #f0e8d5;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s}
+.mosque-item:last-child{border-bottom:none}
+.mosque-item.selected{background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff}
+.mosque-item .mi{font-size:1.5em}
+.mosque-item .mn{font-weight:700;flex:1}
+.mosque-item .mb{font-size:.68em;padding:2px 8px;border-radius:8px;background:rgba(0,0,0,.08)}
+.selected-mosque{background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff;padding:14px;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;animation:slideRight .4s}
+.selected-mosque .smi{font-size:1.8em}
+.selected-mosque .smn{font-weight:800;flex:1}
+.divider{height:2px;background:linear-gradient(90deg,transparent,#e0c87a,transparent);margin:18px 0}
+.top-banner{background:linear-gradient(90deg,#ff4d94,#c8963e,#ff4d94);background-size:200% 100%;color:#fff;border-radius:14px;padding:16px;margin-bottom:12px;font-weight:800;font-size:1em;display:flex;align-items:center;gap:12px;animation:gradient 3s ease infinite,bannerPop .5s;box-shadow:0 6px 20px rgba(200,150,62,.5);text-shadow:0 1px 3px rgba(0,0,0,.3)}
+.top-banner .ti{font-size:1.6em;animation:pulse 1s infinite}
+.champ-banner{background:linear-gradient(135deg,#ffd93d,#c8963e);color:#5c4030;border-radius:14px;padding:14px 16px;margin-bottom:12px;font-weight:700;display:flex;align-items:center;gap:12px;animation:pulse 2s ease-in-out infinite;box-shadow:0 4px 14px rgba(200,150,62,.4)}
+.champ-banner .trophy{font-size:1.6em;animation:trophy 1.2s infinite}
+.motivation{background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #e0c87a;border-radius:16px;padding:18px;margin-bottom:12px;position:relative;overflow:hidden;animation:slideRight .6s}
+.motivation::before{content:'✨';position:absolute;top:10px;left:10px;font-size:1.5em;opacity:.3;animation:float 3s infinite}
+.mot-text{font-size:1.05em;font-weight:600;line-height:1.8}
+.mot-foot{font-size:.75em;color:#888;margin-top:10px;text-align:left}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat-card{background:#fff;border-radius:14px;padding:12px 8px;text-align:center;border:1px solid #e8dcc8}
+.stat-value{font-size:1.5em;font-weight:800;color:#0f3d2a;line-height:1}
+.stat-label{font-size:.7em;color:#888;margin-top:4px}
+.tabs{display:flex;gap:3px;background:#fff;border-radius:12px;padding:4px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:10px 14px;border-radius:10px;font-size:.8em;font-weight:700;color:#5c4030;transition:all .25s;white-space:nowrap}
+.tab.active{background:#1a6b4a;color:#fff}
+.panel{display:none;animation:fadeIn .4s}
+.panel.active{display:block}
+.list-item{background:#fdf8f0;border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:8px;cursor:pointer;border:2px solid transparent;transition:all .25s}
+.list-item:active{transform:scale(.98)}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
+.list-item .body{flex:1;min-width:0}
+.list-item .name{font-weight:700;font-size:.95em;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.list-item .meta{font-size:.75em;color:#888}
+.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.68em;font-weight:700}
+.badge-success{background:#d4edda;color:#0f3d2a}
+.badge-gold{background:#fff3cd;color:#8b6914}
+.badge-danger{background:#f8d7da;color:#b5343a}
+.badge-info{background:#d1ecf1;color:#0c5460}
+.badge-new{background:#b5343a;color:#fff;animation:pulse 1.5s infinite}
+.prayer-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.prayer-item{text-align:center;padding:8px 10px;border-radius:10px;background:#fdf8f0;min-width:70px;flex:1;transition:all .3s}
+.prayer-item.active{background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff;transform:scale(1.05)}
+.prayer-name{font-size:.72em;font-weight:700}
+.prayer-time{font-size:1em;font-weight:800;margin-top:2px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0e8d5;gap:10px}
+.setting-row:last-child{border-bottom:none}
+.setting-row label{font-weight:600;font-size:.9em;display:flex;align-items:center;gap:6px}
+.switch{position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#ddd;border-radius:28px;cursor:pointer;transition:.3s}
+.slider:before{content:'';position:absolute;height:22px;width:22px;right:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.switch input:checked+.slider{background:#1a6b4a}
+.switch input:checked+.slider:before{transform:translateX(-22px)}
+.vol-wrap{display:flex;align-items:center;gap:10px;width:100%}
+.vol-slider{flex:1;-webkit-appearance:none;height:6px;background:#e0d5c0;border-radius:3px;border:none;padding:0}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;background:#1a6b4a;border-radius:50%;cursor:pointer}
+.ann-item{background:#fff;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid #e8dcc8;animation:slideRight .4s}
+.ann-item.unread{border-right:4px solid #b5343a;background:#fff5f5}
+.ann-item.read{opacity:.7}
+.ann-head{display:flex;justify-content:space-between;margin-bottom:6px;align-items:center;flex-wrap:wrap;gap:6px}
+.ann-title{font-weight:700;font-size:.92em;display:flex;align-items:center;gap:6px}
+.ann-time{font-size:.7em;color:#888}
+.ann-body{font-size:.88em;color:#5c4030;line-height:1.7}
+.ann-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:12px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-bg.show{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:20px;padding:20px;width:100%;max-width:450px;max-height:90vh;overflow-y:auto;position:relative;transform:scale(.9);transition:transform .3s}
+.modal-bg.show .modal{transform:scale(1)}
+.modal h3{font-size:1.15em;color:#0f3d2a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #f0e8d5}
+.modal-close{position:absolute;top:12px;left:12px;width:32px;height:32px;background:#fdf8f0;border-radius:50%;font-weight:800;font-size:1.1em;z-index:2}
+.toast-box{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:4000;pointer-events:none;display:flex;flex-direction:column;gap:8px;align-items:center;max-width:90vw}
+.toast{background:#fff;border-radius:12px;padding:12px 18px;box-shadow:0 8px 24px rgba(0,0,0,.15);font-weight:600;font-size:.88em;animation:slideUp .4s,fadeOut .4s 2.6s forwards;border-right:4px solid #1a6b4a;max-width:90vw}
+.toast.success{border-color:#2d8f65}
+.toast.warning{border-color:#e67e22}
+.toast.danger{border-color:#b5343a}
+.qibla-wrap{text-align:center;padding:10px 0}
+.qibla-compass{width:260px;height:260px;margin:10px auto;position:relative;border-radius:50%;background:radial-gradient(circle,#fff 40%,#f5ecd7 100%);box-shadow:inset 0 0 30px rgba(0,0,0,.1),0 8px 24px rgba(0,0,0,.1);border:8px solid #1a6b4a}
+.qibla-compass::before{content:'';position:absolute;inset:18px;border-radius:50%;border:2px dashed #e0d5c0}
+.qibla-cardinal{position:absolute;font-size:.72em;font-weight:800;color:#8b6914;z-index:2}
+.qibla-cardinal.n{top:4px;left:50%;transform:translateX(-50%);color:#b5343a}
+.qibla-cardinal.s{bottom:4px;left:50%;transform:translateX(-50%)}
+.qibla-cardinal.e{right:6px;top:50%;transform:translateY(-50%)}
+.qibla-cardinal.w{left:6px;top:50%;transform:translateY(-50%)}
+.qibla-needle{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;transition:transform .5s cubic-bezier(.34,1.56,.64,1);z-index:1}
+.qibla-needle::before{content:'';position:absolute;top:40px;left:50%;width:5px;height:calc(50% - 48px);transform:translateX(-50%);background:linear-gradient(#b5343a,#c8963e);border-radius:3px}
+.qibla-arrow{font-size:2.4em;margin-top:14px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+.qibla-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:30px;height:30px;background:#1a6b4a;border-radius:50%;box-shadow:0 0 20px rgba(26,107,74,.5);z-index:2}
+.qibla-center::after{content:'';position:absolute;inset:8px;background:#fff;border-radius:50%}
+.qibla-reading{font-size:1.7em;font-weight:800;color:#0f3d2a;margin-top:10px}
+.qibla-status{background:#fdf8f0;padding:10px;border-radius:10px;margin-top:10px;font-size:.85em;color:#5c4030}
+.dhikr-wrap{text-align:center;padding:10px 0}
+.dhikr-count{font-size:3.5em;font-weight:900;color:#0f3d2a;margin-bottom:10px;line-height:1}
+.dhikr-btn{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#2d8f65,#0f3d2a);color:#fff;font-size:1.8em;font-weight:800;cursor:pointer;margin:10px auto;display:block;box-shadow:0 8px 24px rgba(26,107,74,.4);transition:all .15s}
+.dhikr-btn:active{transform:scale(.92)}
+.dhikr-btn.pulse{animation:pulse .4s}
+.dhikr-btn.success{background:radial-gradient(circle at 30% 30%,#c8963e,#8b6914);animation:glow 1s}
+.dua-item{background:#fdf8f0;border-radius:12px;margin-bottom:8px;overflow:hidden}
+.dua-item[open]{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.dua-item summary{padding:12px 14px;font-weight:700;font-size:.9em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between}
+.dua-item summary::-webkit-details-marker{display:none}
+.dua-item summary::before{content:'📖 '}
+.dua-item summary::after{content:'▼';font-size:.7em;transition:transform .3s;color:#888}
+.dua-item[open] summary::after{transform:rotate(180deg)}
+.dua-content{padding:14px;border-top:1px solid #f0e8d5;font-size:.95em;line-height:2.4;color:#2c1810;text-align:right}
+.empty{padding:30px 20px;text-align:center;color:#888;font-size:.88em}
+.empty-icon{font-size:3em;margin-bottom:10px;opacity:.4}
+.footer{text-align:center;padding:16px;margin-top:20px;border-top:2px solid #e8dcc8;font-size:.75em;color:#5c4030}
+.footer .phone{direction:ltr;display:inline-block;background:#f5ecd7;padding:3px 10px;border-radius:10px;font-weight:700;color:#0f3d2a}
+.azan-screen{position:fixed;inset:0;background:radial-gradient(ellipse,#1a6b4a,#0f3d2a);color:#fff;z-index:2000;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px;text-align:center;opacity:0;pointer-events:none;transition:opacity .5s}
+.azan-screen.show{opacity:1;pointer-events:auto}
+.azan-arabic{font-size:3em;margin-bottom:20px;animation:pulse 2s infinite}
+.azan-title{font-size:1.8em;font-weight:800;color:#e0c87a;margin-bottom:10px}
+.azan-waves{display:flex;gap:8px;justify-content:center;margin:20px 0}
+.azan-wave{width:6px;background:#e0c87a;border-radius:3px;animation:wave 1s infinite;height:30px}
+.azan-wave:nth-child(2){animation-delay:.1s}
+.azan-wave:nth-child(3){animation-delay:.2s}
+.azan-wave:nth-child(4){animation-delay:.3s}
+.azan-wave:nth-child(5){animation-delay:.4s}
+.success-ov{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .4s}
+.success-ov.show{opacity:1}
+.success-circle{width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,#2d8f65,#0f3d2a);display:flex;align-items:center;justify-content:center;font-size:4em;color:#fff;animation:bounceIn .6s;box-shadow:0 0 60px rgba(45,143,101,.6)}
+.progress-bar{height:10px;background:rgba(200,150,62,.2);border-radius:5px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;background:linear-gradient(90deg,#c8963e,#8b6914);border-radius:5px;transition:width .8s;position:relative}
+.progress-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 2s infinite;background-size:1000px 100%}
+.reward-card{background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #e0c87a;border-radius:16px;padding:16px;margin-bottom:12px}
+.reward-title{font-weight:800;margin-bottom:4px}
+.reward-sub{font-size:.85em;color:#5c4030;margin-bottom:8px}
+.qr-card{background:#fff;border-radius:16px;padding:16px;text-align:center;border:2px solid #e0c87a}
+.qr-img{width:140px;height:140px;border-radius:10px;margin-bottom:8px}
+.section-divider{height:2px;background:linear-gradient(90deg,transparent,#e0c87a,transparent);margin:20px 0}
+.text-center{text-align:center}.text-muted{color:#888}.text-xs{font-size:.72em}.text-sm{font-size:.85em}
+.fw-700{font-weight:700}.fw-800{font-weight:800}.full-w{width:100%}
+.mt-2{margin-top:8px}.mt-3{margin-top:12px}.mb-2{margin-bottom:8px}.mb-3{margin-bottom:12px}
+.flex{display:flex}.gap-2{gap:8px}
+@media(max-width:480px){.hdr h1{font-size:1.2em}.stat-value{font-size:1.3em}.qibla-compass{width:220px;height:220px}.dhikr-count{font-size:3em}.dhikr-btn{width:130px;height:130px}}
+</style>
+</head>
+<body>
+<div class="splash" id="splash">
+  <div class="splash-icon">🕌</div>
+  <div class="splash-title">مسجد آقا منیر</div>
+  <div class="splash-sub">سامانه هوشمند</div>
+  <div class="splash-loader"></div>
+</div>
+<div class="app">
+toast('📢 منتشر شد','success');
+  $('annText').value = '';
+  showSuccess();
+  renderManager(); updateTopBanner();
+}
+var editAnnId = null;
+function editAnn(id) {
+  var a = getAnns(S.code).find(function(x){ return x.id === id; });
+  if (!a) return;
+  editAnnId = id;
+  $('editAnnText').value = a.text;
+  openModal('editAnnModal');
+}
+function saveEditAnn() {
+  var a = getAnns(S.code).find(function(x){ return x.id === editAnnId; });
+  if (!a) return;
+  a.text = $('editAnnText').value.trim() || a.text;
+  saveAnns(S.code, getAnns(S.code));
+  closeModal('editAnnModal');
+  toast('✅ ویرایش شد','success');
+  renderManager(); updateTopBanner();
+}
+function deleteAnn(id) {
+  twoTap(event.currentTarget, function() {
+    saveAnns(S.code, getAnns(S.code).filter(function(x){ return x.id !== id; }));
+    toast('🗑','info');
+    renderManager(); updateTopBanner();
+  });
+}
+
+function renderPubAnnsMgr() {
+  $('pubAnnList').innerHTML = getPubAnns().map(function(a) {
+    return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 <span class="badge badge-info">'+esc(a.target||'همه')+'</span></div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+'</div></div><div class="ann-body">'+esc(a.text)+'</div><div class="ann-actions"><button class="btn btn-danger btn-sm" data-action="delete-pubann" data-id="'+a.id+'">🗑</button></div></div>';
+  }).join('');
+}
+function addPubAnn() {
+  var text = $('pubAnnText').value.trim();
+  if (!text) { toast('متن','warning'); return; }
+  var target = $('pubAnnTarget').value;
+  var expH = parseInt($('pubAnnExp').value, 10) || 0;
+  var a = getPubAnns();
+  a.unshift({id:uid(), text:text, target:target, expireAt: expH>0?Date.now()+expH*3600000:0, time:new Date().toISOString()});
+  savePubAnns(a);
+  toast('📣 منتشر شد','success');
+  $('pubAnnText').value = '';
+  showSuccess();
+  renderPubAnnsMgr(); updateTopBanner();
+}
+function deletePubAnn(id) {
+  twoTap(event.currentTarget, function() {
+    savePubAnns(getPubAnns().filter(function(x){ return x.id !== id; }));
+    toast('🗑','info');
+    renderPubAnnsMgr(); updateTopBanner();
+  });
+}
+function renderPublicAnns() {
+  var now = Date.now();
+  var list = getPubAnns().filter(function(a){ return !a.expireAt || a.expireAt > now; });
+  $('pubAnnEmpty').classList.toggle('hidden', list.length > 0);
+  $('pubAnnouncements').innerHTML = list.map(function(a) {
+    return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 اطلاعیه عمومی</div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+'</div></div><div class="ann-body">'+esc(a.text)+'</div></div>';
+  }).join('');
+}
+
+function renderHistory() {
+  var icons = {add:'➕',delete:'🗑',points:'⭐',att:'🌙',att_all:'🌙',prayer:'🕌',ann:'📢'};
+  var h = getHistory(S.code);
+  $('histEmpty').classList.toggle('hidden', h.length > 0);
+  $('histList').innerHTML = h.map(function(x) {
+    return '<div class="list-item" style="cursor:default"><div class="body"><div class="name">'+(icons[x.type]||'•')+' '+esc(x.text)+'</div><div class="meta">'+new Date(x.time).toLocaleString('fa-IR')+'</div></div></div>';
+  }).join('');
+}
+
+function getTop(branch) {
+  var top = null;
+  getMosques().forEach(function(m) {
+    getPeople(m.code).forEach(function(p) {
+      if (p.branch === branch) { if (!top  (p.points0) > (top.points||0)) top = p; }
+    });
+  });
+  return top;
+}
+function updateChampBanner() {
+  var el = $('champBanner');
+  if (!el) return;
+  if (S.role === 'public') {
+    var tb = getTop('برادران');
+    var tg = getTop('خواهران');
+    if (!tb && !tg) { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    var html = '<span class="trophy">🏆</span><span>';
+    if (tb) html += 'برترین برادران: ' + esc(tb.name) + ' (' + faNum(tb.points||0) + ')';
+    if (tb && tg) html += ' | ';
+if (tg) html += 'برترین خواهران: ' + esc(tg.name) + ' (' + faNum(tg.points||0) + ')';
+    html += '</span>';
+    el.innerHTML = html;
+  } else {
+    var top = getTop(S.branch);
+    if (!top) { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    el.innerHTML = '<span class="trophy">🏆</span><span>برترین ' + S.branch + ': ' + esc(top.name) + ' (' + faNum(top.points||0) + ' امتیاز)</span>';
+  }
+}
+
+var topBannerInterval = null;
+function updateTopBanner() {
+  var now = Date.now();
+  var active = [];
+  getPubAnns().forEach(function(a) { if (!a.expireAt  a.expireAt > now) { if (a.target === 'همه'  a.target === S.branch) active.push({text:a.text, type:'public'}); } });
+  if (S.code) getAnns(S.code).forEach(function(a) { if (a.branch === S.branch && (!a.expireAt || a.expireAt > now)) active.push({text:a.text, type:'internal'}); });
+  var banner = $('topBanner');
+  if (!active.length) { banner.classList.add('hidden'); return; }
+  banner.classList.remove('hidden');
+  var idx = 0;
+  var update = function() { var a = active[idx % active.length]; banner.innerHTML = '<span class="ti">' + (a.type==='public'?'📣':'') + '</span><span>' + esc(a.text) + '</span>'; };
+  update();
+  if (topBannerInterval) clearInterval(topBannerInterval);
+  topBannerInterval = setInterval(function(){ idx++; update(); }, 5000);
+}
+
+function renderTeenAll() { renderTeenHome(); renderLeader(); renderTeenAnns(); }
+
+function renderTeenHome() {
+  var me = getPeople(S.code).find(function(x){ return x.id === S.personId; });
+  if (!me) return;
+  S.me = me;
+  $('teenPts').textContent = faNum(me.points||0);
+  $('teenNights').textContent = faNum(me.nights||0);
+  $('teenStreak').textContent = faNum(me.streak||0);
+  var sorted = getPeople(S.code).filter(function(x){ return x.branch === S.branch; }).slice().sort(function(a,b){ return (b.points0)-(a.points0); });
+  var rank = 0;
+  for (var i = 0; i < sorted.length; i++) if (sorted[i].id === S.personId) rank = i + 1;
+  $('teenRank').textContent = rank ? faNum(rank) : '—';
+  var rw = getRewards(S.code);
+  var nr = null, got = null;
+  rw.forEach(function(r) { if ((me.points0) < r.pointsRequired && (!nr  r.pointsRequired < nr.pointsRequired)) nr = r; });
+  rw.forEach(function(r) { if ((me.points||0) >= r.pointsRequired) got = r; });
+  if (nr) {
+    var pct = Math.min(100, Math.round((me.points||0) / nr.pointsRequired * 100));
+    $('rewardTitle').innerHTML = nr.icon + ' ' + esc(nr.name);
+    $('rewardSub').textContent = faNum(nr.pointsRequired - (me.points||0)) + ' امتیاز تا دریافت';
+    $('rewardProgress').style.width = pct + '%';
+  } else if (got) {
+    $('rewardTitle').innerHTML = '🏆 مستحق: ' + esc(got.name);
+    $('rewardSub').textContent = 'برای دریافت به مدیر مراجعه کنید';
+    $('rewardProgress').style.width = '100%';
+  }
+  updateMotivation();
+}
+function renderLeader() {
+  var sorted = getPeople(S.code).filter(function(x){ return x.branch === S.branch; }).slice().sort(function(a,b){ return (b.points0)-(a.points0); }).slice(0,10);
+  $('leaderList').innerHTML = sorted.map(function(x, i) {
+    var md = i === 0 ? '🥇' : (i === 2 ? '🥉' : faNum(i+1));
+    var isMe = x.id === S.personId;
+    return '<div class="list-item" style="cursor:default;' + (isMe ? 'background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #e0c87a' : '') + '"><div class="avatar">' + md + '</div><div class="body"><div class="name">' + esc(x.name) + (isMe ? ' <span class="badge badge-gold">شما</span>' : '') + '</div><div class="meta">⭐ ' + faNum(x.points0) + ' | 🌙 ' + faNum(x.nights0) + '</div></div></div>';
+  }).join('');
+}
+function renderTeenAnns() {
+  var now = Date.now();
+  var list = [];
+  getAnns(S.code).forEach(function(a) { if (a.branch === S.branch && (!a.expireAt || a.expireAt > now)) list.push({id:a.id, text:a.text, time:a.time, type:'internal'}); });
+getPubAnns().forEach(function(a) { if ((a.target === 'همه'  a.target === S.branch) && (!a.expireAt  a.expireAt > now)) list.push({id:a.id, text:a.text, time:a.time, type:'public'}); });
+  $('teenAnnEmpty').classList.toggle('hidden', list.length > 0);
+  var readIds = LS.get('readAnn_' + S.code + '_' + S.personId, []);
+  $('teenAnnList').innerHTML = list.map(function(a) {
+    var isRead = readIds.indexOf(a.id) >= 0;
+    return '<div class="ann-item ' + (isRead ? 'read' : 'unread') + '" data-action="mark-ann-read" data-id="' + a.id + '"><div class="ann-head"><div class="ann-title">' + (a.type==='public'?'📣':'') + ' ' + (isRead ? '' : '<span class="badge badge-new">جدید</span>') + '</div><div class="ann-time">' + new Date(a.time).toLocaleDateString('fa-IR') + '</div></div><div class="ann-body">' + esc(a.text) + '</div></div>';
+  }).join('');
+}
+function markAnnRead(id, el) {
+  var key = 'readAnn_' + S.code + '_' + S.personId;
+  var readIds = LS.get(key, []);
+  if (readIds.indexOf(id) < 0) { readIds.push(id); LS.set(key, readIds); }
+  el.classList.remove('unread'); el.classList.add('read');
+  var badge = el.querySelector('.badge-new');
+  if (badge) badge.remove();
+}
+
+var MOTIVATION = {
+  first: ['{name} عزیز، اولین قدم همیشه سخت‌ترین قدم است. تبریک! 🌱','خوش آمدی {name}! هر مسیر بزرگ با یک قدم کوچک شروع می‌شود. ✨'],
+  streak: ['آفرین {name}! {n} روز پشت سر هم. استمرار تو قابل تحسین است. 🌟','{name} جان، {n} روز استمرار! تو الگوی دیگرانی! 🏆'],
+  milestone: ['{name} عزیز، به {n} امتیاز رسیدی! دستاورد بزرگ! 🏆','تبریک {name}! {n} امتیاز جمع کردی. ⭐'],
+  prayer: ['{name} عزیز، نمازت قبول باشه! 🤲','ماشاءالله {name}! این نماز یک نور در قلب تو بود. ✨'],
+  daily: ['{name} عزیز، حضورت امروز ارزشمند بود. 🌱','{name} جان، امروز هم یک قدم نزدیک‌تر به هدف‌هات شدی. 💚']
+};
+function getMotivationMsg(name, type, n) {
+  n = n || 0;
+  var t = MOTIVATION[type] || MOTIVATION.daily;
+  return t[Math.floor(Math.random() * t.length)].replace(/\{name\}/g, name).replace(/\{n\}/g, faNum(n));
+}
+function updateMotivation() {
+  if (!S.me || !S.personName) return;
+  var el = $('teenMotivation');
+  if (!el) return;
+  var type = 'daily', n = 0;
+  var streak = S.me.streak || 0;
+  var nights = S.me.nights || 0;
+  var points = S.me.points || 0;
+  if (streak >= 3) { type = 'streak'; n = streak; }
+  else if (nights === 0) { type = 'first'; }
+  else if (points >= 50) { type = 'milestone'; n = points; }
+  el.innerHTML = '<div class="mot-text">' + getMotivationMsg(S.personName, type, n) + '</div><div class="mot-foot">✨ ' + new Date().toLocaleDateString('fa-IR') + '</div>';
+}
+function showMotivational(name, type, n) { toast(getMotivationMsg(name, type, n), 'success'); }
+
+function loadConfig() {
+  var cfg = LS.get('cfg_' + S.code, {});
+  if (cfg.muezzin) $('cfgMuezzin').value = cfg.muezzin;
+  if (cfg.autoAzan !== undefined) $('cfgAutoAzan').checked = cfg.autoAzan;
+  if (cfg.fajr !== undefined) $('cfgFajr').checked = cfg.fajr;
+  if (cfg.dhuhr !== undefined) $('cfgDhuhr').checked = cfg.dhuhr;
+  if (cfg.maghrib !== undefined) $('cfgMaghrib').checked = cfg.maghrib;
+}
+function saveConfig() {
+  LS.set('cfg_' + S.code, {muezzin: $('cfgMuezzin').value, autoAzan: $('cfgAutoAzan').checked, fajr: $('cfgFajr').checked, dhuhr: $('cfgDhuhr').checked, maghrib: $('cfgMaghrib').checked});
+  toast('✅ ذخیره شد','success');
+}
+function loadTeenSettings() {
+  var s = LS.get('teen_' + S.code + '_' + S.personId, {});
+  if (s.autoAzan !== undefined) $('teenAutoAzan').checked = s.autoAzan;
+  if (s.muezzin) $('teenMuezzin').value = s.muezzin;
+  if (s.fajr !== undefined) $('teenFajr').checked = s.fajr;
+  if (s.dhuhr !== undefined) $('teenDhuhr').checked = s.dhuhr;
+  if (s.maghrib !== undefined) $('teenMaghrib').checked = s.maghrib;
+  if (s.volume !== undefined) $('teenVolume').value = s.volume;
+}
+function saveTeenSettings() {
+  LS.set('teen_' + S.code + '_' + S.personId, {autoAzan: $('teenAutoAzan').checked, muezzin: $('teenMuezzin').value, fajr: $('teenFajr').checked, dhuhr: $('teenDhuhr').checked, maghrib: $('teenMaghrib').checked, volume: parseInt($('teenVolume').value)});
+  toast('✅','success');
+}
+function loadPublicSettings() {
+  var s = LS.get('public_settings', {});
+  if (s.autoAzan !== undefined) $('pubAutoAzan').checked = s.autoAzan;
+  if (s.muezzin) $('pubMuezzin').value = s.muezzin;
+  if (s.fajr !== undefined) $('pubFajr').checked = s.fajr;
+  if (s.dhuhr !== undefined) $('pubDhuhr').checked = s.dhuhr;
+  if (s.maghrib !== undefined) $('pubMaghrib').checked = s.maghrib;
+  if (s.volume !== undefined) $('pubVolume').value = s.volume;
+}
+function savePublicSettings() {
+  LS.set('public_settings', {autoAzan: $('pubAutoAzan').checked, muezzin: $('pubMuezzin').value, fajr: $('pubFajr').checked, dhuhr: $('pubDhuhr').checked, maghrib: $('pubMaghrib').checked, volume: parseInt($('pubVolume').value)});
+  toast('✅','success');
+}
+
+var AZAN_SOUNDS = {afasy: 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3', imadi: 'https://archive.org/download/adhan.notifications/Ahmed_al_Imadi_Adhan.mp3', qatami: 'https://archive.org/download/adhan.notifications/Nasser_al_Qatami_Adhan.mp3'};
+var azanUnlocked = false;
+function testAzan() {
+  $('azanName').textContent = 'تست اذان';
+  $('azanScreen').classList.add('show');
+  if (!azanUnlocked) $('btnPlayAzan').classList.remove('hidden');
+  else playAzanAudio();
+}
+function closeAzan() {
+  $('azanScreen').classList.remove('show');
+  $('azanAudio').pause();
+  $('btnPlayAzan').classList.add('hidden');
+  document.querySelectorAll('.prayer-item').forEach(function(e){ e.classList.remove('active'); });
+}
+function playAzanAudio() {
+  var muezzin = 'afasy', volume = 80;
+  if (S.role === 'teen') { muezzin = $('teenMuezzin') ? $('teenMuezzin').value : muezzin; volume = $('teenVolume') ? parseInt($('teenVolume').value) : volume; }
+  else if (S.role === 'public') { muezzin = $('pubMuezzin') ? $('pubMuezzin').value : muezzin; volume = $('pubVolume') ? parseInt($('pubVolume').value) : volume; }
+  else { muezzin = $('cfgMuezzin') ? $('cfgMuezzin').value : muezzin; }
+  var audio = $('azanAudio');
+  audio.volume = (volume || 80) / 100;
+  azanUnlocked = true;
+  $('btnPlayAzan').classList.add('hidden');
+  audio.src = AZAN_SOUNDS[muezzin] || AZAN_SOUNDS.afasy;
+  audio.play().catch(function(){ $('btnPlayAzan').classList.remove('hidden'); });
+}
+function checkAzanTime() {
+  var now = new Date();
+  var cs = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  var checks = [{p:'Fajr', id:'fajr', name:'اذان صبح'},{p:'Dhuhr', id:'dhuhr', name:'اذان ظهر'},{p:'Maghrib', id:'maghrib', name:'اذان مغرب'}];
+  for (var i = 0; i < checks.length; i++) {
+    var c = checks[i];
+    var el = document.querySelector('[data-p="' + c.p + '"] .prayer-time');
+    if (el && el.textContent === cs) {
+      var key = now.toDateString() + '|' + c.p;
+      var last = LS.get('last_azan', '');
+      if (last !== key) {
+        LS.set('last_azan', key);
+        var shouldPlay = false;
+        if (S.role === 'teen') { var s = LS.get('teen_' + S.code + '_' + S.personId, {}); shouldPlay = s.autoAzan !== false && s[c.id] !== false; }
+        else if (S.role === 'public') { var s2 = LS.get('public_settings', {}); shouldPlay = s2.autoAzan !== false && s2[c.id] !== false; }
+        else { var s3 = LS.get('cfg_' + S.code, {}); shouldPlay = s3.autoAzan !== false && s3[c.id] !== false; }
+        if (shouldPlay) {
+          $('azanName').textContent = c.name;
+          $('azanScreen').classList.add('show');
+          var item = document.querySelector('[data-p="' + c.p + '"]');
+          if (item) item.classList.add('active');
+          if (azanUnlocked) playAzanAudio();
+          else $('btnPlayAzan').classList.remove('hidden');
+          setTimeout(closeAzan, 180000);
+        }
+      }
+    }
+  }
+}
+var qiblaBrng = 0, qiblaHandler = null;
+function qiblaBearing(lat, lon) {
+  var toRad = function(x){ return x * Math.PI / 180; };
+  var toDeg = function(x){ return x * 180 / Math.PI; };
+  var kL = 21.4225, kG = 39.8262;
+  var p1 = toRad(lat), p2 = toRad(kL), dl = toRad(kG - lon);
+  var y = Math.sin(dl) * Math.cos(p2);
+  var x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+function setNeedle(deg) { var n = $('qiblaNeedle'); if (n) n.style.transform = 'rotate(' + deg + 'deg)'; }
+async function initQibla() {
+  var btn = document.querySelector('[data-action="init-qibla"]');
+  var status = $('qiblaStatus');
+  btn.disabled = true; btn.textContent = '⏳ در حال فعال‌سازی...';
+  status.textContent = '📍 در حال دریافت موقعیت...';
+  var lat = null, lon = null, usedDefault = false;
+  if ('geolocation' in navigator) {
+    try {
+      var pos = await new Promise(function(res, rej) { navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy:true, timeout:8000, maximumAge:0}); });
+      lat = pos.coords.latitude; lon = pos.coords.longitude;
+    } catch(e) { usedDefault = true; }
+  } else usedDefault = true;
+  if (lat == null) { lat = 32.6546; lon = 51.6680; usedDefault = true; }
+  qiblaBrng = qiblaBearing(lat, lon);
+  $('qiblaReading').textContent = faNum(Math.round(qiblaBrng)) + '°';
+  setNeedle(qiblaBrng);
+  status.innerHTML = usedDefault
+    ? '🧭 جهت قبله: <b>' + faNum(Math.round(qiblaBrng)) + '°</b> از شمال (پیش‌فرض: اصفهان)<br><span class="text-xs">عقربه قرمز جهت قبله است. برای دقت بیشتر، مجوز موقعیت را فعال کنید</span>'
+    : '✅ موقعیت یافت شد<br>جهت قبله: <b>' + faNum(Math.round(qiblaBrng)) + '°</b> — عقربه قرمز به سمت قبله';
+  startOrientation();
+  btn.textContent = '✓ فعال';
+  btn.classList.remove('btn-primary'); btn.classList.add('btn-success');
+}
+function startOrientation() {
+  if (qiblaHandler) return;
+  qiblaHandler = function(e) {
+    var h = null;
+    if (e.webkitCompassHeading !== undefined) h = e.webkitCompassHeading;
+    else if (e.absolute === true && e.alpha !== null) h = 360 - e.alpha;
+    else if (e.alpha !== null) h = 360 - e.alpha;
+    if (h !== null && !isNaN(h)) setNeedle((qiblaBrng - h + 360) % 360);
+  };
+  if (typeof DeviceOrientationEvent !== 'undefined') {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(function(p) { if (p === 'granted') { window.addEventListener('deviceorientationabsolute', qiblaHandler, true); window.addEventListener('deviceorientation', qiblaHandler, true); } }).catch(function(){});
+    } else {
+      window.addEventListener('deviceorientationabsolute', qiblaHandler, true);
+      window.addEventListener('deviceorientation', qiblaHandler, true);
+    }
+  }
+}
+
+var dhikrCount = 0;
+function dhikrTap() {
+  dhikrCount++;
+  $('dhikrCount').textContent = faNum(dhikrCount);
+  LS.set('dhikr_count', dhikrCount);
+  var btn = $('dhikrBtn');
+  btn.classList.remove('pulse'); void btn.offsetWidth; btn.classList.add('pulse');
+  var target = parseInt($('dhikrTarget').value, 10) || 33;
+  if (dhikrCount % target === 0) {
+    btn.classList.add('success');
+    setTimeout(function(){ btn.classList.remove('success'); }, 1000);
+    toast('🎉 ' + faNum(target) + ' ذکر کامل شد', 'success');
+    showSuccess();
+  }
+}
+function dhikrReset() {
+  dhikrCount = 0;
+  $('dhikrCount').textContent = faNum(0);
+  LS.set('dhikr_count', 0);
+  toast('🔄','info');
+}
+
+var DAILY = ['سُبْحَانَ اللهِ','الْحَمْدُ لِلّٰهِ','لَا إِلٰهَ إِلَّا الله','اللهُ أَكْبَر','اَسْتَغْفِرُ اللهَ','اَللّٰهُمَّ صَلِّ عَلٰی مُحَمَّدٍ'];
+var dhikrIdx = 0, dailyStarted = false;
+function updateDailyDhikr() {
+  var el = $('dailyDhikr');
+  if (!el) return;
+  el.style.opacity = '0';
+  setTimeout(function(){ el.textContent = DAILY[dhikrIdx % DAILY.length]; el.style.opacity = '1'; }, 300);
+if (!dailyStarted) {
+    dailyStarted = true;
+    setInterval(function() {
+      dhikrIdx++;
+      el.style.opacity = '0';
+      setTimeout(function(){ el.textContent = DAILY[dhikrIdx % DAILY.length]; el.style.opacity = '1'; }, 300);
+    }, 6000);
+  }
+}
+
+var QUIZ = [
+  {q:'نماز صبح چند رکعت است؟', a:['۲','۳','۴','۱'], c:0},
+  {q:'نماز مغرب چند رکعت است؟', a:['۲','۳','۴','۵'], c:1},
+  {q:'کتاب آسمانی مسلمانان؟', a:['تورات','انجیل','قرآن','زبور'], c:2},
+  {q:'قبله ما کجاست؟', a:['مدینه','کربلا','کعبه','قدس'], c:2},
+  {q:'چند امام داریم؟', a:['۱۰','۱۱','۱۲','۱۳'], c:2},
+  {q:'ماه روزه‌داری؟', a:['محرم','رمضان','رجب','شوال'], c:1},
+  {q:'تسبیحات زهرا چند الله‌اکبر؟', a:['۳','۳۴','۵','۳۰'], c:1},
+  {q:'نماز عشاء چند رکعت؟', a:['۲','۳','۴','۱'], c:2},
+  {q:'پیامبر اسلام؟', a:['عیسی','موسی','محمد(ص)','نوح'], c:2},
+  {q:'اذان یعنی؟', a:['اعلام وقت نماز','دعا','تسبیح','قرائت'], c:0}
+];
+var quizState = {i:0, score:0};
+function renderQuizStart() {
+  var best = LS.get('quiz_best', 0);
+  $('quizBox').innerHTML = '<div class="text-center"><div class="stat-value" style="font-size:2em;color:#8b6914">🏆 ' + faNum(best) + '</div><div class="text-muted mb-3">بهترین از ' + faNum(QUIZ.length) + '</div><button class="btn btn-primary btn-lg" data-action="quiz-start">🎮 شروع</button></div>';
+}
+function startQuiz() { quizState.i = 0; quizState.score = 0; showQuestion(); }
+function showQuestion() {
+  var q = QUIZ[quizState.i];
+  var html = '<div class="text-xs text-muted mb-2">سؤال ' + faNum(quizState.i+1) + ' از ' + faNum(QUIZ.length) + ' | امتیاز: ' + faNum(quizState.score) + '</div><div class="fw-800 mb-3">' + esc(q.q) + '</div>';
+  for (var i = 0; i < q.a.length; i++) {
+    html += '<button class="btn btn-outline full-w mb-2" data-action="answer-quiz" data-idx="' + i + '">' + esc(q.a[i]) + '</button>';
+  }
+  $('quizBox').innerHTML = html;
+}
+function answerQuiz(idx) {
+  var q = QUIZ[quizState.i];
+  if (idx === q.c) { quizState.score++; toast('✅ درست','success'); }
+  else toast('❌ اشتباه','warning');
+  quizState.i++;
+  if (quizState.i >= QUIZ.length) {
+    var best = LS.get('quiz_best', 0);
+    if (quizState.score > best) LS.set('quiz_best', quizState.score);
+    $('quizBox').innerHTML = '<div class="text-center"><div class="stat-value" style="font-size:2.5em;color:#2d8f65">🎉</div><div class="fw-800" style="font-size:1.3em;margin:10px 0">' + faNum(quizState.score) + ' از ' + faNum(QUIZ.length) + '</div><button class="btn btn-primary btn-lg" data-action="quiz-start">🔄 دوباره</button></div>';
+  } else showQuestion();
+}
+
+function logout() {
+  S.role = null; S.code = null; S.mosque = null; S.personId = null;
+  LS.set('session', null);
+  goTo('start');
+  toast('👋','info');
+}
+
+document.addEventListener('click', function(e) {
+  var el = e.target.closest ? e.target.closest('[data-action]') : null;
+  if (!el) return;
+  var a = el.dataset.action;
+  if (a === 'branch') setBranch(el.dataset.branch);
+  else if (a === 'go') goTo(el.dataset.page);
+  else if (a === 'tab') doTab(el.dataset.group, el.dataset.tab, el);
+  else if (a === 'select-mosque') selectMosque(el.dataset.code, el.dataset.type);
+  else if (a === 'mgr-login') mgrLogin();
+  else if (a === 'create-mosque') createMosque();
+  else if (a === 'delete-mosque') deleteMosque();
+  else if (a === 'teen-login') teenLogin();
+  else if (a === 'logout') logout();
+  else if (a === 'add-person') addPerson();
+  else if (a === 'open-person') openPersonMenu(el.dataset.id);
+  else if (a === 'open-prayer') openPrayerModal(el.dataset.id);
+  else if (a === 'pm-give') pmGive(el.dataset.id);
+  else if (a === 'pm-custom') pmCustom();
+  else if (a === 'pm-att') pmAtt();
+  else if (a === 'pm-prayer') openPrayerModal(curPerson);
+  else if (a === 'pm-delete') pmDelete();
+  else if (a === 'prayer-give') registerPrayer(el.dataset.id, el.dataset.prayer);
+else if (a === 'toggle-att') toggleAtt(el.dataset.id);
+  else if (a === 'mark-all') markAll();
+  else if (a === 'clear-att') clearAtt();
+  else if (a === 'add-reward') addReward();
+  else if (a === 'delete-reward') deleteReward(el.dataset.id);
+  else if (a === 'add-reason') addReason();
+  else if (a === 'delete-reason') deleteReason(el.dataset.id);
+  else if (a === 'add-ann') addAnn();
+  else if (a === 'edit-ann') editAnn(el.dataset.id);
+  else if (a === 'save-edit-ann') saveEditAnn();
+  else if (a === 'delete-ann') deleteAnn(el.dataset.id);
+  else if (a === 'add-pubann') addPubAnn();
+  else if (a === 'delete-pubann') deletePubAnn(el.dataset.id);
+  else if (a === 'test-azan') testAzan();
+  else if (a === 'close-azan') closeAzan();
+  else if (a === 'play-azan') playAzanAudio();
+  else if (a === 'init-qibla') initQibla();
+  else if (a === 'dhikr-tap') dhikrTap();
+  else if (a === 'dhikr-reset') dhikrReset();
+  else if (a === 'quiz-start') startQuiz();
+  else if (a === 'answer-quiz') answerQuiz(+el.dataset.idx);
+  else if (a === 'mark-ann-read') markAnnRead(el.dataset.id, el);
+  else if (a === 'close-modal') closeModal(el.dataset.target);
+});
+
+document.addEventListener('change', function(e) {
+  var el = e.target.closest ? e.target.closest('[data-change]') : null;
+  if (!el) return;
+  var a = el.dataset.change;
+  if (a === 'save-config') saveConfig();
+  else if (a === 'save-teen') saveTeenSettings();
+  else if (a === 'save-public') savePublicSettings();
+});
+
+document.addEventListener('input', function(e) {
+  var el = e.target.closest ? e.target.closest('[data-input]') : null;
+  if (!el) return;
+  var a = el.dataset.input;
+  if (a === 'mgr-search') searchMosques(el.value, 'mgr');
+  else if (a === 'search-ppl') renderPeople();
+  else if (a === 'pwhint') {
+    var name = el.value.trim();
+    var hint = $('pwHint');
+    if (name.length > 0) { hint.innerHTML = '🔑 رمز ورود: <b>' + esc(makePassword(name)) + '</b> (ابجد: ' + faNum(abjad(name)) + ')'; hint.classList.remove('hidden'); }
+    else hint.classList.add('hidden');
+  }
+});
+
+function getRoleParam() {
+  try {
+    var q = new URLSearchParams(location.search).get('role');
+    if (q) return q;
+    var h = (location.hash || '').replace('#', '');
+    if (h) return h;
+  } catch(e) {}
+  return '';
+}
+
+function restoreSession() {
+  var ses = LS.get('session', null);
+  if (!ses) return false;
+  S.branch = ses.branch || S.branch;
+  if (ses.role === 'manager' && ses.code) {
+    var m = getMosques().find(function(x){ return x.code === ses.code; });
+    if (m) { S.code = m.code; S.mosque = m; S.role = 'manager'; return 'manager'; }
+  }
+  if (ses.role === 'teen' && ses.code && ses.personId) {
+    var m2 = getMosques().find(function(x){ return x.code === ses.code; });
+    if (m2) { S.code = m2.code; S.mosque = m2; S.personId = ses.personId; S.personName = ses.personName; S.role = 'teen'; return 'teen'; }
+  }
+  return false;
+}
+
+function boot() {
+  setTimeout(function(){ $('splash').classList.add('hide'); }, 800);
+  dhikrCount = LS.get('dhikr_count', 0);
+  S.branch = LS.get('session_branch', 'برادران');
+  setBranch(S.branch);
+  renderDates();
+  setInterval(renderDates, 600000);
+  setInterval(checkAzanTime, 30000);
+  renderPrayerBar();
+  loadPrayerTimes();
+  setInterval(loadPrayerTimes, 3600000);
+
+  var rp = getRoleParam();
+  if (rp === 'teen') { setTimeout(function(){ goTo('teenLogin'); }, 900); return; }
+  if (rp === 'manager') { setTimeout(function(){ goTo('mgrAuth'); }, 900); return; }
+  if (rp === 'public') { setTimeout(function(){ goTo('publicHome'); }, 900); return; }
+
+  var restored = restoreSession();
+  if (restored === 'manager') setTimeout(enterManager, 900);
+  else if (restored === 'teen') setTimeout(enterTeen, 900);
+  else setTimeout(function(){ goTo('start'); }, 900);
+}
+
+document.addEventListener('click', function() {
+  if (!azanUnlocked) {
+    var a = $('azanAudio');
+    a.muted = true;
+    a.play().then(function(){ a.pause(); a.muted = false; azanUnlocked = true; }).catch(function(){});
+  }
+}, {once: true});
+
+boot();
+</script>
+</div>
+</body>
+</html>
