@@ -1,18 +1,20 @@
-self.addEventListener('install', function(e) { self.skipWaiting(); });
-self.addEventListener('activate', function(e) { e.waitUntil(self.clients.claim()); });
+self.addEventListener('install', function(e) { console.log('[SW] installing'); self.skipWaiting(); });
+self.addEventListener('activate', function(e) { console.log('[SW] activated'); e.waitUntil(self.clients.claim()); });
 
 self.addEventListener('push', function(e) {
+  console.log('[SW] PUSH RECEIVED');
   var title = '🕌 مسجد آقا منیر';
-  var body = '';
-  try {
-    var p = e.data.json();
-    if (p.notification && p.notification.title) title = p.notification.title;
-    else if (p.data && p.data.title) title = p.data.title;
-    if (p.notification && p.notification.body) body = p.notification.body;
-    else if (p.data && p.data.body) body = p.data.body;
-  } catch(err) {
-    try { body = e.data.text(); } catch(e2) {}
+  var body = 'پیام جدید';
+  if (e.data) {
+    try {
+      var d = e.data.json();
+      if (d.notification && d.notification.title) title = d.notification.title;
+      else if (d.data && d.data.title) title = d.data.title;
+      if (d.notification && d.notification.body) body = d.notification.body;
+      else if (d.data && d.data.body) body = d.data.body;
+    } catch(err) { try { body = e.data.text(); } catch(e2) {} }
   }
+  console.log('[SW] showing:', title, body);
   e.waitUntil(
     self.registration.showNotification(title, {
       body: body,
