@@ -1491,7 +1491,15 @@ function registerServiceWorker() {
   }
 }
 function showAzanNotification(prayerName, mosqueName) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!('Notification' in window)) { toast('مرورگر شما اعلان را پشتیبانی نمی‌کند','warning'); return; }
+  if (Notification.permission !== 'granted') {
+    Notification.requestPermission().then(function(p){
+      if (p === 'granted') toast('✅ اجازه اعلان داده شد! دوباره تست کن','success');
+      else toast('🔕 اجازه اعلان رد شد','warning');
+    });
+    return;
+  }
+  var title = '🕌 ' + prayerName;
   var options = {
     body: 'وقت ' + prayerName + ' در ' + mosqueName + ' فرا رسید 🕌',
     icon: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
@@ -1501,12 +1509,11 @@ function showAzanNotification(prayerName, mosqueName) {
     dir: 'rtl',
     lang: 'fa'
   };
-  if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-    navigator.serviceWorker.ready.then(function(reg) {
-      reg.showNotification('🕌 ' + prayerName, options);
+  try { new Notification(title, options); toast('🔔 اعلان نمایش داده شد','success'); return; } catch(e) {}
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(function(reg) {
+      if (reg) reg.showNotification(title, options);
     });
-  } else {
-    try { new Notification('🕌 ' + prayerName, options); } catch(e){}
   }
 }
 function checkAzanNotification() {
