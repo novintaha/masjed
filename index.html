@@ -1574,7 +1574,8 @@ function restoreSession() {
 function boot() {
   setTimeout(function(){ $('splash').classList.add('hide'); }, 800);
   dhikrCount = LS.get('dhikr_count', 0);
-  S.branch = LS.get('session_branch', 'برادران');
+    S.branch = LS.get('session_branch', 'برادران');
+  try { var bp = new URLSearchParams(location.search).get('branch'); if (bp === 'girls' || bp === 'خواهران') S.branch = 'خواهران'; if (bp === 'boys' || bp === 'برادران') S.branch = 'برادران'; } catch(e) {}
   setBranch(S.branch);
   renderDates();
   setInterval(renderDates, 600000);
