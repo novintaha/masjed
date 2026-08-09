@@ -537,6 +537,10 @@ textarea{resize:vertical;min-height:70px}
 <div class="success-ov" id="successOverlay"><div class="success-circle">✓</div></div>
 <div class="toast-box" id="toastBox"></div>
 <audio id="azanAudio" preload="auto"></audio>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 
 <script>
 'use strict';
@@ -1538,6 +1542,62 @@ function checkAzanNotification() {
   }
 }
 // ========== پایان نوتیفیکیشن ==========
+  // ========== اتصال به فایربیس (FCM + Firestore) ==========
+var VAPID_KEY = 'BEhV_K9DMXd2JQFtQMCDtrCXW2G4_jGUHN4h9izoVWq9M_DL-8P-_ozREh__rSU6JTgqwo1rwFJceueUvRIdmdA';
+var fbApp = null, fbDb = null;
+try {
+  fbApp = firebase.initializeApp({
+    apiKey: "AIzaSyDT0sQ_ZcT_Jl9_vvjgsgVojP_TCCLaEFM",
+    authDomain: "masjed-a6505.firebaseapp.com",
+    projectId: "masjed-a6505",
+    storageBucket: "masjed-a6505.firebasestorage.app",
+    messagingSenderId: "23821410712",
+    appId: "1:23821410712:web:1789bb8cc4659377544bed"
+  });
+  fbDb = firebase.firestore();
+} catch(e) { console.log('Firebase init:', e); }
+
+function saveFcmToken(token) {
+  if (!fbDb) return;
+  var safeId = token.split('/').join('_');
+  var doSave = function() {
+    fbDb.collection('fcmTokens').doc(safeId).set({
+      token: token,
+      branch: S.branch || 'عمومی',
+      role: S.role || 'public',
+      updatedAt: new Date().toISOString()
+    }, { merge: true }).catch(function(e){ console.log('save token:', e); });
+  };
+  if (firebase.auth().currentUser) doSave();
+  else firebase.auth().signInAnonymously().then(doSave).catch(function(){});
+}
+
+function initFcmPush() {
+  if (!fbApp || !('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('./sw.js').then(function(reg) {
+    return firebase.messaging().getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+  }).then(function(token) {
+    if (token) { LS.set('fcm_token', token); saveFcmToken(token); console.log('FCM OK'); }
+  }).catch(function(e){ console.log('FCM token:', e); });
+}
+
+function initFcmPushFlow() {
+  if (!('Notification' in window) || !fbApp) return;
+  if (Notification.permission === 'granted') initFcmPush();
+  else if (Notification.permission === 'default') {
+    Notification.requestPermission().then(function(p) {
+      if (p === 'granted') { toast('✅ اعلان‌های ابری فعال شد', 'success'); initFcmPush(); }
+    });
+  }
+}
+
+try {
+  firebase.messaging().onMessage(function(payload) {
+    var n = payload.notification || {};
+    if (n.title) toast('🔔 ' + n.title, 'success');
+  });
+} catch(e) {}
+// ========== پایان فایربیس ==========
 
 document.addEventListener('click', function(e) {
   var el = e.target.closest ? e.target.closest('[data-action]') : null;
@@ -1650,7 +1710,7 @@ function boot() {
 
   // فعال‌سازی نوتیفیکیشن
   registerServiceWorker();
-  setTimeout(askNotificationPermission, 2000);
+  setTimeout(initFcmPushFlow, 2000);
 
   var rp = getRoleParam();
   if (rp === 'teen') { setTimeout(function(){ goTo('teenLogin'); }, 900); return; }
