@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6b4a">
+<title>سامانه مسجد آقا منیر</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مسجد منیر">
+<link rel="apple-touch-icon" href="https://i.ibb.co/S2b6YjQ/unnamed.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Vazirmatn',sans-serif;-webkit-tap-highlight-color:transparent}
@@ -21,7 +29,7 @@ input,select,textarea{font-family:inherit;outline:none}
 @keyframes bounceIn{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
 @keyframes gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 @keyframes bannerPop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
-@keyframes trophy{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.15)}}
+@keyframes trophy{0%,100%{transform:rotate(-8deg)scale(1)}50%{transform:rotate(8deg)scale(1.15)}}
 @keyframes wave{0%,100%{height:15px;opacity:.5}50%{height:50px;opacity:1}}
 @keyframes fadeOut{to{opacity:0;transform:translateY(-20px)}}
 .splash{position:fixed;inset:0;background:linear-gradient(135deg,#1a6b4a,#0f3d2a);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s}
@@ -218,7 +226,821 @@ textarea{resize:vertical;min-height:70px}
   <div class="splash-loader"></div>
 </div>
 <div class="app">
-toast('📢 منتشر شد','success');
+<div id="dbg"></div>
+
+<div id="pageStart">
+<div class="start-box">
+  <img class="start-img" src="https://i.ibb.co/S2b6YjQ/unnamed.jpg" alt="مسجد" onerror="this.style.display='none'">
+  <div class="start-title">مسجد آقا منیر</div>
+  <div class="start-sub">سامانه هوشمند امتیازدهی، اذان و اطلاع‌رسانی</div>
+  <div class="credit">طراح: <b>محمد وزیری</b> | 📞 <span class="phone">09909936883</span></div>
+  <div class="branch-tabs">
+    <button class="branch-tab active" data-action="branch" data-branch="برادران">👦 برادران</button>
+    <button class="branch-tab" data-action="branch" data-branch="خواهران">👧 خواهران</button>
+  </div>
+  <button class="role-btn" data-action="go" data-page="mgrAuth"><div class="ri">🕌</div><div class="rb"><div class="rt">مدیر / مسئول</div><div class="rd">ورود یا ساخت مسجد</div></div><div class="arr">‹</div></button>
+  <button class="role-btn rg" data-action="go" data-page="teenLogin"><div class="ri">🧒</div><div class="rb"><div class="rt">نوجوان / نمازگزار</div><div class="rd">نام + رمز ابجد</div></div><div class="arr">‹</div></button>
+  <button class="role-btn ri2" data-action="go" data-page="publicHome"><div class="ri">🌍</div><div class="rb"><div class="rt">بخش عمومی</div><div class="rd">بدون رمز - قبله، ذکر، ادعیه</div></div><div class="arr">‹</div></button>
+</div>
+</div>
+
+<div id="pageMgrAuth" class="hidden">
+<div class="start-box">
+  <button class="btn btn-ghost" data-action="go" data-page="start" style="margin-bottom:14px">→ بازگشت</button>
+  <h2 style="color:#0f3d2a;margin-bottom:8px">🕌 پنل مدیر</h2>
+  <p class="text-muted mb-3">بخش <b id="mgrBranchLabel">برادران</b></p>
+  <div class="search-results" id="mgrMosqueResults"></div>
+  <input type="text" id="mgrSearch" data-input="mgr-search" placeholder="🔍 بخشی از نام مسجد...">
+  <div id="mgrPinBox" class="hidden mt-3">
+    <div class="selected-mosque" id="mgrSelectedMosque"></div>
+    <input type="password" id="mgrPin" placeholder="🔐 رمز مدیر" inputmode="numeric" style="margin-bottom:10px">
+    <button class="btn btn-primary btn-xl" data-action="mgr-login">🔓 ورود</button>
+    <button class="btn btn-danger full-w mt-2" data-action="delete-mosque" id="btnDeleteMosque">🗑 حذف این مسجد</button>
+  </div>
+  <div class="divider"></div>
+  <h3 style="color:#0f3d2a;margin-bottom:10px">✨ ساخت مسجد جدید</h3>
+  <input type="text" id="setupName" placeholder="نام مسجد (مثلاً: منیر)" style="margin-bottom:10px">
+  <input type="text" id="setupAddress" placeholder="📍 آدرس مسجد" style="margin-bottom:10px">
+  <input type="password" id="setupPin" placeholder="🔑 ایجاد رمز عبور (حداقل ۴ رقم)" inputmode="numeric" style="margin-bottom:10px">
+  <input type="password" id="setupPin2" placeholder="🔁 تکرار رمز عبور" inputmode="numeric" style="margin-bottom:14px">
+  <button class="btn btn-success btn-xl" id="btnCreate" data-action="create-mosque">✅ ساخت مسجد</button>
+</div>
+</div>
+
+<div id="pageTeenLogin" class="hidden">
+<div class="start-box">
+  <button class="btn btn-ghost" data-action="go" data-page="start" style="margin-bottom:14px">→ بازگشت</button>
+  <h2 style="color:#0f3d2a;margin-bottom:8px">🧒 ورود نوجوان</h2>
+  <p class="text-muted mb-3">بخش <b id="teenBranchLabel">برادران</b></p>
+  <input type="text" id="teenName" placeholder="نام و نام خانوادگی" style="margin-bottom:10px">
+  <input type="text" id="teenPw" placeholder="رمز: نام + عدد ابجد (مثلاً: محمد 92)" style="margin-bottom:8px">
+  <div class="text-xs text-muted mb-2">💡 رمز = نام شما + عدد ابجد آن</div>
+  <button class="btn btn-primary btn-xl" data-action="teen-login">🔓 ورود</button>
+</div>
+</div>
+
+<div id="sharedHeader" class="hidden">
+<div class="hdr">
+  <h1 id="hdrTitle">مسجد آقا منیر</h1>
+  <p class="sub" id="hdrSub">سامانه هوشمند</p>
+  <span class="chip" id="hdrChip">—</span>
+</div>
+<div id="topBanner" class="top-banner hidden"></div>
+<div id="champBanner" class="champ-banner hidden"></div>
+<div class="card" style="padding:12px">
+  <div class="text-center">
+    <div style="background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff;padding:8px 16px;border-radius:10px;display:inline-block;margin-bottom:8px">
+      <span class="fw-800" id="dateHijri">—</span>
+      <span style="opacity:.5;margin:0 8px">|</span>
+      <span style="color:#e0c87a;font-size:.88em" id="dateJalali">—</span>
+    </div>
+  </div>
+  <div class="prayer-bar" id="prayerBar"></div>
+</div>
+</div>
+
+<div id="pageManager" class="hidden">
+<div class="card" style="padding:12px">
+  <div class="flex gap-2" style="align-items:center">
+    <span class="text-sm fw-700">🎫 کد:</span>
+    <b id="mgrCode" style="color:#8b6914;letter-spacing:2px"></b>
+    <span class="badge badge-info" id="mgrBranchChip">برادران</span>
+    <span style="flex:1"></span>
+    <button class="btn btn-outline btn-sm" data-action="logout">🚪 خروج</button>
+  </div>
+</div>
+<div class="tabs" id="mgrTabs">
+  <button class="tab active" data-action="tab" data-group="mgr" data-tab="ppl">👥 افراد</button>
+  <button class="tab" data-action="tab" data-group="mgr" data-tab="att">🌙 حضور</button>
+  <button class="tab" data-action="tab" data-group="mgr" data-tab="rw">🎁 جوایز</button>
+  <button class="tab" data-action="tab" data-group="mgr" data-tab="ann">📢 اطلاعیه</button>
+  <button class="tab" data-action="tab" data-group="mgr" data-tab="cfg">⚙️ تنظیمات</button>
+  <button class="tab" data-action="tab" data-group="mgr" data-tab="hist">📜 تاریخچه</button>
+</div>
+<div class="panel active" id="mgr-ppl">
+  <div class="card"><h3>➕ افزودن نمازگزار (بخش <span id="addBranchLabel">برادران</span>)</h3>
+    <input type="text" id="newName" data-input="pwhint" placeholder="نام و نام خانوادگی..." style="margin-bottom:10px">
+    <div id="pwHint" class="hidden" style="background:#e8f5e9;padding:10px;border-radius:10px;margin-bottom:10px;font-size:.85em;color:#2e7d32;font-weight:700"></div>
+    <button class="btn btn-success full-w" data-action="add-person">+ ثبت نمازگزار</button>
+    <div class="text-xs text-muted mt-2">💡 رمز ورود هر فرد: نام + عدد ابجد</div>
+  </div>
+  <div class="card"><h3>📋 لیست نمازگزاران (<span id="listBranchLabel">برادران</span>)</h3>
+    <input type="text" id="searchPpl" data-input="search-ppl" placeholder="🔍 جستجو..." style="margin-bottom:10px">
+    <div id="pplList"></div>
+    <div id="pplEmpty" class="empty hidden"><div class="empty-icon">📭</div><div>هنوز کسی ثبت نشده</div></div>
+  </div>
+</div>
+<div class="panel" id="mgr-att">
+  <div class="card"><h3>🌙 حضور امشب (<span id="attBranchLabel">برادران</span>)</h3>
+    <div class="flex gap-2 mb-3">
+      <button class="btn btn-gold" data-action="mark-all">✅ همه حاضر</button>
+      <button class="btn btn-outline" data-action="clear-att" id="clearAttBtn">🗑 پاک</button>
+    </div>
+    <div id="attList"></div>
+  </div>
+</div>
+<div class="panel" id="mgr-rw">
+  <div class="card"><h3>➕ جایزه جدید</h3>
+    <div class="flex gap-2 mb-2"><input type="text" id="newRwName" placeholder="نام جایزه"><input type="number" id="newRwPts" placeholder="امتیاز" style="max-width:100px"></div>
+    <div class="flex gap-2"><select id="newRwIcon" style="max-width:90px"><option>📖</option><option>🎁</option><option>🕋</option><option>📿</option><option>⚽</option><option>🏆</option><option>💰</option></select><button class="btn btn-gold full-w" data-action="add-reward">➕</button></div>
+  </div>
+  <div class="card"><h3>🎁 لیست جوایز</h3><div id="rwList"></div><div id="rwEmpty" class="empty hidden"><div class="empty-icon">🎁</div><div>جایزه‌ای نیست</div></div></div>
+</div>
+<div class="panel" id="mgr-ann">
+  <div class="card"><h3>📢 اطلاعیه داخلی (بخش <span id="annBranchLabel">برادران</span>)</h3>
+    <textarea id="annText" placeholder="متن اطلاعیه..."></textarea>
+    <div class="flex gap-2 mt-2"><input type="number" id="annExp" placeholder="انقضا (ساعت)" style="max-width:130px" value="0"><button class="btn btn-gold full-w" data-action="add-ann">📢 انتشار</button></div>
+    <div id="annList" class="mt-3"></div>
+  </div>
+  <div class="card"><h3>📣 اطلاعیه عمومی (همه مردم)</h3>
+    <textarea id="pubAnnText" placeholder="متن اطلاعیه عمومی..."></textarea>
+    <div class="flex gap-2 mt-2"><select id="pubAnnTarget" style="max-width:120px"><option>همه</option><option>برادران</option><option>خواهران</option></select><input type="number" id="pubAnnExp" placeholder="ساعت" style="max-width:90px" value="0"><button class="btn btn-primary" data-action="add-pubann">📣</button></div>
+    <div id="pubAnnList" class="mt-3"></div>
+  </div>
+</div>
+<div class="panel" id="mgr-cfg">
+  <div class="card"><h3>🔊 تنظیمات اذان</h3>
+    <div class="setting-row"><label>🎵 موذن</label><select id="cfgMuezzin" data-change="save-config"><option value="afasy">مشاری العفاسی</option><option value="imadi">احمد العمادی</option><option value="qatami">ناصر القطامی</option></select></div>
+    <div class="setting-row"><label>🔔 پخش خودکار</label><span class="switch"><input type="checkbox" id="cfgAutoAzan" checked data-change="save-config"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="cfgFajr" checked data-change="save-config"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="cfgDhuhr" checked data-change="save-config"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌇 مغرب</label><span class="switch"><input type="checkbox" id="cfgMaghrib" checked data-change="save-config"><span class="slider"></span></span></div>
+    <button class="btn btn-outline mt-2" data-action="test-azan">🔊 تست</button>
+  </div>
+  <div class="card"><h3>🎯 دلایل امتیاز</h3>
+    <div id="rsList"></div>
+    <div class="flex gap-2 mt-2"><input type="text" id="newRsName" placeholder="عنوان" style="flex:2"><input type="number" id="newRsPts" placeholder="امتیاز" style="flex:1"><button class="btn btn-primary" data-action="add-reason">➕</button></div>
+  </div>
+</div>
+<div class="panel" id="mgr-hist">
+  <div class="card"><h3>📜 تاریخچه</h3><div id="histList"></div><div id="histEmpty" class="empty hidden"><div class="empty-icon">📜</div><div>فعالیتی نیست</div></div></div>
+</div>
+</div>
+
+<div id="pageTeen" class="hidden">
+<div class="stats-grid">
+  <div class="stat-card"><div class="stat-value" id="teenPts">۰</div><div class="stat-label">⭐ امتیاز</div></div>
+  <div class="stat-card"><div class="stat-value" id="teenNights">۰</div><div class="stat-label">🌙 شب</div></div>
+  <div class="stat-card"><div class="stat-value" id="teenStreak">۰</div><div class="stat-label">🔥 متوالی</div></div>
+  <div class="stat-card"><div class="stat-value" id="teenRank">—</div><div class="stat-label">🏅 رتبه</div></div>
+</div>
+<div id="teenMotivation" class="motivation"></div>
+<div class="reward-card">
+  <div class="reward-title" id="rewardTitle">🎁 در حال محاسبه...</div>
+  <div class="reward-sub" id="rewardSub"></div>
+  <div class="progress-bar"><div class="progress-fill" id="rewardProgress" style="width:0%"></div></div>
+</div>
+<div class="tabs">
+  <button class="tab active" data-action="tab" data-group="teen" data-tab="home">🏠 خانه</button>
+  <button class="tab" data-action="tab" data-group="teen" data-tab="ann">📢 اطلاعیه‌ها</button>
+  <button class="tab" data-action="tab" data-group="teen" data-tab="game">🎮 بازی</button>
+  <button class="tab" data-action="tab" data-group="teen" data-tab="dua">🤲 ادعیه</button>
+  <button class="tab" data-action="tab" data-group="teen" data-tab="settings">⚙️ تنظیمات</button>
+</div>
+<div class="panel active" id="teen-home">
+  <div class="card"><h3>🎫 کارت من</h3>
+    <div class="qr-card"><img id="teenQr" class="qr-img" alt="QR"><div class="fw-800" style="color:#8b6914;letter-spacing:2px" id="teenCodeShow"></div><div class="text-xs text-muted mt-2">این کارت را به مدیر نشان دهید</div></div>
+  </div>
+  <div class="card"><h3>🏅 جدول رتبه‌بندی</h3><div id="leaderList"></div></div>
+  <button class="btn btn-outline full-w mt-3" data-action="logout">🚪 خروج</button>
+</div>
+<div class="panel" id="teen-ann">
+  <div class="card"><h3>📢 اطلاعیه‌های شما</h3><div id="teenAnnList"></div><div id="teenAnnEmpty" class="empty hidden"><div class="empty-icon">📭</div><div>اطلاعیه‌ای نیست</div></div></div>
+</div>
+<div class="panel" id="teen-game">
+  <div class="card"><h3>🎮 بازی دانستنی‌ها</h3><div id="quizBox"></div></div>
+</div>
+<div class="panel" id="teen-dua">
+  <div class="card"><h3>🤲 ادعیه و تعقیبات</h3>
+    <details class="dua-item"><summary>دعای صبح</summary><div class="dua-content">أَللّٰهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ وَمَلَائِكَتَكَ وَجَمِيعَ خَلْقِكَ أَنَّكَ أَنْتَ اللهُ لَا إِلٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ وَأَنَّ مُحَمَّداً عَبْدُكَ وَرَسُولُكَ</div></details>
+    <details class="dua-item"><summary>دعای عصر</summary><div class="dua-content">أَللّٰهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ وَمَلَائِكَتَكَ وَجَمِيعَ خَلْقِكَ أَنَّكَ أَنْتَ اللهُ لَا إِلٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ وَأَنَّ مُحَمَّداً عَبْدُكَ وَرَسُولُكَ</div></details>
+    <details class="dua-item"><summary>تسبیحات حضرت زهرا (س)</summary><div class="dua-content">اللهُ أَكْبَر (۳۴ بار)<br>الْحَمْدُ لِلّٰهِ (۳۳ بار)<br>سُبْحَانَ اللهِ (۳۳ بار)</div></details>
+    <details class="dua-item"><summary>آیت‌الکرسی</summary><div class="dua-content">اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ، لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ، لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ</div></details>
+    <details class="dua-item"><summary>مناجات شعبانیه</summary><div class="dua-content">أَللّٰهُمَّ صَلِّ عَلىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ، وَاسْمَعْ دُعَائِي إِذَا دَعَوْتُكَ</div></details>
+    <details class="dua-item"><summary>دعای فرج</summary><div class="dua-content">إِلٰهِي عَظُمَ الْبَلَاءُ، وَبَرِحَ الْخَفَاءُ<br>أَللّٰهُمَّ فَصَلِّ عَلىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ، وَعَجِّلْ فَرَجَهُمْ</div></details>
+    <details class="dua-item"><summary>دعای عهد</summary><div class="dua-content">أَللّٰهُمَّ رَبَّ النُّورِ الْعَظِيمِ<br>أَللّٰهُمَّ بَلِّغْ مَوْلَانَا الْإِمَامَ الْمَهْدِيَّ الْقَائِمَ بِأَمْرِكَ صَلَوَاتُ اللهِ عَلَيْهِ</div></details>
+    <details class="dua-item"><summary>دعای توسل</summary><div class="dua-content">أَللّٰهُمَّ إِنِّي أَسْأَلُكَ وَأَتَوَجَّهُ إِلَيْكَ بِنَبِيِّكَ مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَآلِهِ</div></details>
+    <details class="dua-item"><summary>استغفار</summary><div class="dua-content">أَسْتَغْفِرُ اللهَ رَبِّي وَأَتُوبُ إِلَيْهِ (۷۰ بار)</div></details>
+    <details class="dua-item"><summary>صلوات</summary><div class="dua-content">أَللّٰهُمَّ صَلِّ عَلىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ وَعَجِّلْ فَرَجَهُمْ (۱۰۰ بار)</div></details>
+  </div>
+</div>
+<div class="panel" id="teen-settings">
+  <div class="card"><h3>🔊 تنظیمات اذان‌گو</h3>
+    <div class="setting-row"><label>🔔 اذان‌گوی خودکار</label><span class="switch"><input type="checkbox" id="teenAutoAzan" checked data-change="save-teen"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🎵 موذن</label><select id="teenMuezzin" data-change="save-teen"><option value="afasy">مشاری العفاسی</option><option value="imadi">احمد العمادی</option><option value="qatami">ناصر القطامی</option></select></div>
+    <div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="teenFajr" checked data-change="save-teen"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="teenDhuhr" checked data-change="save-teen"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌇 مغرب</label><span class="switch"><input type="checkbox" id="teenMaghrib" checked data-change="save-teen"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🔉 حجم صدا</label></div>
+    <div class="vol-wrap"><span>🔈</span><input type="range" min="0" max="100" value="80" id="teenVolume" data-change="save-teen" class="vol-slider"><span>🔊</span></div>
+    <button class="btn btn-outline mt-3 full-w" data-action="test-azan">🔊 تست</button>
+  </div>
+</div>
+</div>
+
+<div id="pagePublic" class="hidden">
+  <div class="card"><h3>🧭 قبله‌نما</h3>
+    <div class="qibla-wrap">
+      <div class="qibla-compass">
+        <div class="qibla-cardinal n">شمال</div>
+        <div class="qibla-cardinal e">شرق</div>
+        <div class="qibla-cardinal s">جنوب</div>
+        <div class="qibla-cardinal w">غرب</div>
+        <div class="qibla-needle" id="qiblaNeedle"><span class="qibla-arrow">🕋</span></div>
+        <div class="qibla-center"></div>
+      </div>
+      <div class="qibla-reading" id="qiblaReading">—°</div>
+      <div class="qibla-status" id="qiblaStatus">در حال آماده‌سازی...</div>
+      <button class="btn btn-primary mt-3" data-action="init-qibla">📍 فعال‌سازی قبله‌نما</button>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+  <div class="card"><h3>📿 ذکرشمار</h3>
+    <div class="dhikr-wrap">
+      <div class="dhikr-count" id="dhikrCount">۰</div>
+      <button class="dhikr-btn" id="dhikrBtn" data-action="dhikr-tap">📿</button>
+      <div class="flex gap-2 mt-3" style="justify-content:center"><select id="dhikrTarget" style="max-width:100px"><option>33</option><option>66</option><option>99</option><option>100</option></select><button class="btn btn-outline" data-action="dhikr-reset">🔄 صفر</button></div>
+      <div class="text-xs text-muted mt-2">هر ۳۳ ذکر = یک دور کامل</div>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+  <div class="card"><h3>✨ ذکر روز</h3><div id="dailyDhikr" style="text-align:center;font-size:1.4em;font-weight:800;color:#0f3d2a;padding:20px;background:linear-gradient(135deg,#fff9e6,#fff3cd);border-radius:12px">سُبْحَانَ اللهِ</div></div>
+  <div class="section-divider"></div>
+  <div class="card"><h3>🤲 ادعیه مفاتیح</h3>
+    <details class="dua-item"><summary>دعای صبح</summary><div class="dua-content">أَللّٰهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ وَمَلَائِكَتَكَ وَجَمِيعَ خَلْقِكَ أَنَّكَ أَنْتَ اللهُ لَا إِلٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ وَأَنَّ مُحَمَّداً عَبْدُكَ وَرَسُولُكَ</div></details>
+    <details class="dua-item"><summary>دعای عصر</summary><div class="dua-content">أَللّٰهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ وَمَلَائِكَتَكَ وَجَمِيعَ خَلْقِكَ أَنَّكَ أَنْتَ اللهُ لَا إِلٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ وَأَنَّ مُحَمَّداً عَبْدُكَ وَرَسُولُكَ</div></details>
+    <details class="dua-item"><summary>تسبیحات حضرت زهرا (س)</summary><div class="dua-content">اللهُ أَكْبَر (۳۴ بار)<br>الْحَمْدُ لِلّٰهِ (۳۳ بار)<br>سُبْحَانَ اللهِ (۳۳ بار)</div></details>
+    <details class="dua-item"><summary>آیت‌الکرسی</summary><div class="dua-content">اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ، لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ، لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ</div></details>
+    <details class="dua-item"><summary>دعای فرج</summary><div class="dua-content">إِلٰهِي عَظُمَ الْبَلَاءُ، وَبَرِحَ الْخَفَاءُ<br>أَللّٰهُمَّ فَصَلِّ عَلىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ، وَعَجِّلْ فَرَجَهُمْ</div></details>
+    <details class="dua-item"><summary>استغفار</summary><div class="dua-content">أَسْتَغْفِرُ اللهَ رَبِّي وَأَتُوبُ إِلَيْهِ (۷۰ بار)</div></details>
+    <details class="dua-item"><summary>صلوات</summary><div class="dua-content">أَللّٰهُمَّ صَلِّ عَلىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ وَعَجِّلْ فَرَجَهُمْ (۱۰۰ بار)</div></details>
+  </div>
+  <div class="section-divider"></div>
+  <div class="card"><h3>📣 اطلاعیه‌های عمومی</h3><div id="pubAnnouncements"></div><div id="pubAnnEmpty" class="empty hidden"><div class="empty-icon">📣</div><div>اطلاعیه‌ای نیست</div></div></div>
+  <div class="section-divider"></div>
+  <div class="card"><h3>🔊 تنظیمات اذان‌گو</h3>
+    <div class="setting-row"><label>🔔 اذان‌گوی خودکار</label><span class="switch"><input type="checkbox" id="pubAutoAzan" checked data-change="save-public"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🎵 موذن</label><select id="pubMuezzin" data-change="save-public"><option value="afasy">مشاری العفاسی</option><option value="imadi">احمد العمادی</option><option value="qatami">ناصر القطامی</option></select></div>
+    <div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="pubFajr" checked data-change="save-public"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="pubDhuhr" checked data-change="save-public"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌇 مغرب</label><span class="switch"><input type="checkbox" id="pubMaghrib" checked data-change="save-public"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🔉 حجم صدا</label></div>
+    <div class="vol-wrap"><span>🔈</span><input type="range" min="0" max="100" value="80" id="pubVolume" data-change="save-public" class="vol-slider"><span>🔊</span></div>
+    <button class="btn btn-outline mt-3 full-w" data-action="test-azan">🔊 تست</button>
+  </div>
+  <button class="btn btn-outline full-w mt-3" data-action="go" data-page="start">🚪 بازگشت</button>
+</div>
+
+<div class="footer">
+  <p>📞 <span class="phone">09909936883</span></p>
+  <p style="margin-top:4px">🕌 مسجد آقا منیر | طراح: محمد وزیری</p>
+</div>
+
+<div class="modal-bg" id="personModal"><div class="modal">
+  <button class="modal-close" data-action="close-modal" data-target="personModal">✕</button>
+  <h3 id="pmName">—</h3>
+  <div class="flex gap-2 mb-3" style="flex-wrap:wrap"><span class="badge badge-success" id="pmPts">⭐ ۰</span><span class="badge badge-gold" id="pmNights">🌙 ۰</span></div>
+  <div class="text-sm fw-700 mb-2">➕ امتیاز بابت:</div>
+  <div id="pmReasons"></div>
+  <div class="text-sm fw-700 mb-2 mt-3">➕ امتیاز دلخواه:</div>
+  <div class="flex gap-2"><input type="number" id="pmCustom" step="any" placeholder="امتیاز"><button class="btn btn-primary" data-action="pm-custom">ثبت</button></div>
+  <div class="text-sm fw-700 mb-2 mt-3">عملیات:</div>
+  <div class="flex gap-2" style="flex-wrap:wrap">
+    <button class="btn btn-gold btn-sm" data-action="pm-prayer">🕌 نماز</button>
+    <button class="btn btn-outline btn-sm" id="pmAttBtn" data-action="pm-att">🌙 حضور</button>
+    <button class="btn btn-danger btn-sm" id="pmDelete" data-action="pm-delete">🗑 حذف</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="prayerModal"><div class="modal">
+  <button class="modal-close" data-action="close-modal" data-target="prayerModal">✕</button>
+  <h3>🕌 ثبت نماز <span id="prName"></span></h3>
+  <div id="prOptions" class="mt-3"></div>
+</div></div>
+
+<div class="modal-bg" id="editAnnModal"><div class="modal">
+  <button class="modal-close" data-action="close-modal" data-target="editAnnModal">✕</button>
+  <h3>✏️ ویرایش اطلاعیه</h3>
+  <textarea id="editAnnText"></textarea>
+  <button class="btn btn-primary full-w mt-2" data-action="save-edit-ann">💾 ذخیره</button>
+</div></div>
+
+<div class="azan-screen" id="azanScreen">
+  <button class="modal-close" data-action="close-azan" style="color:#fff;background:rgba(255,255,255,.2)">✕</button>
+  <div class="azan-arabic">اللهُ أَكْبَر</div>
+  <div class="azan-title" id="azanName">اذان</div>
+  <div style="opacity:.9">🕌 مسجد آقا منیر</div>
+  <div class="azan-waves"><div class="azan-wave"></div><div class="azan-wave"></div><div class="azan-wave"></div><div class="azan-wave"></div><div class="azan-wave"></div></div>
+  <button class="btn btn-gold mt-3 hidden" id="btnPlayAzan" data-action="play-azan">▶ پخش اذان</button>
+</div>
+
+<div class="success-ov" id="successOverlay"><div class="success-circle">✓</div></div>
+<div class="toast-box" id="toastBox"></div>
+<audio id="azanAudio" preload="auto"></audio>
+
+<script>
+'use strict';
+window.onerror = function(m){ var d=document.getElementById('dbg'); if(d) d.textContent='ERR: '+m; return false; };
+var $ = function(id){ return document.getElementById(id); };
+var pad = function(n){ return (n<10?'0':'')+n; };
+var faNum = function(n){ return String(n).replace(/[0-9]/g, function(d){ return '۰۱۲۳۴۵۶۷۸۹'[+d]; }); };
+var esc = function(s){ return String(s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;'); };
+var todayStr = function(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
+var yesterdayStr = function(){ var d=new Date(Date.now()-86400000); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
+var uid = function(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); };
+
+var memStore = {};
+var LS = {
+  get: function(k, d) {
+    try { var v = localStorage.getItem('masjid_' + k); if (v !== null) return JSON.parse(v); } catch(e) {}
+    if (Object.prototype.hasOwnProperty.call(memStore, k)) return memStore[k];
+    return d;
+  },
+  set: function(k, v) {
+    memStore[k] = v;
+    try { localStorage.setItem('masjid_' + k, JSON.stringify(v)); } catch(e) {}
+  }
+};
+
+var ABJAD = {'ا':1,'أ':1,'إ':1,'آ':1,'ب':2,'پ':2,'ج':3,'چ':3,'د':4,'ه':5,'و':6,'ز':7,'ژ':7,'ح':8,'ط':9,'ی':10,'ک':20,'گ':20,'ل':30,'م':40,'ن':50,'س':60,'ع':70,'ف':80,'ص':90,'ق':100,'ر':200,'ش':300,'ت':400,'ث':500,'خ':600,'ذ':700,'ض':800,'ظ':900,'غ':1000};
+var abjad = function(str){ if(!str) return 0; var sum=0; for(var i=0;i<str.length;i++){ var c=str[i]; if(ABJAD[c]) sum+=ABJAD[c]; } return sum; };
+var makePassword = function(name){ return name.trim() + ' ' + abjad(name.trim()); };
+var sha256 = async function(s) {
+  try {
+    if (crypto && crypto.subtle) {
+      var b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+      return Array.from(new Uint8Array(b)).map(function(x){ return x.toString(16).padStart(2,'0'); }).join('');
+    }
+  } catch(e) {}
+  var h = 5381;
+  for (var i = 0; i < s.length; i++) h = ((h<<5)+h+s.charCodeAt(i))|0;
+  return 'x'+(h>>>0).toString(16);
+};
+
+var S = { role:null, code:null, mosque:null, branch:'برادران', personId:null, personName:'', me:null };
+
+function toast(msg, type) {
+  type = type || 'info';
+  var box = $('toastBox');
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  box.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3000);
+}
+function showSuccess() { var o = $('successOverlay'); o.classList.add('show'); setTimeout(function(){ o.classList.remove('show'); }, 1200); }
+function openModal(id) { $(id).classList.add('show'); }
+function closeModal(id) { $(id).classList.remove('show'); }
+function twoTap(btn, fn) {
+  if (btn.dataset.armed === '1') { btn.dataset.armed=''; btn.classList.remove('armed'); btn.innerHTML=btn.dataset.orig; fn(); }
+  else { btn.dataset.orig=btn.innerHTML; btn.dataset.armed='1'; btn.classList.add('armed'); btn.innerHTML='⚠️ تأیید؟'; setTimeout(function(){ if(btn.dataset.armed==='1'){btn.dataset.armed='';btn.classList.remove('armed');btn.innerHTML=btn.dataset.orig;} },2600); }
+}
+
+var getMosques = function(){ return LS.get('mosques', []); };
+var saveMosques = function(l){ LS.set('mosques', l); };
+var getPeople = function(code){ return LS.get('people_'+code, []); };
+var savePeople = function(code,l){ LS.set('people_'+code, l); };
+var getRewards = function(code){ return LS.get('rewards_'+code, []); };
+var saveRewards = function(code,l){ LS.set('rewards_'+code, l); };
+var getReasons = function(code){ return LS.get('reasons_'+code, []); };
+var saveReasons = function(code,l){ LS.set('reasons_'+code, l); };
+var getAnns = function(code){ return LS.get('anns_'+code, []); };
+var saveAnns = function(code,l){ LS.set('anns_'+code, l); };
+var getPubAnns = function(){ return LS.get('pubAnns', []); };
+var savePubAnns = function(l){ LS.set('pubAnns', l); };
+var getHistory = function(code){ return LS.get('hist_'+code, []); };
+var saveHistory = function(code,l){ LS.set('hist_'+code, l); };
+var getAtt = function(code,key){ return LS.get('att_'+code+'_'+key, []); };
+var saveAtt = function(code,key,l){ LS.set('att_'+code+'_'+key, l); };
+var getPray = function(code,key){ return LS.get('pray_'+code+'_'+key, []); };
+var savePray = function(code,key,l){ LS.set('pray_'+code+'_'+key, l); };
+
+function addHistory(code, type, text) {
+  var h = getHistory(code);
+  h.unshift({type:type, text:text, time:new Date().toISOString()});
+  saveHistory(code, h.slice(0,100));
+}
+
+function goTo(page) {
+  ['pageStart','pageMgrAuth','pageTeenLogin','pageManager','pageTeen','pagePublic'].forEach(function(p){ $(p).classList.add('hidden'); });
+  $('sharedHeader').classList.add('hidden');
+  var map = {start:'pageStart',mgrAuth:'pageMgrAuth',teenLogin:'pageTeenLogin',manager:'pageManager',teen:'pageTeen',publicHome:'pagePublic'};
+  var el = $(map[page]);
+  if (el) el.classList.remove('hidden');
+  if (['manager','teen','publicHome'].indexOf(page) >= 0) $('sharedHeader').classList.remove('hidden');
+  if (page === 'mgrAuth' || page === 'teenLogin') {
+    $('mgrBranchLabel').textContent = S.branch;
+    $('teenBranchLabel').textContent = S.branch;
+    if (page === 'mgrAuth') searchMosques('', 'mgr');
+  }
+  if (page === 'publicHome') renderPublic();
+  updateTopBanner(); updateChampBanner();
+}
+
+function setBranch(b) {
+  S.branch = b;
+  LS.set('session_branch', b);
+  document.querySelectorAll('.branch-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.branch === b); });
+}
+
+function doTab(group, name, btn) {
+  document.querySelectorAll('[data-action="tab"][data-group="'+group+'"]').forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+  document.querySelectorAll('[id^="'+group+'-"]').forEach(function(p){ if (p.classList.contains('panel')) p.classList.remove('active'); });
+  var target = $(group + '-' + name);
+  if (target) target.classList.add('active');
+}
+
+function toJalali(gy,gm,gd){var g=[0,31,59,90,120,151,181,212,243,273,304,334];var gy2=gm>2?gy+1:gy;var days=355666+365*gy+Math.floor((gy2+3)/4)-Math.floor((gy2+99)/100)+Math.floor((gy2+399)/400)+gd+g[gm-1];var jy=-1595+33*Math.floor(days/12053);days%=12053;jy+=4*Math.floor(days/1461);days%=1461;if(days>365){jy+=Math.floor((days-1)/365);days=(days-1)%365;}var jm,jd;if(days<186){jm=1+Math.floor(days/31);jd=1+days%31;}else{jm=7+Math.floor((days-186)/30);jd=1+(days-186)%30;}return[jy,jm,jd];}
+function toHijri(gy,gm,gd){var m14=Math.floor((gm-14)/12);var a=Math.floor((1461*(gy+4800+m14))/4);var b=Math.floor((367*(gm-2-12*m14))/12);var c=Math.floor((3*Math.floor((gy+4900+m14)/100))/4);var jd=a+b-c+gd-32075;var l=jd-1948440+10632;var n=Math.floor((l-1)/10631);l=l-10631*n+354;var j=Math.floor((10985-l)/5316)*Math.floor((50*l)/17719)+Math.floor(l/5670)*Math.floor((43*l)/15238);l=l-Math.floor((30-j)/15)*Math.floor((17719*j)/50)-Math.floor(j/16)*Math.floor((15238*j)/43)+29;var hm=Math.floor((24*l)/709);var hd=l-Math.floor((709*hm)/24);var hy=30*n+j-30;return[hy,hm,hd];}
+var SH_M=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+var HI_M=['محرم','صفر','ربیع‌الاول','ربیع‌الثانی','جمادی‌الاول','جمادی‌الثانی','رجب','شعبان','رمضان','شوال','ذی‌القعده','ذی‌الحجه'];
+
+function renderDates() {
+  try {
+    var n = new Date();
+    var j = toJalali(n.getFullYear(), n.getMonth()+1, n.getDate());
+    var h = toHijri(n.getFullYear(), n.getMonth()+1, n.getDate());
+    if ($('dateJalali')) $('dateJalali').textContent = faNum(j[2]) + ' ' + SH_M[j[1]-1];
+    if ($('dateHijri')) $('dateHijri').textContent = faNum(h[2]) + ' ' + HI_M[h[1]-1];
+  } catch(e) {}
+}
+
+async function loadPrayerTimes() {
+  try {
+    var r = await fetch('https://api.aladhan.com/v1/timingsByCity?city=Isfahan&country=Iran&method=7');
+    var d = await r.json();
+    if (d.code === 200) {
+      setPrayer('Fajr', d.data.timings.Fajr.split(' ')[0]);
+      setPrayer('Dhuhr', d.data.timings.Dhuhr.split(' ')[0]);
+      setPrayer('Maghrib', d.data.timings.Maghrib.split(' ')[0]);
+    }
+  } catch(e) { setPrayer('Fajr','05:00'); setPrayer('Dhuhr','12:30'); setPrayer('Maghrib','19:30'); }
+}
+function setPrayer(p, t) { var el = document.querySelector('[data-p="'+p+'"] .prayer-time'); if (el) el.textContent = t; }
+function renderPrayerBar() {
+  var bar = $('prayerBar');
+  if (!bar) return;
+  var items = [{p:'Fajr',n:'🌅 فجر'},{p:'Dhuhr',n:'🌞 ظهر'},{p:'Maghrib',n:'🌇 مغرب'}];
+  bar.innerHTML = items.map(function(x){ return '<div class="prayer-item" data-p="'+x.p+'"><div class="prayer-name">'+x.n+'</div><div class="prayer-time">--:--</div></div>'; }).join('');
+}
+
+function searchMosques(query, type) {
+  var q = (query || '').trim().toLowerCase();
+  var resultsEl = $(type + 'MosqueResults');
+  if (!resultsEl) return;
+  var list = getMosques();
+  if (q) list = list.filter(function(m){ return (m.name||'').toLowerCase().indexOf(q) >= 0; });
+  if (list.length === 0) {
+    resultsEl.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div>مسجدی یافت نشد</div></div>';
+    return;
+  }
+  resultsEl.innerHTML = list.slice(0,10).map(function(m){
+    return '<div class="mosque-item" data-action="select-mosque" data-code="'+m.code+'" data-type="'+type+'"><div class="mi">🕌</div><div class="mn">'+esc(m.name)+'</div><div class="mb">'+esc(m.code)+'</div></div>';
+  }).join('');
+}
+
+function selectMosque(code, type) {
+  var mosque = getMosques().find(function(m){ return m.code === code; });
+  if (!mosque) return;
+  S.code = code; S.mosque = mosque;
+  document.querySelectorAll('#'+type+'MosqueResults .mosque-item').forEach(function(el){ el.classList.toggle('selected', el.dataset.code === code); });
+  var displayEl = $(type + 'SelectedMosque');
+  displayEl.classList.remove('hidden');
+  displayEl.innerHTML = '<div class="smi">🕌</div><div class="smn">'+esc(mosque.name)+'</div>';
+  if (type === 'mgr') $('mgrPinBox').classList.remove('hidden');
+}
+
+async function mgrLogin() {
+  if (!S.code) { toast('اول مسجد را انتخاب کنید','warning'); return; }
+  var pin = $('mgrPin').value.trim();
+  if (!pin) { toast('رمز را وارد کنید','warning'); return; }
+  var h = await sha256(pin);
+  if (h !== S.mosque.pinHash) { toast('رمز اشتباه است','danger'); return; }
+  S.role = 'manager';
+  LS.set('session', {role:'manager', code:S.code, branch:S.branch});
+  showSuccess();
+  enterManager();
+}
+
+async function createMosque() {
+  var btn = $('btnCreate');
+  var name = $('setupName').value.trim();
+  var address = $('setupAddress').value.trim();
+  var pin = $('setupPin').value.trim();
+  var pin2 = $('setupPin2').value.trim();
+  if (!name) { toast('نام مسجد را وارد کنید','warning'); return; }
+  if (pin.length < 4) { toast('رمز حداقل ۴ رقم','warning'); return; }
+  if (pin !== pin2) { toast('تکرار رمز یکسان نیست','warning'); return; }
+  btn.disabled = true; btn.textContent = '⏳ در حال ساخت...';
+  var code = 'M' + Math.floor(1000 + Math.random()*9000);
+  try {
+    var list = getMosques();
+    var pinHash = await sha256(pin);
+    list.push({ code:code, name:name, address:address, pinHash:pinHash, createdAt:todayStr() });
+    saveMosques(list);
+    saveReasons(code, [
+      {id:uid(),name:'نماز جماعت',points:1},{id:uid(),name:'شرکت در کلاس',points:5},
+      {id:uid(),name:'حفظ قرآن',points:10},{id:uid(),name:'کمک به نظافت',points:3},{id:uid(),name:'فعالیت فرهنگی',points:4}
+    ]);
+    saveRewards(code, [{id:uid(),name:'کتاب دعا',pointsRequired:20,icon:'📖'},{id:uid(),name:'هدیه ویژه',pointsRequired:50,icon:'🎁'}]);
+    S.code = code; S.mosque = {code:code,name:name,address:address,pinHash:pinHash};
+    S.role = 'manager';
+    LS.set('session', {role:'manager', code:code, branch:S.branch});
+    toast('✅ مسجد ساخته شد! کد: ' + code, 'success');
+    showSuccess();
+    enterManager();
+  } catch(e) { toast('خطا: ' + e.message, 'danger'); }
+  finally { btn.disabled = false; btn.textContent = '✅ ساخت مسجد'; }
+}
+
+function deleteMosque() {
+  if (!S.code) return;
+  twoTap($('btnDeleteMosque'), function() {
+    saveMosques(getMosques().filter(function(m){ return m.code !== S.code; }));
+    toast('✅ مسجد حذف شد','success');
+    S.code = null; S.mosque = null;
+    $('mgrPinBox').classList.add('hidden');
+    $('mgrSelectedMosque').classList.add('hidden');
+    $('mgrPin').value = '';
+    searchMosques('', 'mgr');
+  });
+}
+
+function teenLogin() {
+  var name = $('teenName').value.trim();
+  var pw = $('teenPw').value.trim();
+  if (!name) { toast('نام و نام خانوادگی را وارد کنید','warning'); return; }
+  if (!pw) { toast('رمز را وارد کنید','warning'); return; }
+  var parts = pw.split(/\s+/);
+  var num = parseInt(parts[parts.length-1], 10);
+  if (isNaN(num)) { toast('رمز باید شامل عدد ابجد باشد','warning'); return; }
+  if (num !== abjad(name)) { toast('رمز اشتباه! عدد ابجد «'+name+'» می‌شود ' + faNum(abjad(name)), 'danger'); return; }
+  var mosques = getMosques();
+  for (var i = 0; i < mosques.length; i++) {
+    var m = mosques[i];
+    var person = getPeople(m.code).find(function(p){ return p.name === name && p.branch === S.branch; });
+    if (person) {
+      S.code = m.code; S.mosque = m; S.personId = person.id; S.personName = name; S.role = 'teen';
+      LS.set('session', {role:'teen', code:m.code, branch:S.branch, personId:person.id, personName:name});
+      showSuccess();
+      enterTeen();
+      return;
+    }
+  }
+  toast('این نام در بخش ' + S.branch + ' ثبت نشده! از مدیر بخواهید ثبت‌تان کند', 'warning');
+}
+
+function enterManager() {
+  $('hdrTitle').textContent = S.mosque.name;
+  $('hdrSub').textContent = 'سامانه هوشمند';
+  $('hdrChip').textContent = '🕌 مدیر | کد: ' + S.code;
+  $('mgrCode').textContent = S.code;
+  $('mgrBranchChip').textContent = S.branch;
+  $('addBranchLabel').textContent = S.branch;
+  $('listBranchLabel').textContent = S.branch;
+  $('attBranchLabel').textContent = S.branch;
+  $('annBranchLabel').textContent = S.branch;
+  goTo('manager');
+  renderDates(); renderPrayerBar(); loadPrayerTimes(); loadConfig(); renderManager();
+}
+function enterTeen() {
+  $('hdrTitle').textContent = S.mosque.name;
+  $('hdrSub').textContent = S.branch + ' | ' + S.personName;
+  $('hdrChip').textContent = '🧒 ' + S.personName;
+  $('teenCodeShow').textContent = S.personName;
+  $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent('MASJID|' + S.code + '|' + S.personName);
+  goTo('teen');
+  renderDates(); renderPrayerBar(); loadPrayerTimes(); loadTeenSettings(); renderTeenAll(); renderQuizStart(); updateDailyDhikr();
+}
+function renderPublic() {
+  renderDates(); renderPrayerBar(); loadPrayerTimes(); loadPublicSettings(); renderPublicAnns(); updateDailyDhikr();
+}
+
+function renderManager() { renderPeople(); renderAttendance(); renderRewards(); renderReasons(); renderAnns(); renderPubAnnsMgr(); renderHistory(); }
+
+function renderPeople() {
+  var q = ($('searchPpl') ? $('searchPpl').value : '') || '';
+  q = q.trim().toLowerCase();
+  var list = getPeople(S.code).filter(function(x){ return x.branch === S.branch; });
+  if (q) list = list.filter(function(x){ return (x.name||'').toLowerCase().indexOf(q) >= 0; });
+  $('pplEmpty').classList.toggle('hidden', list.length > 0);
+  $('pplList').innerHTML = list.map(function(x) {
+    var pw = makePassword(x.name);
+    return '<div class="list-item" data-action="open-person" data-id="'+x.id+'"><div class="avatar">'+esc((x.name||'؟').charAt(0))+'</div><div class="body"><div class="name">'+esc(x.name)+' <span class="badge badge-success">⭐ '+faNum(x.points||0)+'</span></div><div class="meta">🔑 '+esc(pw)+' | 🌙 '+faNum(x.nights||0)+'</div></div><button class="btn btn-gold btn-sm" data-action="open-prayer" data-id="'+x.id+'">🕌</button></div>';
+  }).join('');
+}
+
+function addPerson() {
+  var name = $('newName').value.trim();
+  if (!name) { toast('نام را وارد کنید','warning'); return; }
+  var list = getPeople(S.code);
+  list.push({id:uid(), name:name, branch:S.branch, points:0, nights:0, streak:0, lastAtt:'', createdAt:todayStr()});
+  savePeople(S.code, list);
+  addHistory(S.code, 'add', 'افزودن: ' + name + ' (' + S.branch + ')');
+  toast('✅ ' + name + ' اضافه شد! رمز: ' + makePassword(name), 'success');
+  $('newName').value = ''; $('pwHint').classList.add('hidden');
+  showSuccess();
+  renderManager();
+}
+
+function renderAttendance() {
+  var att = getAtt(S.code, todayStr());
+  var ppl = getPeople(S.code).filter(function(x){ return x.branch === S.branch; });
+  $('attList').innerHTML = ppl.map(function(x) {
+    var here = att.indexOf(x.id) >= 0;
+    return '<div class="list-item"><div class="avatar">'+esc((x.name||'؟').charAt(0))+'</div><div class="body"><div class="name">'+esc(x.name)+'</div></div><button class="btn '+(here?'btn-primary':'btn-outline')+' btn-sm" data-action="toggle-att" data-id="'+x.id+'">'+(here?'✓ حاضر':'ثبت')+'</button></div>';
+  }).join('') || '<div class="empty">خالی</div>';
+}
+
+function toggleAtt(id) {
+  var key = todayStr();
+  var att = getAtt(S.code, key);
+  var list = getPeople(S.code);
+  var p = list.find(function(x){ return x.id === id; });
+  if (!p) return;
+  var has = att.indexOf(id) >= 0;
+  if (has) { att = att.filter(function(x){ return x !== id; }); p.nights = Math.max(0,(p.nights||0)-1); p.streak = Math.max(0,(p.streak||0)-1); }
+  else { att.push(id); p.nights=(p.nights||0)+1; p.points=(p.points||0)+(LS.get('cfg_'+S.code,{}).attPts||2); p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1; p.lastAtt=todayStr(); addHistory(S.code,'att','حضور: '+p.name); }
+  saveAtt(S.code, key, att);
+  savePeople(S.code, list);
+  toast('🌙 ثبت شد','success');
+  renderManager();
+}
+
+function markAll() {
+  var key = todayStr();
+  var att = getAtt(S.code, key);
+  var list = getPeople(S.code);
+  var added = 0;
+  list.forEach(function(p) {
+    if (p.branch !== S.branch) return;
+    if (att.indexOf(p.id) < 0) { att.push(p.id); added++; p.nights=(p.nights||0)+1; p.points=(p.points||0)+(LS.get('cfg_'+S.code,{}).attPts||2); p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1; p.lastAtt=todayStr(); }
+  });
+  saveAtt(S.code, key, att);
+  savePeople(S.code, list);
+  addHistory(S.code,'att_all','حضور گروهی ('+added+')');
+  toast('✅ ' + faNum(added) + ' نفر','success');
+  showSuccess();
+  renderManager();
+}
+
+function clearAtt() {
+  twoTap($('clearAttBtn'), function() {
+    saveAtt(S.code, todayStr(), []);
+    toast('🗑 پاک شد','info');
+    renderManager();
+  });
+}
+
+var curPerson = null;
+function openPersonMenu(id) {
+  var p = getPeople(S.code).find(function(x){ return x.id === id; });
+  if (!p) return;
+  curPerson = id;
+  $('pmName').textContent = '👤 ' + p.name;
+  $('pmPts').textContent = '⭐ ' + faNum(p.points||0);
+  $('pmNights').textContent = '🌙 ' + faNum(p.nights||0);
+  $('pmReasons').innerHTML = getReasons(S.code).map(function(r) {
+    return '<div class="list-item" data-action="pm-give" data-id="'+r.id+'" style="margin-bottom:4px"><div class="body"><div class="name">'+esc(r.name)+'</div></div><div class="badge badge-gold">+'+faNum(r.points)+'</div></div>';
+  }).join('');
+  var here = getAtt(S.code, todayStr()).indexOf(id) >= 0;
+  $('pmAttBtn').innerHTML = here ? '✓ حاضر' : '🌙 حضور';
+  openModal('personModal');
+}
+function pmGive(rid) {
+  var r = getReasons(S.code).find(function(x){ return x.id === rid; });
+  var list = getPeople(S.code);
+  var p = list.find(function(x){ return x.id === curPerson; });
+  if (!r || !p) return;
+  p.points = (p.points||0) + r.points;
+  savePeople(S.code, list);
+  addHistory(S.code,'points', p.name + ' +' + r.points + ' (' + r.name + ')');
+  toast('✅ +' + faNum(r.points), 'success');
+  showSuccess();
+  closeModal('personModal');
+  renderManager();
+}
+function pmCustom() {
+  var v = parseFloat($('pmCustom').value);
+  if (isNaN(v) || v === 0) { toast('امتیاز معتبر','warning'); return; }
+  var list = getPeople(S.code);
+  var p = list.find(function(x){ return x.id === curPerson; });
+  if (!p) return;
+  p.points = Math.max(0, (p.points||0) + v);
+  savePeople(S.code, list);
+  addHistory(S.code,'points', p.name + ' ' + (v>0?'+':'') + v);
+  toast('✅ ثبت شد','success');
+  $('pmCustom').value = '';
+  closeModal('personModal');
+  renderManager();
+}
+function pmAtt() { toggleAtt(curPerson); closeModal('personModal'); }
+function pmDelete() {
+  twoTap($('pmDelete'), function() {
+    savePeople(S.code, getPeople(S.code).filter(function(x){ return x.id !== curPerson; }));
+    addHistory(S.code,'delete','حذف فرد');
+    toast('🗑 حذف شد','info');
+    closeModal('personModal');
+    renderManager();
+  });
+}
+
+function openPrayerModal(id) {
+  var p = getPeople(S.code).find(function(x){ return x.id === id; });
+  if (!p) return;
+  curPerson = id;
+  $('prName').textContent = p.name;
+  var prayers = [{n:'صبح',icon:'🌅'},{n:'ظهر',icon:'🌞'},{n:'مغرب',icon:'🌇'}];
+  var pray = getPray(S.code, todayStr());
+  $('prOptions').innerHTML = prayers.map(function(pr) {
+    var done = pray.indexOf(id + '|' + pr.n) >= 0;
+    return '<div class="list-item" data-action="prayer-give" data-id="'+id+'" data-prayer="'+pr.n+'" style="'+(done?'opacity:.5':'')+'"><div style="font-size:1.5em">'+pr.icon+'</div><div class="body"><div class="name">'+pr.n+'</div></div>'+(done?'<span class="badge badge-success">✓</span>':'<span class="badge badge-gold">+۱</span>')+'</div>';
+  }).join('');
+  openModal('prayerModal');
+}
+function registerPrayer(id, prayer) {
+  var key = todayStr();
+  var pray = getPray(S.code, key);
+  if (pray.indexOf(id + '|' + prayer) >= 0) { toast('قبلاً ثبت شده','warning'); return; }
+  pray.push(id + '|' + prayer);
+  savePray(S.code, key, pray);
+  var list = getPeople(S.code);
+  var p = list.find(function(x){ return x.id === id; });
+  if (p) { p.points = (p.points||0) + 1; savePeople(S.code, list); }
+  addHistory(S.code,'prayer', (p?p.name:'') + ' نماز ' + prayer);
+  showMotivational(p ? p.name : '', 'prayer');
+  toast('🕌 نماز ' + prayer + ' ثبت شد', 'success');
+  showSuccess();
+  closeModal('prayerModal');
+  renderManager();
+}
+
+function renderRewards() {
+  var rw = getRewards(S.code);
+  $('rwEmpty').classList.toggle('hidden', rw.length > 0);
+  $('rwList').innerHTML = rw.map(function(r) {
+    return '<div class="list-item"><div style="font-size:1.5em">'+r.icon+'</div><div class="body"><div class="name">'+esc(r.name)+'</div><div class="meta">'+faNum(r.pointsRequired)+' امتیاز</div></div><button class="btn btn-danger btn-sm" data-action="delete-reward" data-id="'+r.id+'">🗑</button></div>';
+  }).join('');
+}
+function addReward() {
+  var name = $('newRwName').value.trim();
+  var pts = parseInt($('newRwPts').value, 10);
+  var icon = $('newRwIcon').value;
+  if (!name || !pts) { toast('نام و امتیاز','warning'); return; }
+  var rw = getRewards(S.code);
+  rw.push({id:uid(), name:name, pointsRequired:pts, icon:icon});
+  saveRewards(S.code, rw);
+  $('newRwName').value = ''; $('newRwPts').value = '';
+  toast('✅','success');
+  renderManager();
+}
+function deleteReward(id) {
+  twoTap(event.currentTarget, function() {
+    saveRewards(S.code, getRewards(S.code).filter(function(x){ return x.id !== id; }));
+    toast('🗑','info');
+    renderManager();
+  });
+}
+function renderReasons() {
+  $('rsList').innerHTML = getReasons(S.code).map(function(r) {
+    return '<div class="list-item"><div class="body"><div class="name">'+esc(r.name)+'</div></div><div class="badge badge-gold">'+faNum(r.points)+' ⭐</div><button class="btn btn-danger btn-sm" data-action="delete-reason" data-id="'+r.id+'">🗑</button></div>';
+  }).join('');
+}
+function addReason() {
+  var name = $('newRsName').value.trim();
+  var pts = parseFloat($('newRsPts').value);
+  if (!name || isNaN(pts)) { toast('عنوان و امتیاز','warning'); return; }
+  var rs = getReasons(S.code);
+  rs.push({id:uid(), name:name, points:pts});
+  saveReasons(S.code, rs);
+  $('newRsName').value = ''; $('newRsPts').value = '';
+  toast('✅','success');
+  renderManager();
+}
+function deleteReason(id) {
+  twoTap(event.currentTarget, function() {
+    saveReasons(S.code, getReasons(S.code).filter(function(x){ return x.id !== id; }));
+    toast('🗑','info');
+    renderManager();
+  });
+}
+
+function renderAnns() {
+  $('annList').innerHTML = getAnns(S.code).filter(function(a){ return a.branch === S.branch; }).map(function(a) {
+    var exp = a.expireAt ? ' | انقضا: ' + new Date(a.expireAt).toLocaleDateString('fa-IR') : '';
+    return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📢 اطلاعیه</div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+exp+'</div></div><div class="ann-body">'+esc(a.text)+'</div><div class="ann-actions"><button class="btn btn-outline btn-sm" data-action="edit-ann" data-id="'+a.id+'">✏</button><button class="btn btn-danger btn-sm" data-action="delete-ann" data-id="'+a.id+'">🗑</button></div></div>';
+  }).join('');
+}
+function addAnn() {
+  var text = $('annText').value.trim();
+  if (!text) { toast('متن','warning'); return; }
+  var expH = parseInt($('annExp').value, 10) || 0;
+  var a = getAnns(S.code);
+  a.unshift({id:uid(), text:text, branch:S.branch, expireAt: expH>0?Date.now()+expH*3600000:0, time:new Date().toISOString()});
+  saveAnns(S.code, a);
+  addHistory(S.code,'ann','اطلاعیه: ' + text.substring(0,30));
+  toast('📢 منتشر شد','success');
   $('annText').value = '';
   showSuccess();
   renderManager(); updateTopBanner();
@@ -295,7 +1117,7 @@ function getTop(branch) {
   var top = null;
   getMosques().forEach(function(m) {
     getPeople(m.code).forEach(function(p) {
-      if (p.branch === branch) { if (!top  (p.points0) > (top.points||0)) top = p; }
+      if (p.branch === branch) { if (!top || (p.points||0) > (top.points||0)) top = p; }
     });
   });
   return top;
@@ -311,7 +1133,7 @@ function updateChampBanner() {
     var html = '<span class="trophy">🏆</span><span>';
     if (tb) html += 'برترین برادران: ' + esc(tb.name) + ' (' + faNum(tb.points||0) + ')';
     if (tb && tg) html += ' | ';
-if (tg) html += 'برترین خواهران: ' + esc(tg.name) + ' (' + faNum(tg.points||0) + ')';
+    if (tg) html += 'برترین خواهران: ' + esc(tg.name) + ' (' + faNum(tg.points||0) + ')';
     html += '</span>';
     el.innerHTML = html;
   } else {
@@ -326,7 +1148,7 @@ var topBannerInterval = null;
 function updateTopBanner() {
   var now = Date.now();
   var active = [];
-  getPubAnns().forEach(function(a) { if (!a.expireAt  a.expireAt > now) { if (a.target === 'همه'  a.target === S.branch) active.push({text:a.text, type:'public'}); } });
+  getPubAnns().forEach(function(a) { if (!a.expireAt || a.expireAt > now) { if (a.target === 'همه' || a.target === S.branch) active.push({text:a.text, type:'public'}); } });
   if (S.code) getAnns(S.code).forEach(function(a) { if (a.branch === S.branch && (!a.expireAt || a.expireAt > now)) active.push({text:a.text, type:'internal'}); });
   var banner = $('topBanner');
   if (!active.length) { banner.classList.add('hidden'); return; }
@@ -347,13 +1169,13 @@ function renderTeenHome() {
   $('teenPts').textContent = faNum(me.points||0);
   $('teenNights').textContent = faNum(me.nights||0);
   $('teenStreak').textContent = faNum(me.streak||0);
-  var sorted = getPeople(S.code).filter(function(x){ return x.branch === S.branch; }).slice().sort(function(a,b){ return (b.points0)-(a.points0); });
+  var sorted = getPeople(S.code).filter(function(x){ return x.branch === S.branch; }).slice().sort(function(a,b){ return (b.points||0)-(a.points||0); });
   var rank = 0;
   for (var i = 0; i < sorted.length; i++) if (sorted[i].id === S.personId) rank = i + 1;
   $('teenRank').textContent = rank ? faNum(rank) : '—';
   var rw = getRewards(S.code);
   var nr = null, got = null;
-  rw.forEach(function(r) { if ((me.points0) < r.pointsRequired && (!nr  r.pointsRequired < nr.pointsRequired)) nr = r; });
+  rw.forEach(function(r) { if ((me.points||0) < r.pointsRequired && (!nr || r.pointsRequired < nr.pointsRequired)) nr = r; });
   rw.forEach(function(r) { if ((me.points||0) >= r.pointsRequired) got = r; });
   if (nr) {
     var pct = Math.min(100, Math.round((me.points||0) / nr.pointsRequired * 100));
@@ -368,18 +1190,18 @@ function renderTeenHome() {
   updateMotivation();
 }
 function renderLeader() {
-  var sorted = getPeople(S.code).filter(function(x){ return x.branch === S.branch; }).slice().sort(function(a,b){ return (b.points0)-(a.points0); }).slice(0,10);
+  var sorted = getPeople(S.code).filter(function(x){ return x.branch === S.branch; }).slice().sort(function(a,b){ return (b.points||0)-(a.points||0); }).slice(0,10);
   $('leaderList').innerHTML = sorted.map(function(x, i) {
     var md = i === 0 ? '🥇' : (i === 2 ? '🥉' : faNum(i+1));
     var isMe = x.id === S.personId;
-    return '<div class="list-item" style="cursor:default;' + (isMe ? 'background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #e0c87a' : '') + '"><div class="avatar">' + md + '</div><div class="body"><div class="name">' + esc(x.name) + (isMe ? ' <span class="badge badge-gold">شما</span>' : '') + '</div><div class="meta">⭐ ' + faNum(x.points0) + ' | 🌙 ' + faNum(x.nights0) + '</div></div></div>';
+    return '<div class="list-item" style="cursor:default;' + (isMe ? 'background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #e0c87a' : '') + '"><div class="avatar">' + md + '</div><div class="body"><div class="name">' + esc(x.name) + (isMe ? ' <span class="badge badge-gold">شما</span>' : '') + '</div><div class="meta">⭐ ' + faNum(x.points||0) + ' | 🌙 ' + faNum(x.nights||0) + '</div></div></div>';
   }).join('');
 }
 function renderTeenAnns() {
   var now = Date.now();
   var list = [];
   getAnns(S.code).forEach(function(a) { if (a.branch === S.branch && (!a.expireAt || a.expireAt > now)) list.push({id:a.id, text:a.text, time:a.time, type:'internal'}); });
-getPubAnns().forEach(function(a) { if ((a.target === 'همه'  a.target === S.branch) && (!a.expireAt  a.expireAt > now)) list.push({id:a.id, text:a.text, time:a.time, type:'public'}); });
+  getPubAnns().forEach(function(a) { if ((a.target === 'همه' || a.target === S.branch) && (!a.expireAt || a.expireAt > now)) list.push({id:a.id, text:a.text, time:a.time, type:'public'}); });
   $('teenAnnEmpty').classList.toggle('hidden', list.length > 0);
   var readIds = LS.get('readAnn_' + S.code + '_' + S.personId, []);
   $('teenAnnList').innerHTML = list.map(function(a) {
@@ -599,7 +1421,7 @@ function updateDailyDhikr() {
   if (!el) return;
   el.style.opacity = '0';
   setTimeout(function(){ el.textContent = DAILY[dhikrIdx % DAILY.length]; el.style.opacity = '1'; }, 300);
-if (!dailyStarted) {
+  if (!dailyStarted) {
     dailyStarted = true;
     setInterval(function() {
       dhikrIdx++;
@@ -676,7 +1498,7 @@ document.addEventListener('click', function(e) {
   else if (a === 'pm-prayer') openPrayerModal(curPerson);
   else if (a === 'pm-delete') pmDelete();
   else if (a === 'prayer-give') registerPrayer(el.dataset.id, el.dataset.prayer);
-else if (a === 'toggle-att') toggleAtt(el.dataset.id);
+  else if (a === 'toggle-att') toggleAtt(el.dataset.id);
   else if (a === 'mark-all') markAll();
   else if (a === 'clear-att') clearAtt();
   else if (a === 'add-reward') addReward();
