@@ -1509,7 +1509,8 @@ function showAzanNotification(prayerName, mosqueName) {
     dir: 'rtl',
     lang: 'fa'
   };
-  try { new Notification(title, options); toast('🔔 اعلان نمایش داده شد','success'); return; } catch(e) {}
+   try { if (!$('azanScreen').classList.contains('show')) playAzanAudio(); } catch(e) {}
+  try { new Notification(title, options); toast('🔔 اعلان با صدا نمایش داده شد','success'); return; } catch(e) {}
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistration().then(function(reg) {
       if (reg) reg.showNotification(title, options);
