@@ -1476,6 +1476,61 @@ function logout() {
   toast('👋','info');
 }
 
+// ========== سیستم نوتیفیکیشن اذان ==========
+function askNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(function(perm) {
+      if (perm === 'granted') toast('✅ نوتیفیکیشن اذان فعال شد', 'success');
+    });
+  }
+}
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  }
+}
+function showAzanNotification(prayerName, mosqueName) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  var options = {
+    body: 'وقت ' + prayerName + ' در ' + mosqueName + ' فرا رسید 🕌',
+    icon: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
+    badge: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
+    tag: 'azan-' + prayerName,
+    vibrate: [200, 100, 200, 100, 200],
+    dir: 'rtl',
+    lang: 'fa'
+  };
+  if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+    navigator.serviceWorker.ready.then(function(reg) {
+      reg.showNotification('🕌 ' + prayerName, options);
+    });
+  } else {
+    try { new Notification('🕌 ' + prayerName, options); } catch(e){}
+  }
+}
+function checkAzanNotification() {
+  var now = new Date();
+  var cs = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  var checks = [{p:'Fajr', name:'اذان صبح', id:'fajr'},{p:'Dhuhr', name:'اذان ظهر', id:'dhuhr'},{p:'Maghrib', name:'اذان مغرب', id:'maghrib'}];
+  for (var i = 0; i < checks.length; i++) {
+    var c = checks[i];
+    var el = document.querySelector('[data-p="' + c.p + '"] .prayer-time');
+    if (el && el.textContent === cs) {
+      var key = now.toDateString() + '|notif|' + c.p;
+      if (LS.get('last_notif', '') !== key) {
+        LS.set('last_notif', key);
+        var should = true;
+        if (S.role === 'teen') { var s1 = LS.get('teen_' + S.code + '_' + S.personId, {}); should = s1.autoAzan !== false && s1[c.id] !== false; }
+        else if (S.role === 'public') { var s2 = LS.get('public_settings', {}); should = s2.autoAzan !== false && s2[c.id] !== false; }
+        else if (S.role === 'manager') { var s3 = LS.get('cfg_' + S.code, {}); should = s3.autoAzan !== false && s3[c.id] !== false; }
+        if (should) showAzanNotification(c.name, (S.mosque ? S.mosque.name : 'مسجد آقا منیر'));
+      }
+    }
+  }
+}
+// ========== پایان نوتیفیکیشن ==========
+
 document.addEventListener('click', function(e) {
   var el = e.target.closest ? e.target.closest('[data-action]') : null;
   if (!el) return;
@@ -1557,64 +1612,6 @@ function getRoleParam() {
 }
 
 function restoreSession() {
-// === سیستم نوتیفیکیشن اذان ===
-function askNotificationPermission() {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'default') {
-    Notification.requestPermission().then(function(perm) {
-      if (perm === 'granted') toast('✅ نوتیفیکیشن اذان فعال شد', 'success');
-    });
-  }
-}
-function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(function(){});
-  }
-}
-function showAzanNotification(prayerName, mosqueName) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  var options = {
-    body: 'وقت ' + prayerName + ' در ' + mosqueName + ' فرا رسید 🕌',
-    icon: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
-    badge: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
-    tag: 'azan-' + prayerName,
-    vibrate: [200, 100, 200, 100, 200],
-    dir: 'rtl',
-    lang: 'fa'
-  };
-  if (navigator.serviceWorker) {
-    navigator.serviceWorker.ready.then(function(reg) {
-      reg.showNotification('🕌 ' + prayerName, options);
-    });
-  } else {
-    new Notification('🕌 ' + prayerName, options);
-  }
-}
-function checkAzanNotification() {
-  var now = new Date();
-  var cs = pad(now.getHours()) + ':' + pad(now.getMinutes());
-  var checks = [{p:'Fajr', name:'اذان صبح', id:'fajr'},{p:'Dhuhr', name:'اذان ظهر', id:'dhuhr'},{p:'Maghrib', name:'اذان مغرب', id:'maghrib'}];
-  for (var i = 0; i < checks.length; i++) {
-    var c = checks[i];
-    var el = document.querySelector('[data-p="' + c.p + '"] .prayer-time');
-    if (el && el.textContent === cs) {
-      var key = now.toDateString() + '|notif|' + c.p;
-      if (LS.get('last_notif', '') !== key) {
-        LS.set('last_notif', key);
-        var should = true;
-        if (S.role === 'teen') { var s1 = LS.get('teen_' + S.code + '_' + S.personId, {}); should = s1.autoAzan !== false && s1[c.id] !== false; }
-        else if (S.role === 'public') { var s2 = LS.get('public_settings', {}); should = s2.autoAzan !== false && s2[c.id] !== false; }
-        else if (S.role === 'manager') { var s3 = LS.get('cfg_' + S.code, {}); should = s3.autoAzan !== false && s3[c.id] !== false; }
-        if (should) showAzanNotification(c.name, (S.mosque ? S.mosque.name : 'مسجد آقا منیر'));
-      }
-    }
-  }
-}
-registerServiceWorker();
-setTimeout(askNotificationPermission, 2000);
-setInterval(checkAzanNotification, 30000);
-// === پایان نوتیفیکیشن ===
-  
   var ses = LS.get('session', null);
   if (!ses) return false;
   S.branch = ses.branch || S.branch;
@@ -1632,15 +1629,20 @@ setInterval(checkAzanNotification, 30000);
 function boot() {
   setTimeout(function(){ $('splash').classList.add('hide'); }, 800);
   dhikrCount = LS.get('dhikr_count', 0);
-    S.branch = LS.get('session_branch', 'برادران');
+  S.branch = LS.get('session_branch', 'برادران');
   try { var bp = new URLSearchParams(location.search).get('branch'); if (bp === 'girls' || bp === 'خواهران') S.branch = 'خواهران'; if (bp === 'boys' || bp === 'برادران') S.branch = 'برادران'; } catch(e) {}
   setBranch(S.branch);
   renderDates();
   setInterval(renderDates, 600000);
   setInterval(checkAzanTime, 30000);
+  setInterval(checkAzanNotification, 30000);
   renderPrayerBar();
   loadPrayerTimes();
   setInterval(loadPrayerTimes, 3600000);
+
+  // فعال‌سازی نوتیفیکیشن
+  registerServiceWorker();
+  setTimeout(askNotificationPermission, 2000);
 
   var rp = getRoleParam();
   if (rp === 'teen') { setTimeout(function(){ goTo('teenLogin'); }, 900); return; }
