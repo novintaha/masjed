@@ -653,8 +653,7 @@ function fsGetPeople(code, cb) {
 }
 function fsSavePerson(code, p) {
   if (!fbDb) return;
-  fbDb.collection('mosques').doc(code).collection('people').doc(p.id).set(p, {merge:true})
-    .catch(function(err){ toast('❌ خطا در ذخیره: ' + err.message, 'danger'); });
+  fbDb.collection('mosques').doc(code).collection('people').doc(p.id).set(p, {merge:true});
 }
 function fsDeletePerson(code, id) {
   if (!fbDb) return;
@@ -843,11 +842,7 @@ function renderDuas(containerId) {
 var duaPlayers = {};
 function playDuaAudio(id, url) {
   var st = $('astatus-' + id);
-  if (!url) { 
-    if (st) st.textContent = '❌ صوت این دعا بارگذاری نشده';
-    toast('⚠️ فایل صوتی برای این دعا موجود نیست', 'warning');
-    return; 
-  }
+  if (!url) { if (st) st.textContent = '❌ صوت این دعا بارگذاری نشده'; return; }
   if (duaPlayers[id] && duaPlayers[id].ready) {
     duaPlayers[id].el.currentTime = 0;
     duaPlayers[id].el.play().catch(function(){});
@@ -866,7 +861,6 @@ function playDuaAudio(id, url) {
     el.play().catch(function(){ if (st) st.textContent = '▶ دکمه 🎧 را بزن'; });
   }).catch(function(){
     if (st) st.textContent = '❌ منبع صوت در دسترس نیست';
-    toast('⚠️ دانلود صوت ناموفق بود', 'danger');
   });
 }
 function setDuaSpeed(id, rate) {
@@ -876,44 +870,13 @@ function setDuaSpeed(id, rate) {
   }
 }
 
-function getMosqueName() {
-  return (S.mosque && S.mosque.name) ? S.mosque.name : 'مسجد';
-}
-function updateHeader() {
-  var title = getMosqueName();
-  var sub = '';
-  var chip = '';
-  if (S.role === 'manager') {
-    sub = 'سامانه هوشمند';
-    chip = '🕌 مدیر | کد: ' + (S.code || '---');
-  } else if (S.role === 'teen') {
-    sub = (S.branch || '') + ' | ' + (S.personName || 'کاربر');
-    chip = '🧒 ' + (S.personName || 'کاربر');
-  } else if (S.role === 'public') {
-    sub = 'بخش عمومی';
-    chip = '🌍 عمومی';
-  } else {
-    sub = 'سامانه هوشمند';
-    chip = '—';
-  }
-  $('hdrTitle').textContent = title;
-  $('hdrSub').textContent = sub;
-  $('hdrChip').textContent = chip;
-}
-
 function goTo(page) {
   ['pageStart','pageMgrAuth','pageTeenLogin','pageManager','pageTeen','pagePublic','pageSuperLogin','pageSuper'].forEach(function(p){ $(p).classList.add('hidden'); });
   $('sharedHeader').classList.add('hidden');
   var map = {start:'pageStart',mgrAuth:'pageMgrAuth',teenLogin:'pageTeenLogin',manager:'pageManager',teen:'pageTeen',publicHome:'pagePublic',superLogin:'pageSuperLogin',super:'pageSuper'};
   var el = $(map[page]);
   if (el) el.classList.remove('hidden');
-  if (['manager','teen','publicHome'].indexOf(page) >= 0) {
-    $('sharedHeader').classList.remove('hidden');
-    if (page === 'publicHome' && !S.mosque) {
-      S.mosque = { name: 'مسجد آقا منیر', code: 'PUBLIC' };
-    }
-    updateHeader();
-  }
+  if (['manager','teen','publicHome'].indexOf(page) >= 0) $('sharedHeader').classList.remove('hidden');
   if (page === 'mgrAuth' || page === 'teenLogin') {
     $('mgrBranchLabel').textContent = S.branch;
     $('teenBranchLabel').textContent = S.branch;
@@ -1032,7 +995,6 @@ async function mgrLogin() {
   }
 }
 
-// ********** تابع ساخت مسجد با بررسی تکراری (اصلاح‌شده) **********
 async function createMosque() {
   var btn = $('btnCreate');
   var name = $('setupName').value.trim();
@@ -1040,26 +1002,15 @@ async function createMosque() {
   var pin = $('setupPin').value.trim();
   var pin2 = $('setupPin2').value.trim();
   if (!name) { toast('نام مسجد را وارد کنید','warning'); return; }
-  if (!address) { toast('آدرس مسجد را وارد کنید','warning'); return; }
   if (pin.length < 6) { toast('رمز حداقل ۶ کاراکتر (الزام فایربیس)','warning'); return; }
   if (pin !== pin2) { toast('تکرار رمز یکسان نیست','warning'); return; }
-  btn.disabled = true; btn.textContent = '⏳ در حال بررسی...';
-  try {
-    var snap = await fbDb.collection('mosques')
-      .where('name', '==', name)
-      .where('address', '==', address)
-      .get();
-    if (!snap.empty) {
-      toast('⚠️ مسجدی با همین نام و آدرس قبلاً ثبت شده است.', 'danger');
-      btn.disabled = false; btn.textContent = '✅ ساخت مسجد';
-      return;
-    }
-  } catch(e) {
-    toast('❌ خطا در بررسی تکراری: ' + e.message, 'danger');
-    btn.disabled = false; btn.textContent = '✅ ساخت مسجد';
-    return;
-  }
-  btn.textContent = '⏳ در حال ساخت...';
+  
+  var dup = mosqueCache.find(function(m){
+    return (m.name||'').trim() === name && (m.address||'').trim() === address && m.branch === S.branch;
+  });
+  if (dup) { toast('⚠️ این مسجد قبلاً با همین نام و آدرس ثبت شده (کد: '+dup.code+')','warning'); return; }
+  
+  btn.disabled = true; btn.textContent = '⏳ در حال ساخت...';
   var code = 'M' + Math.floor(1000 + Math.random()*9000);
   var adminEmail = 'mosque-' + code.toLowerCase() + '@masjed.app';
   try {
@@ -1084,11 +1035,10 @@ async function createMosque() {
     showSuccess(); enterManager();
   } catch(e) {
     var msg = e.message || 'خطا';
-    if (e.code === 'auth/email-already-in-use') msg = 'این کد قبلاً استفاده شده، دوباره امتحان کن';
+    if (e.code === 'auth/email-already-in-use') msg = 'این کد قبلاً استفاده شده';
     toast('خطا: ' + msg, 'danger');
   } finally { btn.disabled = false; btn.textContent = '✅ ساخت مسجد'; }
 }
-// ************************************************
 
 function deleteMosque() {
   if (!S.code) return;
@@ -1217,18 +1167,24 @@ function superEnter(id) {
 }
 
 function enterManager() {
-  $('mgrCode').textContent = S.code || '---';
-  $('mgrBranchChip').textContent = S.branch || 'برادران';
-  $('addBranchLabel').textContent = S.branch || 'برادران';
-  $('listBranchLabel').textContent = S.branch || 'برادران';
-  $('attBranchLabel').textContent = S.branch || 'برادران';
-  $('annBranchLabel').textContent = S.branch || 'برادران';
+  $('hdrTitle').textContent = S.mosque.name;
+  $('hdrSub').textContent = 'سامانه هوشمند';
+  $('hdrChip').textContent = '🕌 مدیر | کد: ' + S.code;
+  $('mgrCode').textContent = S.code;
+  $('mgrBranchChip').textContent = S.branch;
+  $('addBranchLabel').textContent = S.branch;
+  $('listBranchLabel').textContent = S.branch;
+  $('attBranchLabel').textContent = S.branch;
+  $('annBranchLabel').textContent = S.branch;
   goTo('manager');
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderManager();
 }
 function enterTeen() {
-  $('teenCodeShow').textContent = S.personName || 'کاربر';
-  $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent('MASJID|' + (S.code||'') + '|' + (S.personName||''));
+  $('hdrTitle').textContent = S.mosque.name;
+  $('hdrSub').textContent = S.branch + ' | ' + S.personName;
+  $('hdrChip').textContent = '🧒 ' + S.personName;
+  $('teenCodeShow').textContent = S.personName;
+  $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent('MASJID|' + S.code + '|' + S.personName);
   goTo('teen');
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderTeenAll(); renderQuizStart();
   listenPersonNotifs();
@@ -1248,7 +1204,7 @@ function showTeenWelcome() {
         }
       });
       setTimeout(function(){
-        toast('🎉 خوش آمدی ' + (S.personName||'کاربر') + '! ⭐ ' + faNum(me.points||0) + ' امتیاز | 🌙 ' + faNum(me.nights||0) + ' شب | 🕌 نماز امروز: ' + faNum(fajr+dhuhr+maghrib), 'success');
+        toast('🎉 خوش آمدی ' + S.personName + '! ⭐ ' + faNum(me.points||0) + ' امتیاز | 🌙 ' + faNum(me.nights||0) + ' شب | 🕌 نماز امروز: ' + faNum(fajr+dhuhr+maghrib), 'success');
         showSuccess();
       }, 600);
     });
@@ -1773,22 +1729,13 @@ function savePublicSettings() {
   toast('✅','success');
 }
 
-// ********** اصلاح توابع مربوط به اذان (رفع قفل صدا + لینک جایگزین) **********
-var AZAN_SOURCES = [
-  'اذان.mp3',
-  'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'
-];
+var AZAN_SOUND = 'اذان.mp3';
+var AZAN_SOURCES = ['اذان.mp3', 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
 var azanUnlocked = false;
-
 function testAzan() {
   $('azanName').textContent = 'تست اذان';
   $('azanScreen').classList.add('show');
-  if (!azanUnlocked) {
-    toast('⚠️ برای پخش اذان، ابتدا دکمه ▶ را بزنید', 'warning');
-    $('btnPlayAzan').classList.remove('hidden');
-  } else {
-    playAzanAudio();
-  }
+  playAzanAudio();
 }
 function closeAzan() {
   $('azanScreen').classList.remove('show');
@@ -1797,16 +1744,12 @@ function closeAzan() {
   document.querySelectorAll('.prayer-item').forEach(function(e){ e.classList.remove('active'); });
 }
 function playAzanAudio() {
-  if (!azanUnlocked) {
-    $('btnPlayAzan').classList.remove('hidden');
-    toast('⚠️ برای پخش اذان، دکمه ▶ را بزنید', 'warning');
-    return;
-  }
   var volume = 80;
   if (S.role === 'teen') volume = $('teenVolume') ? parseInt($('teenVolume').value) : volume;
   else if (S.role === 'public') volume = $('pubVolume') ? parseInt($('pubVolume').value) : volume;
   var audio = $('azanAudio');
   audio.volume = (volume || 80) / 100;
+  azanUnlocked = true;
   $('btnPlayAzan').classList.add('hidden');
   var idx = 0;
   function tryNext() {
@@ -1852,8 +1795,6 @@ function checkAzanTime() {
     }
   }
 }
-// *************************************************************
-
 var qiblaBrng = 0, qiblaHandler = null;
 function qiblaBearing(lat, lon) {
   var toRad = function(x){ return x * Math.PI / 180; };
@@ -2206,29 +2147,21 @@ function restoreSession() {
   if (ses.role === 'manager' && ses.code) {
     fbDb.collection('mosques').doc(ses.code).get().then(function(doc){
       if (doc.exists && doc.data().status === 'active') {
-        S.code = ses.code;
-        S.mosque = doc.data();
-        S.role = 'manager';
-        setTimeout(enterManager, 500);
-      } else {
-        LS.set('session', null);
-        goTo('start');
-      }
+        S.code = ses.code; S.mosque = doc.data(); S.role = 'manager';
+        enterManager();
+      } else { LS.set('session', null); goTo('start'); }
     }).catch(function(){ goTo('start'); });
-    return 'manager';
+    return true;
   }
   if (ses.role === 'teen' && ses.code && ses.personId) {
     S.code = ses.code; S.personId = ses.personId; S.personName = ses.personName; S.role = 'teen';
     fbDb.collection('mosques').doc(ses.code).get().then(function(doc){
       if (doc.exists && doc.data().status === 'active') {
         S.mosque = doc.data();
-        setTimeout(enterTeen, 500);
-      } else {
-        LS.set('session', null);
-        goTo('start');
-      }
+        enterTeen();
+      } else { LS.set('session', null); goTo('start'); }
     }).catch(function(){ goTo('start'); });
-    return 'teen';
+    return true;
   }
   return false;
 }
@@ -2257,12 +2190,9 @@ function boot() {
   if (rp === 'super') { setTimeout(function(){ goTo('superLogin'); }, 900); return; }
 
   var restored = restoreSession();
-  if (restored === 'manager') setTimeout(enterManager, 900);
-  else if (restored === 'teen') setTimeout(enterTeen, 900);
-  else setTimeout(function(){ goTo('start'); }, 900);
+  if (!restored) setTimeout(function(){ goTo('start'); }, 900);
 }
 
-// رفع قفل صدا با یک کلیک کاربر
 document.addEventListener('click', function() {
   if (!azanUnlocked) {
     var a = $('azanAudio');
