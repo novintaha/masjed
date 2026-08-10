@@ -843,7 +843,11 @@ function renderDuas(containerId) {
 var duaPlayers = {};
 function playDuaAudio(id, url) {
   var st = $('astatus-' + id);
-  if (!url) { if (st) st.textContent = '❌ صوت این دعا بارگذاری نشده'; return; }
+  if (!url) { 
+    if (st) st.textContent = '❌ صوت این دعا بارگذاری نشده';
+    toast('⚠️ فایل صوتی برای این دعا موجود نیست', 'warning');
+    return; 
+  }
   if (duaPlayers[id] && duaPlayers[id].ready) {
     duaPlayers[id].el.currentTime = 0;
     duaPlayers[id].el.play().catch(function(){});
@@ -862,6 +866,7 @@ function playDuaAudio(id, url) {
     el.play().catch(function(){ if (st) st.textContent = '▶ دکمه 🎧 را بزن'; });
   }).catch(function(){
     if (st) st.textContent = '❌ منبع صوت در دسترس نیست';
+    toast('⚠️ دانلود صوت ناموفق بود', 'danger');
   });
 }
 function setDuaSpeed(id, rate) {
@@ -871,7 +876,6 @@ function setDuaSpeed(id, rate) {
   }
 }
 
-// ********** توابع جدید برای به‌روزرسانی هدر و مدیریت خطاهای null **********
 function getMosqueName() {
   return (S.mosque && S.mosque.name) ? S.mosque.name : 'مسجد';
 }
@@ -905,7 +909,6 @@ function goTo(page) {
   if (el) el.classList.remove('hidden');
   if (['manager','teen','publicHome'].indexOf(page) >= 0) {
     $('sharedHeader').classList.remove('hidden');
-    // مقداردهی پیش‌فرض برای public
     if (page === 'publicHome' && !S.mosque) {
       S.mosque = { name: 'مسجد آقا منیر', code: 'PUBLIC' };
     }
@@ -920,7 +923,6 @@ function goTo(page) {
   if (page === 'teen') renderDuas('teenDuaContainer');
   updateTopBanner(); updateChampBanner();
 }
-// *************************************************************
 
 function setBranch(b) {
   S.branch = b;
@@ -1030,7 +1032,7 @@ async function mgrLogin() {
   }
 }
 
-// ********** تابع ساخت مسجد با بررسی تکراری **********
+// ********** تابع ساخت مسجد با بررسی تکراری (اصلاح‌شده) **********
 async function createMosque() {
   var btn = $('btnCreate');
   var name = $('setupName').value.trim();
@@ -1042,7 +1044,6 @@ async function createMosque() {
   if (pin.length < 6) { toast('رمز حداقل ۶ کاراکتر (الزام فایربیس)','warning'); return; }
   if (pin !== pin2) { toast('تکرار رمز یکسان نیست','warning'); return; }
   btn.disabled = true; btn.textContent = '⏳ در حال بررسی...';
-  // بررسی تکراری بودن نام و آدرس
   try {
     var snap = await fbDb.collection('mosques')
       .where('name', '==', name)
@@ -1216,7 +1217,6 @@ function superEnter(id) {
 }
 
 function enterManager() {
-  // استفاده از updateHeader در goTo انجام می‌شود، اما برخی مقادیر خاص را هم تنظیم می‌کنیم
   $('mgrCode').textContent = S.code || '---';
   $('mgrBranchChip').textContent = S.branch || 'برادران';
   $('addBranchLabel').textContent = S.branch || 'برادران';
@@ -1227,7 +1227,6 @@ function enterManager() {
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderManager();
 }
 function enterTeen() {
-  // مقادیر اختصاصی نوجوان
   $('teenCodeShow').textContent = S.personName || 'کاربر';
   $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent('MASJID|' + (S.code||'') + '|' + (S.personName||''));
   goTo('teen');
@@ -1774,8 +1773,11 @@ function savePublicSettings() {
   toast('✅','success');
 }
 
-// ********** اصلاح توابع مربوط به اذان (رفع قفل صدا) **********
-var AZAN_SOURCES = ['اذان.mp3', 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
+// ********** اصلاح توابع مربوط به اذان (رفع قفل صدا + لینک جایگزین) **********
+var AZAN_SOURCES = [
+  'اذان.mp3',
+  'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'
+];
 var azanUnlocked = false;
 
 function testAzan() {
