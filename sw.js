@@ -1,17 +1,10 @@
-var CACHE = 'masjed-v47';
-var SHELL = ['./', './index.html', './duas-data.js'];
-var AZAN = ['https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
-var DUAS_AUDIO = [
-  'https://archive.org/download/ziyarat-ashura-ali-fani/Ziyarat%20Ashura.mp3',
-  'https://archive.org/download/dua-kumayl-ali-fani/Dua%20Kumayl.mp3'
-];
+var CACHE = 'masjed-v50';
+var SHELL = ['./', './index.html', './duas-data.js', './اذان.mp3'];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE).then(function(cache) {
-      var jobs = SHELL.map(function(u){ return cache.add(u).catch(function(){}); });
-      AZAN.forEach(function(u){ jobs.push(cache.add(u).catch(function(){})); });
-      DUAS_AUDIO.forEach(function(u){ jobs.push(cache.add(u).catch(function(){})); });
+      var jobs = SHELL.map(function(u){ return cache.add(u).catch(function(err){ console.log('cache fail:', u, err); }); });
       return Promise.all(jobs);
     }).then(function(){ return self.skipWaiting(); })
   );
@@ -29,11 +22,13 @@ self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   var url = e.request.url;
 
+  // فایل‌های Firebase و Google را عبور بده (کش نکن)
   if (url.indexOf('googleapis.com') !== -1 || url.indexOf('firebase') !== -1 ||
       url.indexOf('gstatic.com') !== -1) {
     return;
   }
 
+  // ناوبری: شبکه اول، سپس کش (آفلاین)
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request).then(function(res) {
@@ -45,8 +40,11 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  if (url.indexOf('archive.org') !== -1 || url.indexOf(self.location.origin) === 0 ||
-      url.indexOf('fonts.gstatic') !== -1 || url.indexOf('ibb.co') !== -1) {
+  // فایل‌های محلی + archive.org + فونت + ibb.co: کش اول، سپس شبکه + fallback
+  if (url.indexOf(self.location.origin) === 0 || 
+      url.indexOf('archive.org') !== -1 ||
+      url.indexOf('fonts.gstatic') !== -1 || 
+      url.indexOf('ibb.co') !== -1) {
     e.respondWith(
       caches.match(e.request).then(function(cached) {
         if (cached) return cached;
@@ -56,12 +54,15 @@ self.addEventListener('fetch', function(e) {
             caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
           }
           return res;
+        }).catch(function(){ 
+          return caches.match(e.request); 
         });
       })
     );
   }
 });
 
+// FCM پوش در پس‌زمینه
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 firebase.initializeApp({
