@@ -1,76 +1,67 @@
-// Service Worker مسجد - نسخه ۴۰
-// caching صوت اذان برای پخش آفلاین
-
-var CACHE_NAME = 'masjed-cache-v40';
-var AZAN_URLS = [
+var CACHE = 'masjed-v43';
+var SHELL = ['./', './index.html', './duas-data.js'];
+var AZAN = [
   'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3',
   'https://archive.org/download/adhan.notifications/Ahmed_al_Imadi_Adhan.mp3',
   'https://archive.org/download/adhan.notifications/Nasser_al_Qatami_Adhan.mp3'
 ];
 
-// نصب SW - precache کردن صوت اذان
-self.addEventListener('install', function(event) {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(AZAN_URLS).then(function() {
-        return self.skipWaiting();
-      }).catch(function(err) {
-        console.log('Cache failed:', err);
-        return self.skipWaiting();
-      });
-    })
+self.addEventListener('install', function(e) {
+  e.waitUntil(
+    caches.open(CACHE).then(function(cache) {
+      var jobs = SHELL.map(function(u){ return cache.add(u).catch(function(){}); });
+      AZAN.forEach(function(u){ jobs.push(cache.add(u).catch(function(){})); });
+      return Promise.all(jobs);
+    }).then(function(){ return self.skipWaiting(); })
   );
 });
 
-// فعال‌سازی SW
-self.addEventListener('activate', function(event) {
-  event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames.filter(function(cacheName) {
-          return cacheName !== CACHE_NAME;
-        }).map(function(cacheName) {
-          return caches.delete(cacheName);
-        })
-      );
-    }).then(function() {
-      return self.clients.claim();
-    })
+self.addEventListener('activate', function(e) {
+  e.waitUntil(
+    caches.keys().then(function(names) {
+      return Promise.all(names.filter(function(n){ return n !== CACHE; }).map(function(n){ return caches.delete(n); }));
+    }).then(function(){ return self.clients.claim(); })
   );
 });
 
-// Cache اول، سپس Network (برای صوت اذان و ادعیه)
-self.addEventListener('fetch', function(event) {
-  var url = event.request.url;
-  
-  // کش صوت اذان و صوت ادعیه
-  if (url.indexOf('archive.org') !== -1 || url.indexOf('adhan') !== -1) {
-    event.respondWith(
-      caches.match(event.request).then(function(cached) {
-        if (cached) return cached;
-        return fetch(event.request).then(function(response) {
-          if (!response || response.status !== 200) return response;
-          var responseClone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(event.request, responseClone);
-          });
-          return response;
-        });
+self.addEventListener('fetch', function(e) {
+  if (e.request.method !== 'GET') return;
+  var url = e.request.url;
+
+  // ناوبری (صفحه اصلی): اول شبکه، اگر نبود از کش (آفلاین کامل)
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(function(res) {
+        var clone = res.clone();
+        caches.open(CACHE).then(function(c){ c.put('./index.html', clone); });
+        return res;
+      }).catch(function() {
+        return caches.match('./index.html');
       })
     );
     return;
   }
-  
-  // FCM و فایل‌های محلی را عبور بده
-  if (url.indexOf('googleapis') !== -1 || url.indexOf('firebase') !== -1 || url.indexOf('fcm') !== -1) {
-    return;
+
+  // صوت اذان + فایل‌های خود سایت + فونت: اول کش (آفلاین)
+  if (url.indexOf('archive.org') !== -1 || url.indexOf(self.location.origin) === 0 || url.indexOf('fonts.gstatic') !== -1) {
+    e.respondWith(
+      caches.match(e.request).then(function(cached) {
+        if (cached) return cached;
+        return fetch(e.request).then(function(res) {
+          if (res && res.status === 200) {
+            var clone = res.clone();
+            caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
+          }
+          return res;
+        });
+      })
+    );
   }
 });
 
-// مدیریت پیام‌های FCM در پس‌زمینه
+// FCM پوش در پس‌زمینه
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
-
 firebase.initializeApp({
   apiKey: "AIzaSyDT0sQ_ZcT_Jl9_vvjgsgVojP_TCCLaEFM",
   authDomain: "masjed-a6505.firebaseapp.com",
@@ -79,19 +70,10 @@ firebase.initializeApp({
   messagingSenderId: "23821410712",
   appId: "1:23821410712:web:1789bb8cc4659377544bed"
 });
-
-var messaging = firebase.messaging();
-
-messaging.onBackgroundMessage(function(payload) {
+firebase.messaging().onBackgroundMessage(function(payload) {
   var n = payload.notification || {};
-  var title = n.title || '🕌 مسجد آقا منیر';
-  var options = {
-    body: n.body || '',
-    icon: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
-    badge: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
-    vibrate: [200, 100, 200, 100, 200],
-    dir: 'rtl',
-    lang: 'fa'
-  };
-  self.registration.showNotification(title, options);
+  self.registration.showNotification(n.title || '🕌 مسجد آقا منیر', {
+    body: n.body || '', icon: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
+    badge: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg', vibrate: [200,100,200,100,200], dir: 'rtl', lang: 'fa'
+  });
 });
