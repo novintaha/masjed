@@ -1,15 +1,14 @@
-var CACHE = 'masjed-v52';
-var SHELL = ['./', './index.html', './duas-data.js', './اذان.mp3'];
+var CACHE = 'masjed-v53';
+var SHELL = ['./', './index.html', './duas-data.js', './azan.mp3'];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE).then(function(cache) {
-      var jobs = SHELL.map(function(u){ return cache.add(u).catch(function(err){ console.log('cache fail:', u, err); }); });
+      var jobs = SHELL.map(function(u){ return cache.add(u).catch(function(){}); });
       return Promise.all(jobs);
     }).then(function(){ return self.skipWaiting(); })
   );
 });
-
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(names) {
@@ -17,16 +16,10 @@ self.addEventListener('activate', function(e) {
     }).then(function(){ return self.clients.claim(); })
   );
 });
-
 self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   var url = e.request.url;
-
-  if (url.indexOf('googleapis.com') !== -1 || url.indexOf('firebase') !== -1 ||
-      url.indexOf('gstatic.com') !== -1) {
-    return;
-  }
-
+  if (url.indexOf('googleapis.com') !== -1 || url.indexOf('firebase') !== -1 || url.indexOf('gstatic.com') !== -1) return;
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request).then(function(res) {
@@ -37,11 +30,8 @@ self.addEventListener('fetch', function(e) {
     );
     return;
   }
-
-  if (url.indexOf(self.location.origin) === 0 || 
-      url.indexOf('archive.org') !== -1 ||
-      url.indexOf('fonts.gstatic') !== -1 || 
-      url.indexOf('ibb.co') !== -1) {
+  if (url.indexOf(self.location.origin) === 0 || url.indexOf('archive.org') !== -1 ||
+      url.indexOf('fonts.gstatic') !== -1 || url.indexOf('ibb.co') !== -1) {
     e.respondWith(
       caches.match(e.request).then(function(cached) {
         if (cached) return cached;
@@ -51,14 +41,11 @@ self.addEventListener('fetch', function(e) {
             caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
           }
           return res;
-        }).catch(function(){ 
-          return caches.match(e.request); 
-        });
+        }).catch(function(){ return caches.match(e.request); });
       })
     );
   }
 });
-
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 firebase.initializeApp({
