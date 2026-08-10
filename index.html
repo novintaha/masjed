@@ -174,8 +174,6 @@ textarea{resize:vertical;min-height:70px}
 .dhikr-btn:active{transform:scale(.92)}
 .dhikr-btn.pulse{animation:pulse .4s}
 .dhikr-btn.success{background:radial-gradient(circle at 30% 30%,#c8963e,#8b6914);animation:glow 1s}
-
-/* استایل جدید برای ادعیه */
 .dua-item{background:#fdf8f0;border-radius:12px;margin-bottom:10px;overflow:hidden;border:1px solid #e8dcc8}
 .dua-item[open]{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .dua-item.dua-important{background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #c8963e}
@@ -185,11 +183,11 @@ textarea{resize:vertical;min-height:70px}
 .dua-item summary::after{content:'▼';font-size:.8em;transition:transform .3s;color:#888}
 .dua-item.dua-important summary::after{color:#fff}
 .dua-item[open] summary::after{transform:rotate(180deg)}
-.dua-content{padding:16px;border-top:1px solid #f0e8d5;font-size:1.4em;line-height:2.2;color:#2c1810;text-align:right;font-weight:500}
+.dua-content{padding:16px;border-top:1px solid #f0e8d5;font-size:1.8em;line-height:2.4;color:#2c1810;text-align:right;font-weight:600}
 .dua-content p{margin-bottom:14px}
 .dua-content .verse{background:#f5ecd7;padding:10px 14px;border-radius:8px;margin:10px 0;border-right:3px solid #c8963e}
-.dua-audio{margin:10px 0;width:100%}
-
+.dua-audio-box{margin:12px 0;padding:12px;background:#f5ecd7;border-radius:12px;border:1px dashed #c8963e}
+.speed-btns{display:inline-flex;gap:4px;margin-right:8px}
 .empty{padding:30px 20px;text-align:center;color:#888;font-size:.88em}
 .empty-icon{font-size:3em;margin-bottom:10px;opacity:.4}
 .footer{text-align:center;padding:16px;margin-top:20px;border-top:2px solid #e8dcc8;font-size:.75em;color:#5c4030}
@@ -220,8 +218,6 @@ textarea{resize:vertical;min-height:70px}
 .fw-700{font-weight:700}.fw-800{font-weight:800}.full-w{width:100%}
 .mt-2{margin-top:8px}.mt-3{margin-top:12px}.mb-2{margin-bottom:8px}.mb-3{margin-bottom:12px}
 .flex{display:flex}.gap-2{gap:8px}
-
-/* استایل جدید برای ذکر روز */
 .daily-dhikr-card{background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff;border-radius:20px;padding:24px;text-align:center;margin-bottom:16px;box-shadow:0 8px 24px rgba(26,107,74,.3);position:relative;overflow:hidden}
 .daily-dhikr-card::before{content:'';position:absolute;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(224,200,122,.15),transparent);animation:float 4s infinite}
 .daily-dhikr-label{font-size:.85em;color:#e0c87a;margin-bottom:8px;font-weight:600}
@@ -229,8 +225,7 @@ textarea{resize:vertical;min-height:70px}
 .daily-dhikr-arabic{font-size:2em;font-weight:800;line-height:1.6;margin-bottom:8px;text-shadow:0 2px 4px rgba(0,0,0,.3)}
 .daily-dhikr-fa{font-size:1.1em;color:#e0c87a;margin-bottom:12px}
 .daily-dhikr-count{font-size:.85em;opacity:.8}
-
-@media(max-width:480px){.hdr h1{font-size:1.2em}.stat-value{font-size:1.3em}.qibla-compass{width:220px;height:220px}.dhikr-count{font-size:3em}.dhikr-btn{width:130px;height:130px}.dua-content{font-size:1.25em}}
+@media(max-width:480px){.hdr h1{font-size:1.2em}.stat-value{font-size:1.3em}.qibla-compass{width:220px;height:220px}.dhikr-count{font-size:3em}.dhikr-btn{width:130px;height:130px}.dua-content{font-size:1.6em}}
 </style>
 </head>
 <body>
@@ -268,7 +263,7 @@ textarea{resize:vertical;min-height:70px}
   <input type="text" id="mgrSearch" data-input="mgr-search" placeholder="🔍 بخشی از نام مسجد...">
   <div id="mgrPinBox" class="hidden mt-3">
     <div class="selected-mosque" id="mgrSelectedMosque"></div>
-    <input type="password" id="mgrPin" placeholder="🔐 رمز مدیر" inputmode="numeric" style="margin-bottom:10px">
+    <input type="password" id="mgrPin" placeholder="🔐 رمز مدیر (حداقل ۶ کاراکتر)" inputmode="numeric" style="margin-bottom:10px">
     <button class="btn btn-primary btn-xl" data-action="mgr-login">🔓 ورود</button>
     <button class="btn btn-danger full-w mt-2" data-action="delete-mosque" id="btnDeleteMosque">🗑 حذف این مسجد</button>
   </div>
@@ -276,7 +271,7 @@ textarea{resize:vertical;min-height:70px}
   <h3 style="color:#0f3d2a;margin-bottom:10px">✨ ساخت مسجد جدید</h3>
   <input type="text" id="setupName" placeholder="نام مسجد (مثلاً: منیر)" style="margin-bottom:10px">
   <input type="text" id="setupAddress" placeholder="📍 آدرس مسجد" style="margin-bottom:10px">
-  <input type="password" id="setupPin" placeholder="🔑 ایجاد رمز عبور (حداقل ۴ رقم)" inputmode="numeric" style="margin-bottom:10px">
+  <input type="password" id="setupPin" placeholder="🔑 رمز عبور (حداقل ۶ کاراکتر)" inputmode="numeric" style="margin-bottom:10px">
   <input type="password" id="setupPin2" placeholder="🔁 تکرار رمز عبور" inputmode="numeric" style="margin-bottom:14px">
   <button class="btn btn-success btn-xl" id="btnCreate" data-action="create-mosque">✅ ساخت مسجد</button>
 </div>
@@ -291,6 +286,32 @@ textarea{resize:vertical;min-height:70px}
   <input type="text" id="teenPw" placeholder="رمز: نام + عدد ابجد (مثلاً: محمد 92)" style="margin-bottom:8px">
   <div class="text-xs text-muted mb-2">💡 رمز = نام شما + عدد ابجد آن</div>
   <button class="btn btn-primary btn-xl" data-action="teen-login">🔓 ورود</button>
+</div>
+</div>
+
+<div id="pageSuperLogin" class="hidden">
+<div class="start-box">
+  <button class="btn btn-ghost" data-action="go" data-page="start" style="margin-bottom:14px">→ بازگشت</button>
+  <h2 style="color:#0f3d2a;margin-bottom:8px">👑 ورود سوپرادمین</h2>
+  <p class="text-muted mb-3">دسترسی کامل مدیر سیستم</p>
+  <input type="email" id="superEmail" placeholder="📧 ایمیل" style="margin-bottom:10px">
+  <input type="password" id="superPass" placeholder="🔐 رمز عبور" style="margin-bottom:10px">
+  <button class="btn btn-primary btn-xl" data-action="super-login">🔓 ورود</button>
+</div>
+</div>
+
+<div id="pageSuper" class="hidden">
+<div class="card" style="padding:12px">
+  <div class="flex gap-2" style="align-items:center">
+    <span class="fw-800">👑 پنل سوپرادمین</span>
+    <span style="flex:1"></span>
+    <button class="btn btn-outline btn-sm" data-action="logout">🚪 خروج</button>
+  </div>
+</div>
+<div class="card"><h3>📊 آمار کل سیستم</h3><div id="superStats" class="text-sm"></div></div>
+<div class="card"><h3>🕌 همه مساجد (قطع / فعال / حذف)</h3>
+  <input type="text" id="superSearch" data-input="super-search" placeholder="🔍 جستجوی نام یا کد مسجد..." style="margin-bottom:10px">
+  <div id="superList"></div>
 </div>
 </div>
 
@@ -375,7 +396,6 @@ textarea{resize:vertical;min-height:70px}
 </div>
 <div class="panel" id="mgr-cfg">
   <div class="card"><h3>🔊 تنظیمات اذان</h3>
-    <div class="setting-row"><label>🎵 موذن</label><select id="cfgMuezzin" data-change="save-config"><option value="afasy">مشاری العفاسی</option><option value="imadi">احمد العمادی</option><option value="qatami">ناصر القطامی</option></select></div>
     <div class="setting-row"><label>🔔 پخش خودکار</label><span class="switch"><input type="checkbox" id="cfgAutoAzan" checked data-change="save-config"><span class="slider"></span></span></div>
     <div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="cfgFajr" checked data-change="save-config"><span class="slider"></span></span></div>
     <div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="cfgDhuhr" checked data-change="save-config"><span class="slider"></span></span></div>
@@ -398,6 +418,13 @@ textarea{resize:vertical;min-height:70px}
   <div class="stat-card"><div class="stat-value" id="teenNights">۰</div><div class="stat-label">🌙 شب</div></div>
   <div class="stat-card"><div class="stat-value" id="teenStreak">۰</div><div class="stat-label">🔥 متوالی</div></div>
   <div class="stat-card"><div class="stat-value" id="teenRank">—</div><div class="stat-label">🏅 رتبه</div></div>
+</div>
+<div class="card"><h3>🕌 نمازهای ثبت‌شده من</h3>
+  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card"><div class="stat-value" id="teenFajrC">۰</div><div class="stat-label">🌅 صبح</div></div>
+    <div class="stat-card"><div class="stat-value" id="teenDhuhrC">۰</div><div class="stat-label">🌞 ظهر</div></div>
+    <div class="stat-card"><div class="stat-value" id="teenMaghribC">۰</div><div class="stat-label">🌇 مغرب</div></div>
+  </div>
 </div>
 <div id="teenMotivation" class="motivation"></div>
 <div class="reward-card">
@@ -433,7 +460,6 @@ textarea{resize:vertical;min-height:70px}
 <div class="panel" id="teen-settings">
   <div class="card"><h3>🔊 تنظیمات اذان‌گو</h3>
     <div class="setting-row"><label>🔔 اذان‌گوی خودکار</label><span class="switch"><input type="checkbox" id="teenAutoAzan" checked data-change="save-teen"><span class="slider"></span></span></div>
-    <div class="setting-row"><label>🎵 موذن</label><select id="teenMuezzin" data-change="save-teen"><option value="afasy">مشاری العفاسی</option><option value="imadi">احمد العمادی</option><option value="qatami">ناصر القطامی</option></select></div>
     <div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="teenFajr" checked data-change="save-teen"><span class="slider"></span></span></div>
     <div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="teenDhuhr" checked data-change="save-teen"><span class="slider"></span></span></div>
     <div class="setting-row"><label>🌇 مغرب</label><span class="switch"><input type="checkbox" id="teenMaghrib" checked data-change="save-teen"><span class="slider"></span></span></div>
@@ -480,7 +506,6 @@ textarea{resize:vertical;min-height:70px}
   <div class="section-divider"></div>
   <div class="card"><h3>🔊 تنظیمات اذان‌گو</h3>
     <div class="setting-row"><label>🔔 اذان‌گوی خودکار</label><span class="switch"><input type="checkbox" id="pubAutoAzan" checked data-change="save-public"><span class="slider"></span></span></div>
-    <div class="setting-row"><label>🎵 موذن</label><select id="pubMuezzin" data-change="save-public"><option value="afasy">مشاری العفاسی</option><option value="imadi">احمد العمادی</option><option value="qatami">ناصر القطامی</option></select></div>
     <div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="pubFajr" checked data-change="save-public"><span class="slider"></span></span></div>
     <div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="pubDhuhr" checked data-change="save-public"><span class="slider"></span></span></div>
     <div class="setting-row"><label>🌇 مغرب</label><span class="switch"><input type="checkbox" id="pubMaghrib" checked data-change="save-public"><span class="slider"></span></span></div>
@@ -502,6 +527,7 @@ textarea{resize:vertical;min-height:70px}
 <div class="footer">
   <p>📞 <span class="phone">09909936883</span></p>
   <p style="margin-top:4px">🕌 مسجد آقا منیر | طراح: محمد وزیری</p>
+  <p style="margin-top:6px"><button class="btn btn-ghost btn-sm" data-action="go" data-page="superLogin">👑 ورود سوپرادمین</button></p>
 </div>
 
 <div class="modal-bg" id="personModal"><div class="modal">
@@ -516,6 +542,7 @@ textarea{resize:vertical;min-height:70px}
   <div class="flex gap-2" style="flex-wrap:wrap">
     <button class="btn btn-gold btn-sm" data-action="pm-prayer">🕌 نماز</button>
     <button class="btn btn-outline btn-sm" id="pmAttBtn" data-action="pm-att">🌙 حضور</button>
+    <button class="btn btn-warning btn-sm" data-action="pm-reset">🔄 صفر کردن امتیاز</button>
     <button class="btn btn-danger btn-sm" id="pmDelete" data-action="pm-delete">🗑 حذف</button>
   </div>
 </div></div>
@@ -550,6 +577,7 @@ textarea{resize:vertical;min-height:70px}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<script src="duas-data.js"></script>
 
 <script>
 'use strict';
@@ -598,7 +626,6 @@ function twoTap(btn, fn) {
   else { btn.dataset.orig=btn.innerHTML; btn.dataset.armed='1'; btn.classList.add('armed'); btn.innerHTML='⚠️ تأیید؟'; setTimeout(function(){ if(btn.dataset.armed==='1'){btn.dataset.armed='';btn.classList.remove('armed');btn.innerHTML=btn.dataset.orig;} },2600); }
 }
 
-// ========== اتصال به فایربیس ==========
 var SUPER_UID = 'GjleuLj5u6eI6V6zCR0y4Eb5cj03';
 var fbApp = null, fbDb = null;
 try {
@@ -614,7 +641,6 @@ try {
   fbDb.enablePersistence({ synchronizeTabs: true }).catch(function(e){ console.log('offline:', e.code); });
 } catch(e) { console.log('Firebase init:', e); }
 
-// ========== توابع خواندن از Firestore ==========
 function fsGetPeople(code, cb) {
   if (!fbDb) { cb([]); return; }
   fbDb.collection('mosques').doc(code).collection('people').onSnapshot(function(snap) {
@@ -732,7 +758,6 @@ function fsAddHistory(code, type, text) {
   });
 }
 
-// ========== ذکر روز بر اساس هفته ==========
 var DAILY_DHIKR = {
   0: {day: 'یکشنبه', fa: 'یا الله', ar: 'یَا اللهُ', count: 100, desc: 'ذکر روز یکشنبه - نام اعظم خداوند'},
   1: {day: 'دوشنبه', fa: 'یا رسول الله', ar: 'یَا رَسُولَ اللهِ', count: 100, desc: 'ذکر روز دوشنبه - صلوات بر پیامبر اکرم (ص)'},
@@ -760,198 +785,56 @@ function renderDailyDhikr() {
     '<div class="daily-dhikr-count">📿 ' + faNum(dh.count) + ' مرتبه | ' + dh.desc + '</div>';
 }
 
-// ========== ادعیه کامل ==========
 var DUAS = [
-  {
-    id: 'ashura', title: 'زیارت عاشورا', icon: '📜', important: true,
-    audio: 'https://archive.org/download/ZiyaratAshura/Ashura.mp3',
-    text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا أَبَا عَبْدِ اللَّهِ، السَّلَامُ عَلَيْكَ يَا ابْنَ رَسُولِ اللَّهِ، السَّلَامُ عَلَيْكَ يَا ابْنَ أَمِيرِ الْمُؤْمِنِينَ وَابْنَ سَيِّدِ الْوَصِيِّينَ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا ابْنَ فَاطِمَةَ سَيِّدَةِ نِسَاءِ الْعَالَمِينَ، السَّلَامُ عَلَيْكَ يَا ثَارَ اللَّهِ وَابْنَ ثَارِهِ وَالْوِتْرَ الْمَوْتُورَ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ وَعَلَى الْأَرْوَاحِ الَّتِي حَلَّتْ بِفِنَائِكَ، عَلَيْكُمْ مِنِّي جَمِيعًا سَلَامُ اللَّهِ أَبَدًا مَا بَقِيتُ وَبَقِيَ اللَّيْلُ وَالنَّهَارُ</p>' +
-      '<p>يَا أَبَا عَبْدِ اللَّهِ لَقَدْ عَظُمَتِ الرَّزِيَّةُ وَجَلَّتْ وَعَظُمَتِ الْمُصِيبَةُ بِكَ عَلَيْنَا وَعَلَى جَمِيعِ أَهْلِ الْإِسْلَامِ</p>' +
-      '<p>وَجَلَّتْ وَعَظُمَتْ مُصِيبَتُكَ فِي السَّمَاوَاتِ عَلَى جَمِيعِ أَهْلِ السَّمَاوَاتِ</p>' +
-      '<p>فَلَعَنَ اللَّهُ أُمَّةً أَسَّسَتْ أَسَاسَ الظُّلْمِ وَالْجَوْرِ عَلَيْكُمْ أَهْلَ الْبَيْتِ</p>' +
-      '<p>وَلَعَنَ اللَّهُ أُمَّةً دَفَعَتْكُمْ عَنْ مَقَامِكُمْ وَأَزَالَتْكُمْ عَنْ مَرَاتِبِكُمُ الَّتِي رَتَّبَكُمُ اللَّهُ فِيهَا</p>' +
-      '<p>وَلَعَنَ اللَّهُ أُمَّةً قَتَلَتْكُمْ وَلَعَنَ اللَّهُ الْمُمَهِّدِينَ لَهُمْ بِالتَّمْكِينِ مِنْ قِتَالِكُمْ</p>' +
-      '<div class="verse">أَشْهَدُ أَنَّكَ كُنْتَ نُورًا فِي الْأَصْلَابِ الشَّامِخَةِ وَالْأَرْحَامِ الْمُطَهَّرَةِ</div>'
-  },
-  {
-    id: 'alqama', title: 'زیارت علقمه', icon: '📖', important: true,
-    text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا وَلِيَّ اللَّهِ، السَّلَامُ عَلَيْكَ يَا حُجَّةَ اللَّهِ، السَّلَامُ عَلَيْكَ يَا صَفِيَّ اللَّهِ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا خَازِنَ عِلْمِ اللَّهِ، السَّلَامُ عَلَيْكَ يَا مَوْضِعَ سِرِّ اللَّهِ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا أَبَا عَبْدِ اللَّهِ، السَّلَامُ عَلَيْكَ يَا بْنَ رَسُولِ اللَّهِ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا بْنَ أَمِيرِ الْمُؤْمِنِينَ وَابْنَ سَيِّدِ الْوَصِيِّينَ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا بْنَ فَاطِمَةَ سَيِّدَةِ نِسَاءِ الْعَالَمِينَ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا ثَارَ اللَّهِ وَابْنَ ثَارِهِ وَالْوِتْرَ الْمَوْتُورَ</p>' +
-      '<p>أَشْهَدُ أَنَّكَ قَدْ أَقَمْتَ الصَّلَاةَ وَآتَيْتَ الزَّكَاةَ وَأَمَرْتَ بِالْمَعْرُوفِ وَنَهَيْتَ عَنِ الْمُنْكَرِ</p>' +
-      '<p>وَأَطَعْتَ اللَّهَ وَرَسُولَهُ حَتَّى أَتَاكَ الْيَقِينُ</p>' +
-      '<p>فَلَعَنَ اللَّهُ أُمَّةً قَتَلَتْكَ وَلَعَنَ اللَّهُ أُمَّةً ظَلَمَتْكَ</p>'
-  },
-  {
-    id: 'alyasin', title: 'زیارت آل یاسین', icon: '🌟', important: true,
-    text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div>' +
-      '<p>سَلَامُ اللَّهِ وَسَلَامُ مَلَائِكَتِهِ الْمُقَرَّبِينَ وَأَنْبِيَائِهِ الْمُرْسَلِينَ وَعِبَادِهِ الصَّالِحِينَ</p>' +
-      '<p>وَجَمِيعِ مَا خَلَقَ وَجَنِّهِ وَإِنْسِهِ وَشَرْقِهِ وَغَرْبِهِ وَبَرِّهِ وَبَحْرِهِ</p>' +
-      '<p>عَلَى أَبِي الصَّالِحِينَ وَصَاحِبِ الزَّمَانِ وَالْقَائِمِ بِالْحَقِّ وَالْهَادِي إِلَيْهِ</p>' +
-      '<p>الْمُهْتَدِي بِهِ الْبَاقِي بَعْدَهُ بَقِيَّةِ اللَّهِ مِنْ آلِ طٰهٰ وَيٰس</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا آلَ يٰس، السَّلَامُ عَلَيْكَ يَا دَاعِيَ اللَّهِ وَرَبَّ آيَاتِهِ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا بَابَ اللَّهِ وَدَلِيلَهُ، السَّلَامُ عَلَيْكَ يَا حُجَّةَ اللَّهِ وَنُورَهُ</p>' +
-      '<p>أَشْهَدُ أَنَّكَ أَقَمْتَ الصَّلَاةَ وَآتَيْتَ الزَّكَاةَ وَأَمَرْتَ بِالْمَعْرُوفِ وَنَهَيْتَ عَنِ الْمُنْكَرِ</p>' +
-      '<p>وَأَطَعْتَ اللَّهَ وَرَسُولَهُ حَتَّى أَتَاكَ الْيَقِينُ</p>' +
-      '<p>اللَّهُمَّ إِنِّي أُشْهِدُكَ أَنَّهُ إِمَامِي وَحُجَّتِي وَقَائِدِي إِلَى اللَّهِ</p>'
-  },
-  {
-    id: 'fatimah', title: 'زیارت حضرت زهرا (س)', icon: '🌹', important: true,
-    text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div>' +
-      '<p>السَّلَامُ عَلَيْكِ يَا بِنْتَ رَسُولِ اللَّهِ، السَّلَامُ عَلَيْكِ يَا بِنْتَ نَبِيِّ اللَّهِ</p>' +
-      '<p>السَّلَامُ عَلَيْكِ يَا بِنْتَ حَبِيبِ اللَّهِ، السَّلَامُ عَلَيْكِ يَا بِنْتَ خَلِيلِ اللَّهِ</p>' +
-      '<p>السَّلَامُ عَلَيْكِ يَا بِنْتَ صَفِيِّ اللَّهِ، السَّلَامُ عَلَيْكِ يَا بِنْتَ أَمِينِ اللَّهِ</p>' +
-      '<p>السَّلَامُ عَلَيْكِ يَا بِنْتَ خَيْرِ الْخَلْقِ أَجْمَعِينَ</p>' +
-      '<p>السَّلَامُ عَلَيْكِ يَا أُمَّ الْحَسَنِ وَالْحُسَيْنِ سَيِّدَيْ شَبَابِ أَهْلِ الْجَنَّةِ</p>' +
-      '<p>السَّلَامُ عَلَيْكِ أَيَّتُهَا الصِّدِّيقَةُ الشَّهِيدَةُ</p>' +
-      '<p>السَّلَامُ عَلَيْكِ يَا سَيِّدَةَ نِسَاءِ الْعَالَمِينَ مِنَ الْأَوَّلِينَ وَالْآخِرِينَ</p>' +
-      '<p>السَّلَامُ عَلَيْكِ يَا زَوْجَةَ وَلِيِّ اللَّهِ وَأُمَّ سِبْطَيِ الرَّحْمَةِ</p>' +
-      '<p>اللَّهُمَّ صَلِّ عَلَى فَاطِمَةَ بِنْتِ نَبِيِّكَ وَأُمِّ وَلَدَيْكَ وَزَوْجَةِ وَلِيِّكَ</p>'
-  },
-  {
-    id: 'kumayl', title: 'دعای کمیل', icon: '🌙', important: true,
-    text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div>' +
-      '<p>اللَّهُمَّ إِنِّي أَسْأَلُكَ بِرَحْمَتِكَ الَّتِي وَسِعَتْ كُلَّ شَيْءٍ</p>' +
-      '<p>وَبِقُوَّتِكَ الَّتِي قَهَرْتَ بِهَا كُلَّ شَيْءٍ وَخَضَعَ لَهَا كُلُّ شَيْءٍ وَذَلَّ لَهَا كُلُّ شَيْءٍ</p>' +
-      '<p>وَبِجَبَرُوتِكَ الَّتِي غَلَبْتَ بِهَا كُلَّ شَيْءٍ</p>' +
-      '<p>وَبِعِزَّتِكَ الَّتِي لَا يَقُومُ لَهَا شَيْءٌ</p>' +
-      '<p>وَبِعَظَمَتِكَ الَّتِي مَلَأَتْ كُلَّ شَيْءٍ</p>' +
-      '<p>وَبِسُلْطَانِكَ الَّذِي عَلَا كُلَّ شَيْءٍ</p>' +
-      '<p>وَبِوَجْهِكَ الْبَاقِي بَعْدَ فَنَاءِ كُلِّ شَيْءٍ</p>' +
-      '<p>وَبِأَسْمَائِكَ الَّتِي مَلَأَتْ أَرْكَانَ كُلِّ شَيْءٍ</p>' +
-      '<p>وَبِعِلْمِكَ الَّذِي يُحِيطُ بِكُلِّ شَيْءٍ</p>' +
-      '<p>وَبِنُورِ وَجْهِكَ الَّذِي أَضَاءَ لَهُ كُلُّ شَيْءٍ</p>' +
-      '<p>يَا نُورُ يَا قُدُّوسُ، يَا أَوَّلَ الْأَوَّلِينَ وَيَا آخِرَ الْآخِرِينَ</p>' +
-      '<p>اللَّهُمَّ اغْفِرْ لِيَ الذُّنُوبَ الَّتِي تَهْتِكُ الْعِصَمَ</p>' +
-      '<p>اللَّهُمَّ اغْفِرْ لِيَ الذُّنُوبَ الَّتِي تُنْزِلُ النِّقَمَ</p>' +
-      '<p>اللَّهُمَّ اغْفِرْ لِيَ الذُّنُوبَ الَّتِي تُغَيِّرُ النِّعَمَ</p>' +
-      '<p>اللَّهُمَّ اغْفِرْ لِيَ الذُّنُوبَ الَّتِي تُورِثُ النَّدَمَ</p>'
-  },
-  {
-    id: 'kisa', title: 'حدیث کسا', icon: '🕋', important: true,
-    text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div>' +
-      '<p>قَالَتْ فَاطِمَةُ عَلَيْهَا السَّلَامُ: دَخَلَ عَلَيَّ أَبِي رَسُولُ اللَّهِ صَلَّى اللهُ عَلَيْهِ وَآلِهِ فِي بَعْضِ الْأَيَّامِ</p>' +
-      '<p>فَقَالَ: السَّلَامُ عَلَيْكِ يَا فَاطِمَةُ. فَقُلْتُ: وَعَلَيْكَ السَّلَامُ يَا أَبَتَاهُ وَرَسُولَ اللَّهِ</p>' +
-      '<p>ثُمَّ قَالَ: إِنِّي أَجِدُ فِي بَدَنِي ضَعْفًا. فَقُلْتُ لَهُ: أُعِيذُكَ بِاللَّهِ يَا أَبَتَاهُ مِنَ الضَّعْفِ</p>' +
-      '<p>فَقَالَ: يَا فَاطِمَةُ ائْتِينِي بِالْكِسَاءِ الْيَمَانِيِّ فَغَطِّنِي بِهِ</p>' +
-      '<p>فَأَتَيْتُهُ بِالْكِسَاءِ الْيَمَانِيِّ فَغَطَّيْتُهُ بِهِ، وَصِرْتُ أَنْظُرُ إِلَيْهِ</p>' +
-      '<p>وَإِذَا وَجْهُهُ يَتَلَأْلَأُ كَأَنَّهُ الْبَدْرُ فِي لَيْلَةِ تَمَامِهِ</p>' +
-      '<p>فَمَا كَانَتْ إِلَّا سَاعَةً وَإِذَا بِوَلَدِيَ الْحَسَنِ قَدْ أَقْبَلَ وَقَالَ: السَّلَامُ عَلَيْكِ يَا أُمَّاهُ</p>' +
-      '<p>فَقُلْتُ: وَعَلَيْكَ السَّلَامُ يَا قُرَّةَ عَيْنِي وَثَمَرَةَ فُؤَادِي</p>' +
-      '<p>ثُمَّ قَالَ: يَا أُمَّاهُ إِنِّي أَشَمُّ عِنْدَكِ رَائِحَةً طَيِّبَةً كَأَنَّهَا رَائِحَةُ جَدِّي رَسُولِ اللَّهِ</p>'
-  },
-  {
-    id: 'husayn', title: 'زیارت مخصوص امام حسین (ع)', icon: '⚔️', important: true,
-    text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا أَبَا عَبْدِ اللَّهِ، السَّلَامُ عَلَيْكَ يَا بْنَ رَسُولِ اللَّهِ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا خِيَرَةَ اللَّهِ وَابْنَ خِيَرَتِهِ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا بْنَ أَمِيرِ الْمُؤْمِنِينَ وَابْنَ سَيِّدِ الْوَصِيِّينَ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا بْنَ فَاطِمَةَ سَيِّدَةِ نِسَاءِ الْعَالَمِينَ</p>' +
-      '<p>السَّلَامُ عَلَيْكَ يَا ثَارَ اللَّهِ وَابْنَ ثَارِهِ وَالْوِتْرَ الْمَوْتُورَ</p>' +
-      '<p>أَشْهَدُ أَنَّكَ قَدْ أَقَمْتَ الصَّلَاةَ وَآتَيْتَ الزَّكَاةَ وَأَمَرْتَ بِالْمَعْرُوفِ وَنَهَيْتَ عَنِ الْمُنْكَرِ</p>' +
-      '<p>وَأَطَعْتَ اللَّهَ وَرَسُولَهُ حَتَّى أَتَاكَ الْيَقِينُ</p>' +
-      '<p>فَلَعَنَ اللَّهُ أُمَّةً قَتَلَتْكَ وَلَعَنَ اللَّهُ أُمَّةً ظَلَمَتْكَ</p>' +
-      '<p>وَلَعَنَ اللَّهُ أُمَّةً سَمِعَتْ بِذَلِكَ فَرَضِيَتْ بِهِ</p>' +
-      '<p>يَا أَبَا عَبْدِ اللَّهِ إِنِّي سِلْمٌ لِمَنْ سَالَمَكُمْ وَحَرْبٌ لِمَنْ حَارَبَكُمْ</p>' +
-      '<p>إِلَى يَوْمِ الْقِيَامَةِ</p>'
-  },
-  {
-    id: 'ahd', title: 'دعای عهد', icon: '📜', important: false,
-    text: '<p>اللَّهُمَّ رَبَّ النُّورِ الْعَظِيمِ، وَرَبَّ الْكُرْسِيِّ الرَّفِيعِ، وَرَبَّ الْبَحْرِ الْمَسْجُورِ</p>' +
-      '<p>وَمُنْزِلَ التَّوْرَاةِ وَالْإِنْجِيلِ وَالزَّبُورِ، وَرَبَّ الظِّلِّ وَالْحَرُورِ</p>' +
-      '<p>وَمُنْزِلَ الْقُرْآنِ الْعَظِيمِ، وَرَبَّ الْمَلَائِكَةِ الْمُقَرَّبِينَ وَالْأَنْبِيَاءِ وَالْمُرْسَلِينَ</p>' +
-      '<p>اللَّهُمَّ إِنِّي أَسْأَلُكَ بِوَجْهِكَ الْكَرِيمِ وَبِكَلِمَاتِكَ التَّامَّةِ</p>' +
-      '<p>أَنْ تُصَلِّيَ عَلَى مُحَمَّدٍ وَأَهْلِ بَيْتِهِ</p>' +
-      '<p>وَأَنْ تَجْعَلَنِي مِمَّنْ يُبَايِعُهُ وَيُجَدِّدُ لَهُ الْعَهْدَ</p>'
-  },
-  {
-    id: 'tawassul', title: 'دعای توسل', icon: '🤲', important: false,
-    text: '<p>اللَّهُمَّ إِنِّي أَسْأَلُكَ وَأَتَوَجَّهُ إِلَيْكَ بِنَبِيِّكَ نَبِيِّ الرَّحْمَةِ</p>' +
-      '<p>يَا مُحَمَّدُ يَا رَسُولَ اللَّهِ إِنِّي أَتَوَجَّهُ بِكَ إِلَى رَبِّكَ فِي حَاجَتِي هَذِهِ لِتُقْضَى لِي</p>' +
-      '<p>اللَّهُمَّ فَشَفِّعْهُ فِيَّ</p>' +
-      '<p>يَا أَمِيرَ الْمُؤْمِنِينَ يَا عَلِيَّ بْنَ أَبِي طَالِبٍ إِنِّي أَتَوَجَّهُ بِكَ إِلَى رَبِّكَ</p>' +
-      '<p>يَا فَاطِمَةُ يَا بِنْتَ رَسُولِ اللَّهِ إِنِّي أَتَوَجَّهُ بِكِ إِلَى رَبِّكَ</p>' +
-      '<p>يَا حَسَنُ يَا حُسَيْنُ إِنِّي أَتَوَجَّهُ بِكُمَا إِلَى رَبِّكَ</p>'
-  },
-  {
-    id: 'faraj', title: 'دعای فرج', icon: '🌅', important: false,
-    text: '<p>إِلٰهِي عَظُمَ الْبَلَاءُ وَبَرِحَ الْخَفَاءُ وَانْكَشَفَ الْغِطَاءُ وَانْسَدَّ الصَّوَابُ</p>' +
-      '<p>وَضَاقَتْ عَلَيَّ الْأَرْضُ بِمَا رَحُبَتْ وَمُنِعَتِ السَّمَاءُ أَنْ تُمْطِرَ</p>' +
-      '<p>وَالْأَرْضُ جَدْبَاءُ وَالْحَيَاةُ قَاحِلَةٌ</p>' +
-      '<p>فَأَنْتَ الْغِيَاثُ وَأَنْتَ الْمَلَاذُ</p>' +
-      '<p>اللَّهُمَّ كُنْ لِوَلِيِّكَ الْحُجَّةِ بْنِ الْحَسَنِ صَلَوَاتُكَ عَلَيْهِ وَعَلَى آبَائِهِ</p>' +
-      '<p>فِي هَذِهِ السَّاعَةِ وَفِي كُلِّ سَاعَةٍ وَلِيًّا وَحَافِظًا وَقَائِدًا وَنَاصِرًا</p>' +
-      '<p>وَدَلِيلًا وَعَيْنًا حَتَّى تُسْكِنَهُ أَرْضَكَ طَوْعًا وَتُمَتِّعَهُ فِيهَا طَوِيلًا</p>'
-  },
-  {
-    id: 'subh', title: 'دعای صبح', icon: '☀️', important: false,
-    text: '<p>أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ رَبِّ الْعَالَمِينَ</p>' +
-      '<p>اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذَا الْيَوْمِ فَتْحَهُ وَنَصْرَهُ وَنُورَهُ وَبَرَكَتَهُ وَهُدَاهُ</p>' +
-      '<p>وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِيهِ وَشَرِّ مَا بَعْدَهُ</p>' +
-      '<p>أَللّٰهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ وَمَلَائِكَتَكَ وَجَمِيعَ خَلْقِكَ</p>' +
-      '<p>أَنَّكَ أَنْتَ اللهُ لَا إِلٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ</p>' +
-      '<p>وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ</p>'
-  },
-  {
-    id: 'masa', title: 'دعای عصر', icon: '🌇', important: false,
-    text: '<p>أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ رَبِّ الْعَالَمِينَ</p>' +
-      '<p>اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذِهِ اللَّيْلَةِ وَأَعُوذُ بِكَ مِنْ شَرِّهَا وَشَرِّ مَا بَعْدَهَا</p>' +
-      '<p>أَللّٰهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ وَمَلَائِكَتَكَ وَجَمِيعَ خَلْقِكَ</p>' +
-      '<p>أَنَّكَ أَنْتَ اللهُ لَا إِلٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ</p>' +
-      '<p>وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ</p>'
-  },
-  {
-    id: 'tasbihat', title: 'تسبیحات حضرت زهرا (س)', icon: '📿', important: false,
-    text: '<p><strong>۳۴ مرتبه:</strong> اللهُ أَكْبَرُ</p>' +
-      '<p><strong>۳۳ مرتبه:</strong> الْحَمْدُ لِلَّهِ</p>' +
-      '<p><strong>۳۳ مرتبه:</strong> سُبْحَانَ اللَّهِ</p>' +
-      '<div class="verse">ثواب این تسبیحات معادل یک هزار رکعت نماز است</div>'
-  },
-  {
-    id: 'kursi', title: 'آیت الکرسی', icon: '🕋', important: false,
-    text: '<p>اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ</p>' +
-      '<p>لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ</p>' +
-      '<p>يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلَّا بِمَا شَاءَ</p>' +
-      '<p>وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ</p>'
-  },
-  {
-    id: 'istighfar', title: 'استغفار', icon: '🙏', important: false,
-    text: '<p><strong>۷۰ مرتبه:</strong> أَسْتَغْفِرُ اللَّهَ رَبِّي وَأَتُوبُ إِلَيْهِ</p>' +
-      '<p><strong>یا:</strong> سَيِّدُ الِاسْتِغْفَارِ:</p>' +
-      '<p>اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ</p>' +
-      '<p>وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ</p>' +
-      '<p>أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ</p>' +
-      '<p>وَأَبُوءُ بِذَنْبِي، فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ</p>'
-  },
-  {
-    id: 'salawat', title: 'صلوات', icon: '🌸', important: false,
-    text: '<p><strong>۱۰۰ مرتبه:</strong></p>' +
-      '<p>أَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ وَعَجِّلْ فَرَجَهُمْ</p>' +
-      '<div class="verse">ثواب: هر صلوات ده حسنه دارد و ده گناه را پاک می‌کند</div>'
-  }
+  { id: 'ashura', title: 'زیارت عاشورا', icon: '📜', important: true, audio: 'https://archive.org/download/ZiyaratAshura/Ashura.mp3', text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div><p>السَّلَامُ عَلَيْكَ يَا أَبَا عَبْدِ اللَّهِ</p>' },
+  { id: 'alqama', title: 'زیارت علقمه', icon: '📖', important: true, text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div><p>السَّلَامُ عَلَيْكَ يَا وَلِيَّ اللَّهِ</p>' }
 ];
 
 function renderDuas(containerId) {
   var container = $(containerId);
   if (!container) return;
-  var html = DUAS.map(function(d) {
-    var audioHtml = d.audio ? '<audio controls class="dua-audio" preload="none"><source src="'+d.audio+'" type="audio/mpeg">مرورگر شما صوت را پشتیبانی نمی‌کند</audio>' : '';
+  var list = (typeof window.DUAS_FULL !== 'undefined') ? window.DUAS_FULL : DUAS;
+  container.innerHTML = list.map(function(d) {
+    var audioHtml = d.audio ?
+      '<div class="dua-audio-box">' +
+        '<button class="btn btn-gold btn-sm" data-action="dua-audio" data-id="'+d.id+'" data-url="'+d.audio+'">🎧 دانلود و پخش صوت</button> ' +
+        '<span class="speed-btns hidden" id="speed-'+d.id+'">' +
+          '<button class="btn btn-outline btn-sm" data-action="dua-speed" data-id="'+d.id+'" data-rate="1">×1</button> ' +
+          '<button class="btn btn-outline btn-sm" data-action="dua-speed" data-id="'+d.id+'" data-rate="1.5">×1.5</button> ' +
+          '<button class="btn btn-outline btn-sm" data-action="dua-speed" data-id="'+d.id+'" data-rate="2">×2</button>' +
+        '</span>' +
+        '<div class="text-xs text-muted mt-2" id="astatus-'+d.id+'">اختیاری: یک‌بار دانلود می‌شود، بعد برای همیشه از روی گوشی/سیستم خودت پخش می‌شود</div>' +
+      '</div>' : '';
     return '<details class="dua-item' + (d.important ? ' dua-important' : '') + '"><summary>' + d.icon + ' ' + d.title + '</summary><div class="dua-content">' + audioHtml + d.text + '</div></details>';
   }).join('');
-  container.innerHTML = html;
+}
+
+var duaPlayers = {};
+function playDuaAudio(id, url) {
+  var st = $('astatus-' + id);
+  if (duaPlayers[id] && duaPlayers[id].ready) { duaPlayers[id].el.play().catch(function(){}); return; }
+  if (st) st.textContent = '⏳ در حال دانلود صوت...';
+  caches.open('masjed-v44').then(function(cache) {
+    return cache.match(url).then(function(hit) {
+      if (hit) return hit;
+      return fetch(url, {mode:'no-cors'}).then(function(res) { cache.put(url, res.clone()); return res; });
+    });
+  }).then(function(res) { return res.blob ? res.blob() : null; }).then(function(blob) {
+    var src = blob ? URL.createObjectURL(blob) : url;
+    duaPlayers[id] = {el: new Audio(src), ready: true};
+    if (st) st.textContent = '✅ روی دستگاهت ذخیره شد — از این به بعد آفلاین پخش می‌شود';
+    var sb = $('speed-' + id); if (sb) sb.classList.remove('hidden');
+    duaPlayers[id].el.play().catch(function(){});
+  }).catch(function() { if (st) st.textContent = '❌ دانلود نشد — اینترنت را چک کن'; });
+}
+function setDuaSpeed(id, rate) {
+  if (duaPlayers[id] && duaPlayers[id].el) { duaPlayers[id].el.playbackRate = rate; toast('⏩ سرعت: ×' + rate, 'info'); }
 }
 
 function goTo(page) {
-  ['pageStart','pageMgrAuth','pageTeenLogin','pageManager','pageTeen','pagePublic'].forEach(function(p){ $(p).classList.add('hidden'); });
+  ['pageStart','pageMgrAuth','pageTeenLogin','pageManager','pageTeen','pagePublic','pageSuperLogin','pageSuper'].forEach(function(p){ $(p).classList.add('hidden'); });
   $('sharedHeader').classList.add('hidden');
-  var map = {start:'pageStart',mgrAuth:'pageMgrAuth',teenLogin:'pageTeenLogin',manager:'pageManager',teen:'pageTeen',publicHome:'pagePublic'};
+  var map = {start:'pageStart',mgrAuth:'pageMgrAuth',teenLogin:'pageTeenLogin',manager:'pageManager',teen:'pageTeen',publicHome:'pagePublic',superLogin:'pageSuperLogin',super:'pageSuper'};
   var el = $(map[page]);
   if (el) el.classList.remove('hidden');
   if (['manager','teen','publicHome'].indexOf(page) >= 0) $('sharedHeader').classList.remove('hidden');
@@ -1080,7 +963,7 @@ async function createMosque() {
   var pin = $('setupPin').value.trim();
   var pin2 = $('setupPin2').value.trim();
   if (!name) { toast('نام مسجد را وارد کنید','warning'); return; }
-  if (pin.length < 4) { toast('رمز حداقل ۴ رقم','warning'); return; }
+  if (pin.length < 6) { toast('رمز حداقل ۶ کاراکتر (الزام فایربیس)','warning'); return; }
   if (pin !== pin2) { toast('تکرار رمز یکسان نیست','warning'); return; }
   btn.disabled = true; btn.textContent = '⏳ در حال ساخت...';
   var code = 'M' + Math.floor(1000 + Math.random()*9000);
@@ -1163,6 +1046,58 @@ function teenLogin() {
     });
   });
   setTimeout(function(){ if (!found) toast('این نام در بخش ' + S.branch + ' ثبت نشده','warning'); }, 2000);
+}
+
+var superCache = [];
+function superLogin() {
+  var email = $('superEmail').value.trim();
+  var pass = $('superPass').value;
+  if (!email || !pass) { toast('ایمیل و رمز را وارد کنید','warning'); return; }
+  firebase.auth().signInWithEmailAndPassword(email, pass).then(function(cred) {
+    if (cred.user.uid !== SUPER_UID) {
+      firebase.auth().signOut();
+      toast('❌ شما سوپرادمین نیستید','danger');
+      return;
+    }
+    S.role = 'super';
+    enterSuper();
+  }).catch(function(e){
+    toast('❌ ' + (e.code === 'auth/too-many-requests' ? 'تلاش زیاد! چند دقیقه صبر کن' : 'ایمیل یا رمز اشتباه است'), 'danger');
+  });
+}
+function enterSuper() { goTo('super'); loadSuperList(); }
+function loadSuperList() {
+  fbDb.collection('mosques').onSnapshot(function(snap) {
+    superCache = [];
+    snap.forEach(function(doc){ superCache.push({id:doc.id, ...doc.data()}); });
+    renderSuperList();
+    var act = superCache.filter(function(m){ return m.status !== 'disabled'; }).length;
+    $('superStats').innerHTML = '🕌 کل مساجد: <b>' + faNum(superCache.length) + '</b> | ✅ فعال: <b>' + faNum(act) + '</b> | 🛑 قطع: <b>' + faNum(superCache.length - act) + '</b>';
+  });
+}
+function renderSuperList() {
+  var q = ($('superSearch') ? $('superSearch').value : '').trim().toLowerCase();
+  var list = superCache;
+  if (q) list = list.filter(function(m){ return (m.name||'').toLowerCase().indexOf(q) >= 0 || (m.code||'').toLowerCase().indexOf(q) >= 0; });
+  $('superList').innerHTML = list.map(function(m){
+    var dis = m.status === 'disabled';
+    return '<div class="list-item"><div class="avatar">🕌</div><div class="body"><div class="name">' + esc(m.name) + ' <span class="badge ' + (dis?'badge-danger':'badge-success') + '">' + (dis?'🛑 قطع':'✅ فعال') + '</span></div><div class="meta">کد: ' + esc(m.code) + ' | ' + esc(m.branch||'') + '</div></div>' +
+      '<button class="btn ' + (dis?'btn-success':'btn-danger') + ' btn-sm" data-action="super-toggle" data-id="' + m.code + '">' + (dis?'✅ فعال‌سازی':'🛑 قطع') + '</button>' +
+      '<button class="btn btn-outline btn-sm" data-action="super-delete" data-id="' + m.code + '">🗑</button></div>';
+  }).join('') || '<div class="empty">مسجدی ثبت نشده</div>';
+}
+function superToggle(code) {
+  var m = superCache.find(function(x){ return x.code === code; });
+  if (!m) return;
+  var ns = m.status === 'disabled' ? 'active' : 'disabled';
+  fbDb.collection('mosques').doc(code).update({status: ns}).then(function(){
+    toast(ns === 'disabled' ? '🛑 مسجد قطع شد' : '✅ مسجد فعال شد', 'success');
+  });
+}
+function superDelete(code) {
+  twoTap(event.currentTarget, function(){
+    fbDb.collection('mosques').doc(code).delete().then(function(){ toast('🗑 حذف شد','info'); });
+  });
 }
 
 function enterManager() {
@@ -1324,6 +1259,17 @@ function pmCustom() {
   closeModal('personModal');
 }
 function pmAtt() { toggleAtt(curPerson); closeModal('personModal'); }
+function pmReset() {
+  twoTap(event.currentTarget, function() {
+    var p = pplCache.find(function(x){ return x.id === curPerson; });
+    if (!p) return;
+    p.points = 0;
+    fsSavePerson(S.code, p);
+    fsAddHistory(S.code,'reset', p.name + ' امتیاز صفر شد (بعد از جایزه)');
+    toast('🔄 امتیاز صفر شد','success');
+    closeModal('personModal');
+  });
+}
 function pmDelete() {
   twoTap($('pmDelete'), function() {
     fsDeletePerson(S.code, curPerson);
@@ -1493,7 +1439,7 @@ function renderPublicAnns() {
 }
 
 function renderHistory() {
-  var icons = {add:'➕',delete:'🗑',points:'⭐',att:'🌙',att_all:'🌙',prayer:'🕌',ann:'📢'};
+  var icons = {add:'➕',delete:'🗑',points:'⭐',att:'🌙',att_all:'🌙',prayer:'🕌',ann:'📢',reset:'🔄'};
   fsGetHistory(S.code, function(h) {
     $('histEmpty').classList.toggle('hidden', h.length > 0);
     $('histList').innerHTML = h.map(function(x) {
@@ -1549,6 +1495,22 @@ function renderTeenHome() {
     var rank = 0;
     for (var i = 0; i < sorted.length; i++) if (sorted[i].id === S.personId) rank = i + 1;
     $('teenRank').textContent = rank ? faNum(rank) : '—';
+    
+    // شمارش نمازها
+    fsGetPray(S.code, todayStr(), function(pray) {
+      var fajrC = 0, dhuhrC = 0, maghribC = 0;
+      pray.forEach(function(r) {
+        if (r.indexOf(S.personId + '|') === 0) {
+          if (r.indexOf('|صبح') >= 0) fajrC++;
+          else if (r.indexOf('|ظهر') >= 0) dhuhrC++;
+          else if (r.indexOf('|مغرب') >= 0) maghribC++;
+        }
+      });
+      $('teenFajrC').textContent = faNum(fajrC);
+      $('teenDhuhrC').textContent = faNum(dhuhrC);
+      $('teenMaghribC').textContent = faNum(maghribC);
+    });
+    
     fsGetRewards(S.code, function(rw) {
       var nr = null, got = null;
       rw.forEach(function(r) { if ((me.points||0) < r.pointsRequired && (!nr || r.pointsRequired < nr.pointsRequired)) nr = r; });
@@ -1627,44 +1589,41 @@ function showMotivational(name, type, n) { toast(getMotivationMsg(name, type, n)
 
 function loadConfig() {
   var cfg = LS.get('cfg_' + S.code, {});
-  if (cfg.muezzin) $('cfgMuezzin').value = cfg.muezzin;
   if (cfg.autoAzan !== undefined) $('cfgAutoAzan').checked = cfg.autoAzan;
   if (cfg.fajr !== undefined) $('cfgFajr').checked = cfg.fajr;
   if (cfg.dhuhr !== undefined) $('cfgDhuhr').checked = cfg.dhuhr;
   if (cfg.maghrib !== undefined) $('cfgMaghrib').checked = cfg.maghrib;
 }
 function saveConfig() {
-  LS.set('cfg_' + S.code, {muezzin: $('cfgMuezzin').value, autoAzan: $('cfgAutoAzan').checked, fajr: $('cfgFajr').checked, dhuhr: $('cfgDhuhr').checked, maghrib: $('cfgMaghrib').checked});
+  LS.set('cfg_' + S.code, {autoAzan: $('cfgAutoAzan').checked, fajr: $('cfgFajr').checked, dhuhr: $('cfgDhuhr').checked, maghrib: $('cfgMaghrib').checked});
   toast('✅ ذخیره شد','success');
 }
 function loadTeenSettings() {
   var s = LS.get('teen_' + S.code + '_' + S.personId, {});
   if (s.autoAzan !== undefined) $('teenAutoAzan').checked = s.autoAzan;
-  if (s.muezzin) $('teenMuezzin').value = s.muezzin;
   if (s.fajr !== undefined) $('teenFajr').checked = s.fajr;
   if (s.dhuhr !== undefined) $('teenDhuhr').checked = s.dhuhr;
   if (s.maghrib !== undefined) $('teenMaghrib').checked = s.maghrib;
   if (s.volume !== undefined) $('teenVolume').value = s.volume;
 }
 function saveTeenSettings() {
-  LS.set('teen_' + S.code + '_' + S.personId, {autoAzan: $('teenAutoAzan').checked, muezzin: $('teenMuezzin').value, fajr: $('teenFajr').checked, dhuhr: $('teenDhuhr').checked, maghrib: $('teenMaghrib').checked, volume: parseInt($('teenVolume').value)});
+  LS.set('teen_' + S.code + '_' + S.personId, {autoAzan: $('teenAutoAzan').checked, fajr: $('teenFajr').checked, dhuhr: $('teenDhuhr').checked, maghrib: $('teenMaghrib').checked, volume: parseInt($('teenVolume').value)});
   toast('✅','success');
 }
 function loadPublicSettings() {
   var s = LS.get('public_settings', {});
   if (s.autoAzan !== undefined) $('pubAutoAzan').checked = s.autoAzan;
-  if (s.muezzin) $('pubMuezzin').value = s.muezzin;
   if (s.fajr !== undefined) $('pubFajr').checked = s.fajr;
   if (s.dhuhr !== undefined) $('pubDhuhr').checked = s.dhuhr;
   if (s.maghrib !== undefined) $('pubMaghrib').checked = s.maghrib;
   if (s.volume !== undefined) $('pubVolume').value = s.volume;
 }
 function savePublicSettings() {
-  LS.set('public_settings', {autoAzan: $('pubAutoAzan').checked, muezzin: $('pubMuezzin').value, fajr: $('pubFajr').checked, dhuhr: $('pubDhuhr').checked, maghrib: $('pubMaghrib').checked, volume: parseInt($('pubVolume').value)});
+  LS.set('public_settings', {autoAzan: $('pubAutoAzan').checked, fajr: $('pubFajr').checked, dhuhr: $('pubDhuhr').checked, maghrib: $('pubMaghrib').checked, volume: parseInt($('pubVolume').value)});
   toast('✅','success');
 }
 
-var AZAN_SOUNDS = {afasy: 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3', imadi: 'https://archive.org/download/adhan.notifications/Ahmed_al_Imadi_Adhan.mp3', qatami: 'https://archive.org/download/adhan.notifications/Nasser_al_Qatami_Adhan.mp3'};
+var AZAN_SOUND = 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3';
 var azanUnlocked = false;
 function testAzan() {
   $('azanName').textContent = 'تست اذان';
@@ -1679,15 +1638,14 @@ function closeAzan() {
   document.querySelectorAll('.prayer-item').forEach(function(e){ e.classList.remove('active'); });
 }
 function playAzanAudio() {
-  var muezzin = 'afasy', volume = 80;
-  if (S.role === 'teen') { muezzin = $('teenMuezzin') ? $('teenMuezzin').value : muezzin; volume = $('teenVolume') ? parseInt($('teenVolume').value) : volume; }
-  else if (S.role === 'public') { muezzin = $('pubMuezzin') ? $('pubMuezzin').value : muezzin; volume = $('pubVolume') ? parseInt($('pubVolume').value) : volume; }
-  else { muezzin = $('cfgMuezzin') ? $('cfgMuezzin').value : muezzin; }
+  var volume = 80;
+  if (S.role === 'teen') { volume = $('teenVolume') ? parseInt($('teenVolume').value) : volume; }
+  else if (S.role === 'public') { volume = $('pubVolume') ? parseInt($('pubVolume').value) : volume; }
   var audio = $('azanAudio');
   audio.volume = (volume || 80) / 100;
   azanUnlocked = true;
   $('btnPlayAzan').classList.add('hidden');
-  audio.src = AZAN_SOUNDS[muezzin] || AZAN_SOUNDS.afasy;
+  audio.src = AZAN_SOUND;
   audio.play().catch(function(){ $('btnPlayAzan').classList.remove('hidden'); });
 }
 function checkAzanTime() {
@@ -1839,7 +1797,6 @@ function logout() {
   toast('👋','info');
 }
 
-// ========== سیستم نوتیفیکیشن اذان ==========
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(function(){});
@@ -1891,7 +1848,6 @@ function checkAzanNotification() {
   }
 }
 
-// ========== FCM ==========
 var VAPID_KEY = 'BEhV_K9DMXd2JQFtQMCDtrCXW2G4_jGUHN4h9izoVWq9M_DL-8P-_ozREh__rSU6JTgqwo1rwFJceueUvRIdmdA';
 
 function saveFcmToken(token) {
@@ -1938,7 +1894,6 @@ try {
   });
 } catch(e) {}
 
-// ========== اشکال‌یابی ==========
 function updateDebugStatus() {
   var el = document.getElementById('debugStatus');
   if (!el) return;
@@ -1990,6 +1945,9 @@ document.addEventListener('click', function(e) {
   else if (a === 'create-mosque') createMosque();
   else if (a === 'delete-mosque') deleteMosque();
   else if (a === 'teen-login') teenLogin();
+  else if (a === 'super-login') superLogin();
+  else if (a === 'super-toggle') superToggle(el.dataset.id);
+  else if (a === 'super-delete') superDelete(el.dataset.id);
   else if (a === 'logout') logout();
   else if (a === 'add-person') addPerson();
   else if (a === 'open-person') openPersonMenu(el.dataset.id);
@@ -1997,6 +1955,7 @@ document.addEventListener('click', function(e) {
   else if (a === 'pm-give') pmGive(el.dataset.id);
   else if (a === 'pm-custom') pmCustom();
   else if (a === 'pm-att') pmAtt();
+  else if (a === 'pm-reset') pmReset();
   else if (a === 'pm-prayer') openPrayerModal(curPerson);
   else if (a === 'pm-delete') pmDelete();
   else if (a === 'prayer-give') registerPrayer(el.dataset.id, el.dataset.prayer);
@@ -2016,6 +1975,8 @@ document.addEventListener('click', function(e) {
   else if (a === 'test-azan') testAzan();
   else if (a === 'close-azan') closeAzan();
   else if (a === 'play-azan') playAzanAudio();
+  else if (a === 'dua-audio') playDuaAudio(el.dataset.id, el.dataset.url);
+  else if (a === 'dua-speed') setDuaSpeed(el.dataset.id, parseFloat(el.dataset.rate));
   else if (a === 'init-qibla') initQibla();
   else if (a === 'dhikr-tap') dhikrTap();
   else if (a === 'dhikr-reset') dhikrReset();
@@ -2039,6 +2000,7 @@ document.addEventListener('input', function(e) {
   if (!el) return;
   var a = el.dataset.input;
   if (a === 'mgr-search') searchMosques(el.value, 'mgr');
+  else if (a === 'super-search') renderSuperList();
   else if (a === 'search-ppl') renderPeople();
   else if (a === 'pwhint') {
     var name = el.value.trim();
@@ -2113,6 +2075,7 @@ function boot() {
   if (rp === 'teen') { setTimeout(function(){ goTo('teenLogin'); }, 900); return; }
   if (rp === 'manager') { setTimeout(function(){ goTo('mgrAuth'); }, 900); return; }
   if (rp === 'public') { setTimeout(function(){ goTo('publicHome'); }, 900); return; }
+  if (rp === 'super') { setTimeout(function(){ goTo('superLogin'); }, 900); return; }
 
   var restored = restoreSession();
   if (restored === 'manager') setTimeout(enterManager, 900);
