@@ -1,8 +1,6 @@
-var CACHE = 'masjed-v45';
+var CACHE = 'masjed-v46';
 var SHELL = ['./', './index.html', './duas-data.js'];
-var AZAN = [
-  'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'
-];
+var AZAN = ['https://archive.org/download/adhan.notifications/Mishary%20Rashid%20al%20Afasy%20Fajr%20Adhan.mp3'];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
@@ -26,31 +24,24 @@ self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   var url = e.request.url;
 
-  // فایل‌های Firebase/Google را عبور بده (کش نکن)
   if (url.indexOf('googleapis.com') !== -1 || url.indexOf('firebase') !== -1 ||
-      url.indexOf('gstatic.com') !== -1 || url.indexOf('fcm') !== -1) {
+      url.indexOf('gstatic.com') !== -1) {
     return;
   }
 
-  // ناوبری (صفحه اصلی): اول شبکه، اگر نبود از کش (آفلاین کامل)
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request).then(function(res) {
         var clone = res.clone();
         caches.open(CACHE).then(function(c){ c.put('./index.html', clone); });
         return res;
-      }).catch(function() {
-        return caches.match('./index.html');
-      })
+      }).catch(function() { return caches.match('./index.html'); })
     );
     return;
   }
 
-  // صوت اذان + صوت ادعیه + فایل‌های سایت + فونت: اول کش، سپس شبکه (آفلاین)
-  if (url.indexOf('archive.org') !== -1 || 
-      url.indexOf(self.location.origin) === 0 || 
-      url.indexOf('fonts.gstatic') !== -1 ||
-      url.indexOf('ibb.co') !== -1) {
+  if (url.indexOf('archive.org') !== -1 || url.indexOf(self.location.origin) === 0 ||
+      url.indexOf('fonts.gstatic') !== -1 || url.indexOf('ibb.co') !== -1) {
     e.respondWith(
       caches.match(e.request).then(function(cached) {
         if (cached) return cached;
@@ -63,11 +54,9 @@ self.addEventListener('fetch', function(e) {
         });
       })
     );
-    return;
   }
 });
 
-// FCM پوش در پس‌زمینه
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 firebase.initializeApp({
