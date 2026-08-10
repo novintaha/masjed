@@ -1,6 +1,6 @@
-var CACHE = 'masjed-v46';
+var CACHE = 'masjed-v47';
 var SHELL = ['./', './index.html', './duas-data.js'];
-var AZAN = ['https://archive.org/download/adhan.notifications/Mishary%20Rashid%20al%20Afasy%20Fajr%20Adhan.mp3'];
+var AZAN = ['https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
