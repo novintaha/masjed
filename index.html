@@ -50,6 +50,7 @@ textarea{resize:vertical;min-height:70px}
 .btn-primary{background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff}
 .btn-gold{background:linear-gradient(135deg,#c8963e,#8b6914);color:#fff}
 .btn-danger{background:#b5343a;color:#fff}
+.btn-warning{background:#e67e22;color:#fff}
 .btn-outline{background:#fff;border:2px solid #1a6b4a;color:#1a6b4a}
 .btn-ghost{background:transparent;color:#1a6b4a;padding:8px 12px}
 .btn-sm{padding:7px 12px;font-size:.78em}
@@ -472,7 +473,6 @@ textarea{resize:vertical;min-height:70px}
 
 <div id="pagePublic" class="hidden">
   <div class="daily-dhikr-card" id="dailyDhikrCard"></div>
-  
   <div class="card"><h3>🧭 قبله‌نما</h3>
     <div class="qibla-wrap">
       <div class="qibla-compass">
@@ -758,6 +758,35 @@ function fsAddHistory(code, type, text) {
   });
 }
 
+// ========== سیستم پیام‌دهی به فرد خاص ==========
+function sendPersonNotif(code, personId, text) {
+  if (!fbDb || !code || !personId) return;
+  fbDb.collection('mosques').doc(code).collection('notifs').add({
+    personId: personId,
+    text: text,
+    ts: Date.now(),
+    read: false
+  }).catch(function(e){ console.log('notif:', e); });
+}
+function listenPersonNotifs() {
+  if (!fbDb || !S.code || !S.personId) return;
+  var last = LS.get('notif_seen_' + S.personId, 0);
+  fbDb.collection('mosques').doc(S.code).collection('notifs')
+    .where('personId', '==', S.personId)
+    .orderBy('ts', 'desc').limit(10)
+    .onSnapshot(function(snap) {
+      snap.forEach(function(doc) {
+        var n = doc.data();
+        if ((n.ts || 0) > last) {
+          last = n.ts;
+          LS.set('notif_seen_' + S.personId, last);
+          toast(n.text, 'success');
+          showSuccess();
+        }
+      });
+    }, function(e){ console.log('listen notif:', e); });
+}
+
 var DAILY_DHIKR = {
   0: {day: 'یکشنبه', fa: 'یا الله', ar: 'یَا اللهُ', count: 100, desc: 'ذکر روز یکشنبه - نام اعظم خداوند'},
   1: {day: 'دوشنبه', fa: 'یا رسول الله', ar: 'یَا رَسُولَ اللهِ', count: 100, desc: 'ذکر روز دوشنبه - صلوات بر پیامبر اکرم (ص)'},
@@ -812,23 +841,54 @@ function renderDuas(containerId) {
 var duaPlayers = {};
 function playDuaAudio(id, url) {
   var st = $('astatus-' + id);
-  if (duaPlayers[id] && duaPlayers[id].ready) { duaPlayers[id].el.play().catch(function(){}); return; }
-  if (st) st.textContent = '⏳ در حال دانلود صوت...';
- caches.open('masjed-v45').then(function(cache)  {
+  if (duaPlayers[id] && duaPlayers[id].ready) { 
+    duaPlayers[id].el.currentTime = 0;
+    duaPlayers[id].el.play().catch(function(){}); 
+    return; 
+  }
+  if (st) st.textContent = '⏳ در حال آماده‌سازی صوت...';
+  
+  // ابتدا بررسی کش
+  caches.open('masjed-v46').then(function(cache) {
     return cache.match(url).then(function(hit) {
       if (hit) return hit;
-      return fetch(url, {mode:'no-cors'}).then(function(res) { cache.put(url, res.clone()); return res; });
+      // حذف no-cors — باید پاسخ واقعی بگیریم تا blob درست داشته باشیم
+      return fetch(url).then(function(res) {
+        if (res && res.ok) cache.put(url, res.clone());
+        return res;
+      });
     });
-  }).then(function(res) { return res.blob ? res.blob() : null; }).then(function(blob) {
-    var src = blob ? URL.createObjectURL(blob) : url;
-    duaPlayers[id] = {el: new Audio(src), ready: true};
+  }).then(function(res) {
+    if (!res || !res.ok) throw new Error('bad response');
+    return res.blob();
+  }).then(function(blob) {
+    if (!blob || blob.size === 0) throw new Error('empty blob');
+    var src = URL.createObjectURL(blob);
+    var el = new Audio(src);
+    duaPlayers[id] = {el: el, ready: true};
     if (st) st.textContent = '✅ روی دستگاهت ذخیره شد — از این به بعد آفلاین پخش می‌شود';
     var sb = $('speed-' + id); if (sb) sb.classList.remove('hidden');
-    duaPlayers[id].el.play().catch(function(){});
-  }).catch(function() { if (st) st.textContent = '❌ دانلود نشد — اینترنت را چک کن'; });
+    el.play().catch(function(){ 
+      if (st) st.textContent = '▶ برای پخش، دوباره دکمه 🎧 را بزن'; 
+    });
+  }).catch(function(err) {
+    // Fallback: پخش مستقیم از اینترنت
+    console.log('cache failed, direct play:', err);
+    var el = new Audio(url);
+    el.crossOrigin = 'anonymous';
+    duaPlayers[id] = {el: el, ready: true};
+    var sb = $('speed-' + id); if (sb) sb.classList.remove('hidden');
+    if (st) st.textContent = '▶ پخش مستقیم از اینترنت...';
+    el.play().catch(function() {
+      if (st) st.textContent = '❌ منبع صوت در دسترس نیست';
+    });
+  });
 }
 function setDuaSpeed(id, rate) {
-  if (duaPlayers[id] && duaPlayers[id].el) { duaPlayers[id].el.playbackRate = rate; toast('⏩ سرعت: ×' + rate, 'info'); }
+  if (duaPlayers[id] && duaPlayers[id].el) { 
+    duaPlayers[id].el.playbackRate = rate; 
+    toast('⏩ سرعت: ×' + rate, 'info'); 
+  }
 }
 
 function goTo(page) {
@@ -1121,6 +1181,7 @@ function enterTeen() {
   $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent('MASJID|' + S.code + '|' + S.personName);
   goTo('teen');
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderTeenAll(); renderQuizStart();
+  listenPersonNotifs(); // گوش دادن به پیام‌های این نوجوان
 }
 function renderPublic() {
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderPublicAnns();
@@ -1178,7 +1239,14 @@ function toggleAtt(id) {
   var p = pplCache.find(function(x){ return x.id === id; });
   if (p) {
     if (has) { p.nights = Math.max(0,(p.nights||0)-1); p.streak = Math.max(0,(p.streak||0)-1); }
-    else { p.nights=(p.nights||0)+1; p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1; p.lastAtt=todayStr(); fsAddHistory(S.code,'att','حضور: '+p.name); }
+    else { 
+      p.nights=(p.nights||0)+1; 
+      p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1; 
+      p.lastAtt=todayStr(); 
+      fsAddHistory(S.code,'att','حضور: '+p.name);
+      // پیام به خود فرد که امشب حضور ثبت شد
+      sendPersonNotif(S.code, p.id, '🌙 حضور امشب شما ثبت شد! آفرین ' + p.name);
+    }
     fsSavePerson(S.code, p);
   }
   toast('🌙 ثبت شد','success');
@@ -1197,6 +1265,7 @@ function markAll() {
           p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1;
           p.lastAtt=todayStr();
           fsSavePerson(S.code, p);
+          sendPersonNotif(S.code, p.id, '🌙 حضور امشب شما ثبت شد!');
         }
       });
       fsSaveAtt(S.code, todayStr(), newAtt);
@@ -1241,6 +1310,8 @@ function pmGive(rid) {
     p.points = (p.points||0) + r.points;
     fsSavePerson(S.code, p);
     fsAddHistory(S.code,'points', p.name + ' +' + r.points + ' (' + r.name + ')');
+    // پیام به خود فرد (نه مدیر)
+    sendPersonNotif(S.code, p.id, '🎉 ' + r.points + ' امتیاز گرفتی! (' + r.name + ')');
     toast('✅ +' + faNum(r.points), 'success');
     showSuccess();
     closeModal('personModal');
@@ -1254,6 +1325,7 @@ function pmCustom() {
   p.points = Math.max(0, (p.points||0) + v);
   fsSavePerson(S.code, p);
   fsAddHistory(S.code,'points', p.name + ' ' + (v>0?'+':'') + v);
+  sendPersonNotif(S.code, p.id, '⭐ ' + (v>0?'+':'') + v + ' امتیاز دریافت کردی!');
   toast('✅ ثبت شد','success');
   $('pmCustom').value = '';
   closeModal('personModal');
@@ -1266,6 +1338,7 @@ function pmReset() {
     p.points = 0;
     fsSavePerson(S.code, p);
     fsAddHistory(S.code,'reset', p.name + ' امتیاز صفر شد (بعد از جایزه)');
+    sendPersonNotif(S.code, p.id, '🎁 امتیازت صفر شد (جایزه‌ات را از مدیر بگیر)');
     toast('🔄 امتیاز صفر شد','success');
     closeModal('personModal');
   });
@@ -1301,7 +1374,15 @@ function registerPrayer(id, prayer) {
     var p = pplCache.find(function(x){ return x.id === id; });
     if (p) { p.points = (p.points||0) + 1; fsSavePerson(S.code, p); }
     fsAddHistory(S.code,'prayer', (p?p.name:'') + ' نماز ' + prayer);
-    showMotivational(p ? p.name : '', 'prayer');
+    
+    // اگر نوجوان خودش هست، پیام روی دستگاهش
+    if (S.role === 'teen' && S.personId === id) {
+      showMotivational(p ? p.name : '', 'prayer');
+    } else {
+      // اگر مدیر برای فرد ثبت می‌کند، پیام به خود فرد
+      if (p) sendPersonNotif(S.code, p.id, '🕌 نماز ' + prayer + ' برایت ثبت شد! ' + getMotivationMsg(p.name, 'prayer'));
+    }
+    
     toast('🕌 نماز ' + prayer + ' ثبت شد', 'success');
     showSuccess();
     closeModal('prayerModal');
@@ -1496,7 +1577,6 @@ function renderTeenHome() {
     for (var i = 0; i < sorted.length; i++) if (sorted[i].id === S.personId) rank = i + 1;
     $('teenRank').textContent = rank ? faNum(rank) : '—';
     
-    // شمارش نمازها
     fsGetPray(S.code, todayStr(), function(pray) {
       var fajrC = 0, dhuhrC = 0, maghribC = 0;
       pray.forEach(function(r) {
@@ -1623,7 +1703,7 @@ function savePublicSettings() {
   toast('✅','success');
 }
 
-var AZAN_SOUND = 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3';
+var AZAN_SOUND = 'https://archive.org/download/adhan.notifications/Mishary%20Rashid%20al%20Afasy%20Fajr%20Adhan.mp3';
 var azanUnlocked = false;
 function testAzan() {
   $('azanName').textContent = 'تست اذان';
@@ -1646,7 +1726,15 @@ function playAzanAudio() {
   azanUnlocked = true;
   $('btnPlayAzan').classList.add('hidden');
   audio.src = AZAN_SOUND;
-  audio.play().catch(function(){ $('btnPlayAzan').classList.remove('hidden'); });
+  audio.load(); // مهم: اطمینان از بارگذاری کامل
+  var p = audio.play();
+  if (p && p.catch) {
+    p.catch(function(err) {
+      console.log('play error:', err);
+      $('btnPlayAzan').classList.remove('hidden');
+      toast('⚠️ برای پخش صدا دکمه ▶ را بزن','warning');
+    });
+  }
 }
 function checkAzanTime() {
   var now = new Date();
