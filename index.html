@@ -814,7 +814,7 @@ function playDuaAudio(id, url) {
   var st = $('astatus-' + id);
   if (duaPlayers[id] && duaPlayers[id].ready) { duaPlayers[id].el.play().catch(function(){}); return; }
   if (st) st.textContent = '⏳ در حال دانلود صوت...';
-  caches.open('masjed-v44').then(function(cache) {
+ caches.open('masjed-v45').then(function(cache)  {
     return cache.match(url).then(function(hit) {
       if (hit) return hit;
       return fetch(url, {mode:'no-cors'}).then(function(res) { cache.put(url, res.clone()); return res; });
