@@ -1,4 +1,4 @@
-var CACHE = 'masjed-v51';
+var CACHE = 'masjed-v52';
 var SHELL = ['./', './index.html', './duas-data.js', './اذان.mp3'];
 
 self.addEventListener('install', function(e) {
