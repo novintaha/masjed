@@ -1501,7 +1501,7 @@ function registerServiceWorker() {
   }
 }
 function showAzanNotification(prayerName, mosqueName) {
-  if (!('Notification' in window)) { toast('مرورگر شما اعلان را پشتیبانی نمی‌کند','warning'); return; }
+  if (!('Notification' in window)) { toast('مرورگر اعلان را پشتیبانی نمی‌کند','warning'); return; }
   if (Notification.permission !== 'granted') {
     Notification.requestPermission().then(function(p){
       if (p === 'granted') toast('✅ اجازه اعلان داده شد! دوباره تست کن','success');
@@ -1520,12 +1520,13 @@ function showAzanNotification(prayerName, mosqueName) {
     lang: 'fa'
   };
   try { if (!$('azanScreen').classList.contains('show')) playAzanAudio(); } catch(e) {}
-  try { new Notification(title, options); toast('🔔 اعلان با صدا نمایش داده شد','success'); return; } catch(e) {}
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistration().then(function(reg) {
-      if (reg) reg.showNotification(title, options);
+      if (reg) { reg.showNotification(title, options); toast('🔔 اعلان نمایش داده شد','success'); }
+      else { try { new Notification(title, options); } catch(e) {} }
     });
-  }
+  } else {
+    try { new Notification(title, options); } catch(e) {} }
 }
 function checkAzanNotification() {
   var now = new Date();
@@ -1590,11 +1591,15 @@ function initFcmPush() {
 
 function initFcmPushFlow() {
   if (!('Notification' in window) || !fbApp) return;
-  if (Notification.permission === 'granted') initFcmPush();
-  else if (Notification.permission === 'default') {
+  if (Notification.permission === 'granted') {
+    initFcmPush();
+  } else if (Notification.permission === 'default') {
     Notification.requestPermission().then(function(p) {
       if (p === 'granted') { toast('✅ اعلان‌های ابری فعال شد', 'success'); initFcmPush(); }
     });
+  } else if (Notification.permission === 'denied') {
+    if (LS.get('fcm_token', '')) LS.set('fcm_token', '');
+    console.log('Notification denied - old token cleared');
   }
 }
 
@@ -1633,8 +1638,16 @@ document.addEventListener('DOMContentLoaded', function(){
   var b1 = document.getElementById('debugLocalBtn');
   var b2 = document.getElementById('debugRefreshBtn');
   if (b1) b1.addEventListener('click', function(){
-    try { new Notification('🕌 تست محلی شیائومی', {body:'اگر این آمد = گوشی سالم است',icon:'https://i.ibb.co/S2b6YjQ/unnamed.jpg'}); }
-    catch(e){ toast('خطا: '+e.message,'danger'); }
+    if (!('serviceWorker' in navigator)) { toast('SW پشتیبانی نمی‌شود','danger'); return; }
+    navigator.serviceWorker.getRegistration().then(function(reg){
+      if (!reg) { toast('SW فعال نیست','danger'); return; }
+      return reg.showNotification('🕌 تست محلی', {
+        body: 'اگر این آمد = گوشی سالم است',
+        icon: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
+        vibrate: [200, 100, 200]
+      });
+    }).then(function(){ toast('✅ اعلان فرستاده شد','success'); })
+      .catch(function(e){ toast('خطا: '+e.message,'danger'); });
   });
   if (b2) b2.addEventListener('click', updateDebugStatus);
 });
