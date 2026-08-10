@@ -1,9 +1,7 @@
-var CACHE = 'masjed-v43';
+var CACHE = 'masjed-v45';
 var SHELL = ['./', './index.html', './duas-data.js'];
 var AZAN = [
-  'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3',
-  'https://archive.org/download/adhan.notifications/Ahmed_al_Imadi_Adhan.mp3',
-  'https://archive.org/download/adhan.notifications/Nasser_al_Qatami_Adhan.mp3'
+  'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'
 ];
 
 self.addEventListener('install', function(e) {
@@ -28,6 +26,12 @@ self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   var url = e.request.url;
 
+  // فایل‌های Firebase/Google را عبور بده (کش نکن)
+  if (url.indexOf('googleapis.com') !== -1 || url.indexOf('firebase') !== -1 ||
+      url.indexOf('gstatic.com') !== -1 || url.indexOf('fcm') !== -1) {
+    return;
+  }
+
   // ناوبری (صفحه اصلی): اول شبکه، اگر نبود از کش (آفلاین کامل)
   if (e.request.mode === 'navigate') {
     e.respondWith(
@@ -42,8 +46,11 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // صوت اذان + فایل‌های خود سایت + فونت: اول کش (آفلاین)
-  if (url.indexOf('archive.org') !== -1 || url.indexOf(self.location.origin) === 0 || url.indexOf('fonts.gstatic') !== -1) {
+  // صوت اذان + صوت ادعیه + فایل‌های سایت + فونت: اول کش، سپس شبکه (آفلاین)
+  if (url.indexOf('archive.org') !== -1 || 
+      url.indexOf(self.location.origin) === 0 || 
+      url.indexOf('fonts.gstatic') !== -1 ||
+      url.indexOf('ibb.co') !== -1) {
     e.respondWith(
       caches.match(e.request).then(function(cached) {
         if (cached) return cached;
@@ -56,6 +63,7 @@ self.addEventListener('fetch', function(e) {
         });
       })
     );
+    return;
   }
 });
 
