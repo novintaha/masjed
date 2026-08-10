@@ -1,12 +1,17 @@
 var CACHE = 'masjed-v47';
 var SHELL = ['./', './index.html', './duas-data.js'];
 var AZAN = ['https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
+var DUAS_AUDIO = [
+  'https://archive.org/download/ziyarat-ashura-ali-fani/Ziyarat%20Ashura.mp3',
+  'https://archive.org/download/dua-kumayl-ali-fani/Dua%20Kumayl.mp3'
+];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE).then(function(cache) {
       var jobs = SHELL.map(function(u){ return cache.add(u).catch(function(){}); });
       AZAN.forEach(function(u){ jobs.push(cache.add(u).catch(function(){})); });
+      DUAS_AUDIO.forEach(function(u){ jobs.push(cache.add(u).catch(function(){})); });
       return Promise.all(jobs);
     }).then(function(){ return self.skipWaiting(); })
   );
