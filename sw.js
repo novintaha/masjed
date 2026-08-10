@@ -1,4 +1,4 @@
-var CACHE = 'masjed-v50';
+var CACHE = 'masjed-v51';
 var SHELL = ['./', './index.html', './duas-data.js', './اذان.mp3'];
 
 self.addEventListener('install', function(e) {
@@ -22,13 +22,11 @@ self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   var url = e.request.url;
 
-  // فایل‌های Firebase و Google را عبور بده (کش نکن)
   if (url.indexOf('googleapis.com') !== -1 || url.indexOf('firebase') !== -1 ||
       url.indexOf('gstatic.com') !== -1) {
     return;
   }
 
-  // ناوبری: شبکه اول، سپس کش (آفلاین)
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request).then(function(res) {
@@ -40,7 +38,6 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // فایل‌های محلی + archive.org + فونت + ibb.co: کش اول، سپس شبکه + fallback
   if (url.indexOf(self.location.origin) === 0 || 
       url.indexOf('archive.org') !== -1 ||
       url.indexOf('fonts.gstatic') !== -1 || 
@@ -62,7 +59,6 @@ self.addEventListener('fetch', function(e) {
   }
 });
 
-// FCM پوش در پس‌زمینه
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 firebase.initializeApp({
