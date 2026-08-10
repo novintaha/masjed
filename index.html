@@ -310,8 +310,9 @@ textarea{resize:vertical;min-height:70px}
   </div>
 </div>
 <div class="card"><h3>📊 آمار کل سیستم</h3><div id="superStats" class="text-sm"></div></div>
-<div class="card"><h3>🕌 همه مساجد (قطع / فعال / حذف)</h3>
+<div class="card"><h3>🕌 همه مساجد</h3>
   <input type="text" id="superSearch" data-input="super-search" placeholder="🔍 جستجوی نام یا کد مسجد..." style="margin-bottom:10px">
+  <button class="btn btn-danger full-w mb-3" id="btnSuperDeleteAll" data-action="super-delete-all">⚠️ حذف همه مساجد (خطرناک)</button>
   <div id="superList"></div>
 </div>
 </div>
@@ -571,7 +572,7 @@ textarea{resize:vertical;min-height:70px}
 
 <div class="success-ov" id="successOverlay"><div class="success-circle">✓</div></div>
 <div class="toast-box" id="toastBox"></div>
-<audio id="azanAudio" preload="auto"></audio>
+<audio id="azanAudio" preload="auto" crossorigin="anonymous"></audio>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -622,8 +623,9 @@ function showSuccess() { var o = $('successOverlay'); o.classList.add('show'); s
 function openModal(id) { $(id).classList.add('show'); }
 function closeModal(id) { $(id).classList.remove('show'); }
 function twoTap(btn, fn) {
-  if (btn.dataset.armed === '1') { btn.dataset.armed=''; btn.classList.remove('armed'); btn.innerHTML=btn.dataset.orig; fn(); }
-  else { btn.dataset.orig=btn.innerHTML; btn.dataset.armed='1'; btn.classList.add('armed'); btn.innerHTML='⚠️ تأیید؟'; setTimeout(function(){ if(btn.dataset.armed==='1'){btn.dataset.armed='';btn.classList.remove('armed');btn.innerHTML=btn.dataset.orig;} },2600); }
+  if (!btn || !btn.dataset) return;
+  if (btn.dataset.armed === '1') { btn.dataset.armed=''; btn.classList.remove('armed'); btn.innerHTML=btn.dataset.orig||btn.innerHTML; fn(); }
+  else { btn.dataset.orig=btn.innerHTML; btn.dataset.armed='1'; btn.classList.add('armed'); btn.innerHTML='⚠️ تأیید؟'; setTimeout(function(){ if(btn && btn.dataset && btn.dataset.armed==='1'){btn.dataset.armed='';btn.classList.remove('armed');btn.innerHTML=btn.dataset.orig||'';} },2600); }
 }
 
 var SUPER_UID = 'GjleuLj5u6eI6V6zCR0y4Eb5cj03';
@@ -758,7 +760,6 @@ function fsAddHistory(code, type, text) {
   });
 }
 
-// ========== سیستم پیام‌دهی به فرد خاص ==========
 function sendPersonNotif(code, personId, text) {
   if (!fbDb || !code || !personId) return;
   fbDb.collection('mosques').doc(code).collection('notifs').add({
@@ -815,7 +816,7 @@ function renderDailyDhikr() {
 }
 
 var DUAS = [
-  { id: 'ashura', title: 'زیارت عاشورا', icon: '📜', important: true, audio: 'https://archive.org/download/ZiyaratAshura/Ashura.mp3', text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div><p>السَّلَامُ عَلَيْكَ يَا أَبَا عَبْدِ اللَّهِ</p>' },
+  { id: 'ashura', title: 'زیارت عاشورا', icon: '📜', important: true, text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div><p>السَّلَامُ عَلَيْكَ يَا أَبَا عَبْدِ اللَّهِ</p>' },
   { id: 'alqama', title: 'زیارت علقمه', icon: '📖', important: true, text: '<div class="verse">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِیمِ</div><p>السَّلَامُ عَلَيْكَ يَا وَلِيَّ اللَّهِ</p>' }
 ];
 
@@ -848,11 +849,9 @@ function playDuaAudio(id, url) {
   }
   if (st) st.textContent = '⏳ در حال آماده‌سازی صوت...';
   
-  // ابتدا بررسی کش
-  caches.open('masjed-v46').then(function(cache) {
+  caches.open('masjed-v47').then(function(cache) {
     return cache.match(url).then(function(hit) {
       if (hit) return hit;
-      // حذف no-cors — باید پاسخ واقعی بگیریم تا blob درست داشته باشیم
       return fetch(url).then(function(res) {
         if (res && res.ok) cache.put(url, res.clone());
         return res;
@@ -872,7 +871,6 @@ function playDuaAudio(id, url) {
       if (st) st.textContent = '▶ برای پخش، دوباره دکمه 🎧 را بزن'; 
     });
   }).catch(function(err) {
-    // Fallback: پخش مستقیم از اینترنت
     console.log('cache failed, direct play:', err);
     var el = new Audio(url);
     el.crossOrigin = 'anonymous';
@@ -1142,22 +1140,43 @@ function renderSuperList() {
   $('superList').innerHTML = list.map(function(m){
     var dis = m.status === 'disabled';
     return '<div class="list-item"><div class="avatar">🕌</div><div class="body"><div class="name">' + esc(m.name) + ' <span class="badge ' + (dis?'badge-danger':'badge-success') + '">' + (dis?'🛑 قطع':'✅ فعال') + '</span></div><div class="meta">کد: ' + esc(m.code) + ' | ' + esc(m.branch||'') + '</div></div>' +
-      '<button class="btn ' + (dis?'btn-success':'btn-danger') + ' btn-sm" data-action="super-toggle" data-id="' + m.code + '">' + (dis?'✅ فعال‌سازی':'🛑 قطع') + '</button>' +
-      '<button class="btn btn-outline btn-sm" data-action="super-delete" data-id="' + m.code + '">🗑</button></div>';
+      '<div style="display:flex;flex-direction:column;gap:4px">' +
+        '<button class="btn btn-primary btn-sm" data-action="super-enter" data-id="' + m.code + '">🚪 ورود</button>' +
+        '<button class="btn ' + (dis?'btn-success':'btn-danger') + ' btn-sm" data-action="super-toggle" data-id="' + m.code + '">' + (dis?'✅ فعال':'🛑 قطع') + '</button>' +
+        '<button class="btn btn-outline btn-sm" data-action="super-delete" data-id="' + m.code + '">🗑 حذف</button>' +
+      '</div>' +
+    '</div>';
   }).join('') || '<div class="empty">مسجدی ثبت نشده</div>';
 }
-function superToggle(code) {
-  var m = superCache.find(function(x){ return x.code === code; });
+function superToggle(id, btn) {
+  var m = superCache.find(function(x){ return x.code === id; });
   if (!m) return;
   var ns = m.status === 'disabled' ? 'active' : 'disabled';
-  fbDb.collection('mosques').doc(code).update({status: ns}).then(function(){
+  fbDb.collection('mosques').doc(id).update({status: ns}).then(function(){
     toast(ns === 'disabled' ? '🛑 مسجد قطع شد' : '✅ مسجد فعال شد', 'success');
   });
 }
-function superDelete(code) {
-  twoTap(event.currentTarget, function(){
-    fbDb.collection('mosques').doc(code).delete().then(function(){ toast('🗑 حذف شد','info'); });
+function superDelete(id, btn) {
+  twoTap(btn, function() {
+    fbDb.collection('mosques').doc(id).delete().then(function(){ toast('🗑 مسجد حذف شد','info'); });
   });
+}
+function superDeleteAll(btn) {
+  twoTap(btn, function() {
+    if (!confirm('⚠️ آیا مطمئن هستید که می‌خواهید همه مساجد را حذف کنید؟ این عمل غیرقابل بازگشت است.')) return;
+    var count = 0;
+    superCache.forEach(function(m) {
+      fbDb.collection('mosques').doc(m.code).delete().then(function(){ count++; toast('🗑 حذف شد: ' + count + ' از ' + superCache.length, 'info'); });
+    });
+  });
+}
+function superEnter(id) {
+  var m = superCache.find(function(x){ return x.code === id; });
+  if (!m) return;
+  S.role = 'manager'; S.code = id; S.mosque = m;
+  S.branch = m.branch || S.branch;
+  LS.set('session', {role:'manager', code:id, branch:S.branch});
+  enterManager();
 }
 
 function enterManager() {
@@ -1181,7 +1200,7 @@ function enterTeen() {
   $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent('MASJID|' + S.code + '|' + S.personName);
   goTo('teen');
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderTeenAll(); renderQuizStart();
-  listenPersonNotifs(); // گوش دادن به پیام‌های این نوجوان
+  listenPersonNotifs();
 }
 function renderPublic() {
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderPublicAnns();
@@ -1244,7 +1263,6 @@ function toggleAtt(id) {
       p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1; 
       p.lastAtt=todayStr(); 
       fsAddHistory(S.code,'att','حضور: '+p.name);
-      // پیام به خود فرد که امشب حضور ثبت شد
       sendPersonNotif(S.code, p.id, '🌙 حضور امشب شما ثبت شد! آفرین ' + p.name);
     }
     fsSavePerson(S.code, p);
@@ -1310,7 +1328,6 @@ function pmGive(rid) {
     p.points = (p.points||0) + r.points;
     fsSavePerson(S.code, p);
     fsAddHistory(S.code,'points', p.name + ' +' + r.points + ' (' + r.name + ')');
-    // پیام به خود فرد (نه مدیر)
     sendPersonNotif(S.code, p.id, '🎉 ' + r.points + ' امتیاز گرفتی! (' + r.name + ')');
     toast('✅ +' + faNum(r.points), 'success');
     showSuccess();
@@ -1331,8 +1348,8 @@ function pmCustom() {
   closeModal('personModal');
 }
 function pmAtt() { toggleAtt(curPerson); closeModal('personModal'); }
-function pmReset() {
-  twoTap(event.currentTarget, function() {
+function pmReset(btn) {
+  twoTap(btn, function() {
     var p = pplCache.find(function(x){ return x.id === curPerson; });
     if (!p) return;
     p.points = 0;
@@ -1343,8 +1360,8 @@ function pmReset() {
     closeModal('personModal');
   });
 }
-function pmDelete() {
-  twoTap($('pmDelete'), function() {
+function pmDelete(btn) {
+  twoTap(btn, function() {
     fsDeletePerson(S.code, curPerson);
     fsAddHistory(S.code,'delete','حذف فرد');
     toast('🗑 حذف شد','info');
@@ -1375,11 +1392,9 @@ function registerPrayer(id, prayer) {
     if (p) { p.points = (p.points||0) + 1; fsSavePerson(S.code, p); }
     fsAddHistory(S.code,'prayer', (p?p.name:'') + ' نماز ' + prayer);
     
-    // اگر نوجوان خودش هست، پیام روی دستگاهش
     if (S.role === 'teen' && S.personId === id) {
       showMotivational(p ? p.name : '', 'prayer');
     } else {
-      // اگر مدیر برای فرد ثبت می‌کند، پیام به خود فرد
       if (p) sendPersonNotif(S.code, p.id, '🕌 نماز ' + prayer + ' برایت ثبت شد! ' + getMotivationMsg(p.name, 'prayer'));
     }
     
@@ -1408,8 +1423,8 @@ function addReward() {
   $('newRwName').value = ''; $('newRwPts').value = '';
   toast('✅','success');
 }
-function deleteReward(id) {
-  twoTap(event.currentTarget, function() {
+function deleteReward(id, btn) {
+  twoTap(btn, function() {
     fsDeleteReward(S.code, id);
     toast('🗑','info');
   });
@@ -1432,8 +1447,8 @@ function addReason() {
   $('newRsName').value = ''; $('newRsPts').value = '';
   toast('✅','success');
 }
-function deleteReason(id) {
-  twoTap(event.currentTarget, function() {
+function deleteReason(id, btn) {
+  twoTap(btn, function() {
     fsDeleteReason(S.code, id);
     toast('🗑','info');
   });
@@ -1475,8 +1490,8 @@ function saveEditAnn() {
   closeModal('editAnnModal');
   toast('✅ ویرایش شد','success');
 }
-function deleteAnn(id) {
-  twoTap(event.currentTarget, function() {
+function deleteAnn(id, btn) {
+  twoTap(btn, function() {
     fsDeleteAnn(S.code, id);
     toast('🗑','info');
   });
@@ -1501,8 +1516,8 @@ function addPubAnn() {
   $('pubAnnText').value = '';
   showSuccess();
 }
-function deletePubAnn(id) {
-  twoTap(event.currentTarget, function() {
+function deletePubAnn(id, btn) {
+  twoTap(btn, function() {
     fsDeletePubAnn(id);
     toast('🗑','info');
   });
@@ -1703,7 +1718,7 @@ function savePublicSettings() {
   toast('✅','success');
 }
 
-var AZAN_SOUND = 'https://archive.org/download/adhan.notifications/Mishary%20Rashid%20al%20Afasy%20Fajr%20Adhan.mp3';
+var AZAN_SOUND = 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3';
 var azanUnlocked = false;
 function testAzan() {
   $('azanName').textContent = 'تست اذان';
@@ -1726,7 +1741,7 @@ function playAzanAudio() {
   azanUnlocked = true;
   $('btnPlayAzan').classList.add('hidden');
   audio.src = AZAN_SOUND;
-  audio.load(); // مهم: اطمینان از بارگذاری کامل
+  audio.load();
   var p = audio.play();
   if (p && p.catch) {
     p.catch(function(err) {
@@ -2034,8 +2049,10 @@ document.addEventListener('click', function(e) {
   else if (a === 'delete-mosque') deleteMosque();
   else if (a === 'teen-login') teenLogin();
   else if (a === 'super-login') superLogin();
-  else if (a === 'super-toggle') superToggle(el.dataset.id);
-  else if (a === 'super-delete') superDelete(el.dataset.id);
+  else if (a === 'super-toggle') superToggle(el.dataset.id, el);
+  else if (a === 'super-delete') superDelete(el.dataset.id, el);
+  else if (a === 'super-delete-all') superDeleteAll(el);
+  else if (a === 'super-enter') superEnter(el.dataset.id);
   else if (a === 'logout') logout();
   else if (a === 'add-person') addPerson();
   else if (a === 'open-person') openPersonMenu(el.dataset.id);
@@ -2043,23 +2060,23 @@ document.addEventListener('click', function(e) {
   else if (a === 'pm-give') pmGive(el.dataset.id);
   else if (a === 'pm-custom') pmCustom();
   else if (a === 'pm-att') pmAtt();
-  else if (a === 'pm-reset') pmReset();
+  else if (a === 'pm-reset') pmReset(el);
   else if (a === 'pm-prayer') openPrayerModal(curPerson);
-  else if (a === 'pm-delete') pmDelete();
+  else if (a === 'pm-delete') pmDelete(el);
   else if (a === 'prayer-give') registerPrayer(el.dataset.id, el.dataset.prayer);
   else if (a === 'toggle-att') toggleAtt(el.dataset.id);
   else if (a === 'mark-all') markAll();
   else if (a === 'clear-att') clearAtt();
   else if (a === 'add-reward') addReward();
-  else if (a === 'delete-reward') deleteReward(el.dataset.id);
+  else if (a === 'delete-reward') deleteReward(el.dataset.id, el);
   else if (a === 'add-reason') addReason();
-  else if (a === 'delete-reason') deleteReason(el.dataset.id);
+  else if (a === 'delete-reason') deleteReason(el.dataset.id, el);
   else if (a === 'add-ann') addAnn();
   else if (a === 'edit-ann') editAnn(el.dataset.id);
   else if (a === 'save-edit-ann') saveEditAnn();
-  else if (a === 'delete-ann') deleteAnn(el.dataset.id);
+  else if (a === 'delete-ann') deleteAnn(el.dataset.id, el);
   else if (a === 'add-pubann') addPubAnn();
-  else if (a === 'delete-pubann') deletePubAnn(el.dataset.id);
+  else if (a === 'delete-pubann') deletePubAnn(el.dataset.id, el);
   else if (a === 'test-azan') testAzan();
   else if (a === 'close-azan') closeAzan();
   else if (a === 'play-azan') playAzanAudio();
