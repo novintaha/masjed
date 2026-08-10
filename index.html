@@ -572,7 +572,7 @@ textarea{resize:vertical;min-height:70px}
 
 <div class="success-ov" id="successOverlay"><div class="success-circle">✓</div></div>
 <div class="toast-box" id="toastBox"></div>
-<audio id="azanAudio" preload="auto" crossorigin="anonymous"></audio>
+<audio id="azanAudio" preload="auto"></audio>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -739,7 +739,7 @@ function fsGetPubAnns(cb) {
 }
 function fsSavePubAnn(a) {
   if (!fbDb) return;
-  fbDb.collection('pubAnns').doc(a.id).set(a, {merge:true});
+  return fbDb.collection('pubAnns').doc(a.id).set(a, {merge:true});
 }
 function fsDeletePubAnn(id) {
   if (!fbDb) return;
@@ -842,44 +842,25 @@ function renderDuas(containerId) {
 var duaPlayers = {};
 function playDuaAudio(id, url) {
   var st = $('astatus-' + id);
-  if (duaPlayers[id] && duaPlayers[id].ready) { 
+  if (!url) { if (st) st.textContent = '❌ صوت این دعا بارگذاری نشده'; return; }
+  if (duaPlayers[id] && duaPlayers[id].ready) {
     duaPlayers[id].el.currentTime = 0;
-    duaPlayers[id].el.play().catch(function(){}); 
-    return; 
+    duaPlayers[id].el.play().catch(function(){});
+    return;
   }
-  if (st) st.textContent = '⏳ در حال آماده‌سازی صوت...';
-  
-  caches.open('masjed-v47').then(function(cache) {
-    return cache.match(url).then(function(hit) {
-      if (hit) return hit;
-      return fetch(url).then(function(res) {
-        if (res && res.ok) cache.put(url, res.clone());
-        return res;
-      });
-    });
-  }).then(function(res) {
-    if (!res || !res.ok) throw new Error('bad response');
+  if (st) st.textContent = '⏳ در حال دانلود صوت...';
+  fetch(url).then(function(res){
+    if (!res.ok) throw new Error('bad');
     return res.blob();
-  }).then(function(blob) {
-    if (!blob || blob.size === 0) throw new Error('empty blob');
+  }).then(function(blob){
     var src = URL.createObjectURL(blob);
     var el = new Audio(src);
     duaPlayers[id] = {el: el, ready: true};
-    if (st) st.textContent = '✅ روی دستگاهت ذخیره شد — از این به بعد آفلاین پخش می‌شود';
+    if (st) st.textContent = '✅ دانلود شد — آفلاین پخش می‌شود';
     var sb = $('speed-' + id); if (sb) sb.classList.remove('hidden');
-    el.play().catch(function(){ 
-      if (st) st.textContent = '▶ برای پخش، دوباره دکمه 🎧 را بزن'; 
-    });
-  }).catch(function(err) {
-    console.log('cache failed, direct play:', err);
-    var el = new Audio(url);
-    el.crossOrigin = 'anonymous';
-    duaPlayers[id] = {el: el, ready: true};
-    var sb = $('speed-' + id); if (sb) sb.classList.remove('hidden');
-    if (st) st.textContent = '▶ پخش مستقیم از اینترنت...';
-    el.play().catch(function() {
-      if (st) st.textContent = '❌ منبع صوت در دسترس نیست';
-    });
+    el.play().catch(function(){ if (st) st.textContent = '▶ دکمه 🎧 را بزن'; });
+  }).catch(function(){
+    if (st) st.textContent = '❌ منبع صوت در دسترس نیست';
   });
 }
 function setDuaSpeed(id, rate) {
@@ -1201,6 +1182,27 @@ function enterTeen() {
   goTo('teen');
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderTeenAll(); renderQuizStart();
   listenPersonNotifs();
+  showTeenWelcome();
+}
+function showTeenWelcome() {
+  fsGetPeople(S.code, function(people) {
+    var me = people.find(function(x){ return x.id === S.personId; });
+    if (!me) return;
+    var fajr=0, dhuhr=0, maghrib=0;
+    fsGetPray(S.code, todayStr(), function(pray) {
+      pray.forEach(function(r) {
+        if (r.indexOf(S.personId + '|') === 0) {
+          if (r.indexOf('|صبح')>=0) fajr++;
+          else if (r.indexOf('|ظهر')>=0) dhuhr++;
+          else if (r.indexOf('|مغرب')>=0) maghrib++;
+        }
+      });
+      setTimeout(function(){
+        toast('🎉 خوش آمدی ' + S.personName + '! ⭐ ' + faNum(me.points||0) + ' امتیاز | 🌙 ' + faNum(me.nights||0) + ' شب | 🕌 نماز امروز: ' + faNum(fajr+dhuhr+maghrib), 'success');
+        showSuccess();
+      }, 600);
+    });
+  });
 }
 function renderPublic() {
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderPublicAnns();
@@ -1511,10 +1513,13 @@ function addPubAnn() {
   if (!text) { toast('متن','warning'); return; }
   var target = $('pubAnnTarget').value;
   var expH = parseInt($('pubAnnExp').value, 10) || 0;
-  fsSavePubAnn({id:uid(), text:text, target:target, expireAt: expH>0?Date.now()+expH*3600000:0, time:new Date().toISOString()});
-  toast('📣 منتشر شد','success');
-  $('pubAnnText').value = '';
-  showSuccess();
+  fsSavePubAnn({id:uid(), text:text, target:target, expireAt: expH>0?Date.now()+expH*3600000:0, time:new Date().toISOString()}).then(function(){
+    toast('📣 منتشر شد','success');
+    $('pubAnnText').value = '';
+    showSuccess();
+  }).catch(function(err){
+    toast('❌ خطا در ارسال اطلاعیه: ' + (err.message || ''), 'danger');
+  });
 }
 function deletePubAnn(id, btn) {
   twoTap(btn, function() {
@@ -1719,12 +1724,12 @@ function savePublicSettings() {
 }
 
 var AZAN_SOUND = 'اذان.mp3';
+var AZAN_SOURCES = ['اذان.mp3', 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
 var azanUnlocked = false;
 function testAzan() {
   $('azanName').textContent = 'تست اذان';
   $('azanScreen').classList.add('show');
-  if (!azanUnlocked) $('btnPlayAzan').classList.remove('hidden');
-  else playAzanAudio();
+  playAzanAudio();
 }
 function closeAzan() {
   $('azanScreen').classList.remove('show');
@@ -1734,22 +1739,26 @@ function closeAzan() {
 }
 function playAzanAudio() {
   var volume = 80;
-  if (S.role === 'teen') { volume = $('teenVolume') ? parseInt($('teenVolume').value) : volume; }
-  else if (S.role === 'public') { volume = $('pubVolume') ? parseInt($('pubVolume').value) : volume; }
+  if (S.role === 'teen') volume = $('teenVolume') ? parseInt($('teenVolume').value) : volume;
+  else if (S.role === 'public') volume = $('pubVolume') ? parseInt($('pubVolume').value) : volume;
   var audio = $('azanAudio');
   audio.volume = (volume || 80) / 100;
   azanUnlocked = true;
   $('btnPlayAzan').classList.add('hidden');
-  audio.src = AZAN_SOUND;
-  audio.load();
-  var p = audio.play();
-  if (p && p.catch) {
-    p.catch(function(err) {
-      console.log('play error:', err);
+  var idx = 0;
+  function tryNext() {
+    if (idx >= AZAN_SOURCES.length) {
       $('btnPlayAzan').classList.remove('hidden');
-      toast('⚠️ برای پخش صدا دکمه ▶ را بزن','warning');
-    });
+      toast('⚠️ صدا در دسترس نیست — دکمه ▶ را بزن','warning');
+      return;
+    }
+    audio.src = AZAN_SOURCES[idx];
+    audio.load();
+    var p = audio.play();
+    if (p && p.catch) p.catch(function(){ idx++; tryNext(); });
   }
+  audio.onerror = function(){ idx++; tryNext(); };
+  tryNext();
 }
 function checkAzanTime() {
   var now = new Date();
