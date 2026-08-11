@@ -88,8 +88,8 @@ textarea{resize:vertical;min-height:70px}
 .selected-mosque .smi{font-size:1.8em}
 .selected-mosque .smn{font-weight:800;flex:1}
 .divider{height:2px;background:linear-gradient(90deg,transparent,#e0c87a,transparent);margin:18px 0}
-.top-banner{background:linear-gradient(90deg,#ff4d94,#c8963e,#ff4d94);background-size:200% 100%;color:#fff;border-radius:14px;padding:16px;margin-bottom:12px;font-weight:800;font-size:1em;display:flex;align-items:center;gap:12px;animation:gradient 3s ease infinite,bannerPop .5s;box-shadow:0 6px 20px rgba(200,150,62,.5);text-shadow:0 1px 3px rgba(0,0,0,.3)}
-.top-banner .ti{font-size:1.6em;animation:pulse 1s infinite}
+.top-banner{background:linear-gradient(90deg,#ff4d94,#c8963e,#ff9d4d,#ff4d94);background-size:300% 100%;color:#fff;border-radius:16px;padding:18px;margin-bottom:14px;font-weight:900;font-size:1.15em;display:flex;align-items:center;gap:14px;animation:gradient 2.5s ease infinite,bannerPop .5s;box-shadow:0 8px 28px rgba(255,77,148,.55);text-shadow:0 2px 6px rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.35)}
+.top-banner .ti{font-size:2em;animation:pulse .8s infinite}
 .champ-banner{background:linear-gradient(135deg,#ffd93d,#c8963e);color:#5c4030;border-radius:14px;padding:14px 16px;margin-bottom:12px;font-weight:700;display:flex;align-items:center;gap:12px;animation:pulse 2s ease-in-out infinite;box-shadow:0 4px 14px rgba(200,150,62,.4)}
 .champ-banner .trophy{font-size:1.6em;animation:trophy 1.2s infinite}
 .motivation{background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #e0c87a;border-radius:16px;padding:18px;margin-bottom:12px;position:relative;overflow:hidden;animation:slideRight .6s}
@@ -319,7 +319,7 @@ textarea{resize:vertical;min-height:70px}
   <select id="pushMosque" style="margin-bottom:10px"></select>
   <textarea id="pushText" placeholder="متن پیام دلخواه..." style="margin-bottom:10px"></textarea>
   <button class="btn btn-primary full-w" data-action="send-push">📨 ارسال پوش</button>
-  <div class="text-xs text-muted mt-2">💡 این پیام به‌صورت پوش به همه کاربرانی که در آن مسجد وارد شده‌اند ارسال می‌شود</div>
+  <div class="text-xs text-muted mt-2">💡 پیام به همه کاربرانی که در آن مسجد وارد شده‌اند ارسال می‌شود</div>
 </div>
 <div class="card" style="border:2px dashed #c8963e"><h3>🔧 اشکال‌یابی پوش</h3>
   <div id="debugStatus" style="font-family:monospace;font-size:.85em;line-height:1.8;padding:10px;background:#fdf8f0;border-radius:8px">در حال بررسی...</div>
@@ -570,10 +570,10 @@ textarea{resize:vertical;min-height:70px}
 <div class="toast-box" id="toastBox"></div>
 <audio id="azanAudio" preload="auto"></audio>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
 <script src="duas-data.js"></script>
 
 <script>
@@ -636,14 +636,14 @@ try {
     appId: "1:23821410712:web:1789bb8cc4659377544bed"
   });
   fbDb = firebase.firestore();
-  fbDb.enablePersistence({ synchronizeTabs: true }).catch(function(e){ console.log('offline:', e.code); });
-} catch(e) { console.log('Firebase init:', e); }
+  fbDb.enablePersistence({ synchronizeTabs: true }).catch(function(e){});
+} catch(e) {}
 
 function fsGetPeople(code, cb) {
   if (!fbDb) { cb([]); return; }
   fbDb.collection('mosques').doc(code).collection('people').onSnapshot(function(snap) {
     var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-  }, function(e){ console.log('get people:', e); cb([]); });
+  }, function(){ cb([]); });
 }
 function fsSavePerson(code, p) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('people').doc(p.id).set(p, {merge:true}); }
 function fsDeletePerson(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('people').doc(id).delete(); }
@@ -651,7 +651,7 @@ function fsGetRewards(code, cb) {
   if (!fbDb) { cb([]); return; }
   fbDb.collection('mosques').doc(code).collection('rewards').onSnapshot(function(snap) {
     var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-  }, function(e){ cb([]); });
+  }, function(){ cb([]); });
 }
 function fsSaveReward(code, r) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('rewards').doc(r.id).set(r, {merge:true}); }
 function fsDeleteReward(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('rewards').doc(id).delete(); }
@@ -659,7 +659,7 @@ function fsGetReasons(code, cb) {
   if (!fbDb) { cb([]); return; }
   fbDb.collection('mosques').doc(code).collection('reasons').onSnapshot(function(snap) {
     var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-  }, function(e){ cb([]); });
+  }, function(){ cb([]); });
 }
 function fsSaveReason(code, r) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('reasons').doc(r.id).set(r, {merge:true}); }
 function fsDeleteReason(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('reasons').doc(id).delete(); }
@@ -681,7 +681,7 @@ function fsGetAnns(code, cb) {
   if (!fbDb) { cb([]); return; }
   fbDb.collection('mosques').doc(code).collection('anns').onSnapshot(function(snap) {
     var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-  }, function(e){ cb([]); });
+  }, function(){ cb([]); });
 }
 function fsSaveAnn(code, a) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('anns').doc(a.id).set(a, {merge:true}); }
 function fsDeleteAnn(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('anns').doc(id).delete(); }
@@ -689,7 +689,7 @@ function fsGetPubAnns(cb) {
   if (!fbDb) { cb([]); return; }
   fbDb.collection('pubAnns').onSnapshot(function(snap) {
     var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-  }, function(e){ cb([]); });
+  }, function(){ cb([]); });
 }
 function fsSavePubAnn(a) { if (!fbDb) return; return fbDb.collection('pubAnns').doc(a.id).set(a, {merge:true}); }
 function fsDeletePubAnn(id) { if (!fbDb) return; fbDb.collection('pubAnns').doc(id).delete(); }
@@ -697,16 +697,15 @@ function fsGetHistory(code, cb) {
   if (!fbDb) { cb([]); return; }
   fbDb.collection('mosques').doc(code).collection('history').orderBy('time', 'desc').limit(100).onSnapshot(function(snap) {
     var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-  }, function(e){ cb([]); });
+  }, function(){ cb([]); });
 }
 function fsAddHistory(code, type, text) {
   if (!fbDb) return;
   fbDb.collection('mosques').doc(code).collection('history').add({ type: type, text: text, time: new Date().toISOString() });
 }
-
 function sendPersonNotif(code, personId, text) {
   if (!fbDb || !code || !personId) return;
-  fbDb.collection('mosques').doc(code).collection('notifs').add({ personId: personId, text: text, ts: Date.now(), read: false }).catch(function(e){});
+  fbDb.collection('mosques').doc(code).collection('notifs').add({ personId: personId, text: text, ts: Date.now(), read: false }).catch(function(){});
 }
 function listenPersonNotifs() {
   if (!fbDb || !S.code || !S.personId) return;
@@ -724,13 +723,13 @@ function listenPersonNotifs() {
 }
 
 var DAILY_DHIKR = {
-  0: {day: 'یکشنبه', fa: 'یا الله', ar: 'یَا اللهُ', count: 100, desc: 'ذکر روز یکشنبه - نام اعظم خداوند'},
-  1: {day: 'دوشنبه', fa: 'یا رسول الله', ar: 'یَا رَسُولَ اللهِ', count: 100, desc: 'ذکر روز دوشنبه'},
-  2: {day: 'سه‌شنبه', fa: 'یا امیرالمؤمنین', ar: 'یَا أَمِیرَ الْمُؤْمِنِینَ', count: 100, desc: 'ذکر روز سه‌شنبه'},
-  3: {day: 'چهارشنبه', fa: 'یا امام حسن', ar: 'یَا إِمَامَ حَسَن', count: 100, desc: 'ذکر روز چهارشنبه'},
-  4: {day: 'پنج‌شنبه', fa: 'یا اباعبدالله الحسین', ar: 'یَا أَبَا عَبْدِ اللهِ الْحُسَیْن', count: 100, desc: 'ذکر روز پنج‌شنبه'},
-  5: {day: 'جمعه', fa: 'یا صاحب الزمان', ar: 'یَا صَاحِبَ الزَّمَانِ', count: 100, desc: 'ذکر روز جمعه'},
-  6: {day: 'شنبه', fa: 'لا اله الا الله ملک الحق المبین', ar: 'لَا إِلٰهَ إِلَّا اللهُ مَلِکُ الْحَقِّ الْمُبِینُ', count: 100, desc: 'ذکر روز شنبه'}
+  6: {day:'شنبه', fa:'یا رب العالمین', ar:'یَا رَبَّ الْعَالَمِینَ', count:100, desc:'ذکر روز شنبه'},
+  0: {day:'یکشنبه', fa:'یا ذاالجلال و الاکرام', ar:'یَا ذَاالْجَلَالِ وَالْإِکْرَامِ', count:100, desc:'ذکر روز یکشنبه'},
+  1: {day:'دوشنبه', fa:'یا قاضی الحاجات', ar:'یَا قَاضِيَ الْحَاجَاتِ', count:100, desc:'ذکر روز دوشنبه'},
+  2: {day:'سه‌شنبه', fa:'یا ارحم الراحمین', ar:'یَا أَرْحَمَ الرَّاحِمِینَ', count:100, desc:'ذکر روز سه‌شنبه'},
+  3: {day:'چهارشنبه', fa:'یا حی یا قیوم', ar:'یَا حَيُّ يَا قَيُّومُ', count:100, desc:'ذکر روز چهارشنبه'},
+  4: {day:'پنج‌شنبه', fa:'لا اله الا الله الملک الحق المبین', ar:'لَا إِلٰهَ إِلَّا اللهُ الْمَلِکُ الْحَقُّ الْمُبِینُ', count:100, desc:'ذکر روز پنج‌شنبه'},
+  5: {day:'جمعه', fa:'اللهم صل علی محمد و آل محمد', ar:'اللَّهُمَّ صَلِّ عَلٰی مُحَمَّدٍ وَآلِ مُحَمَّدٍ', count:100, desc:'ذکر روز جمعه'}
 };
 function getTodayDhikr() { return DAILY_DHIKR[new Date().getDay()]; }
 function renderDailyDhikr() {
@@ -825,7 +824,7 @@ function loadMosquesFromFirestore() {
   fbDb.collection('mosques').where('status', '==', 'active').onSnapshot(function(snap) {
     mosqueCache = []; snap.forEach(function(doc){ mosqueCache.push({id:doc.id, ...doc.data()}); });
     if ($('mgrSearch')) searchMosques($('mgrSearch').value, 'mgr');
-  }, function(e){});
+  }, function(){});
 }
 function searchMosques(query, type) {
   var q = (query || '').trim().toLowerCase();
@@ -866,6 +865,7 @@ async function mgrLogin() {
     var msg = e.message || 'خطا';
     if (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') msg = 'رمز اشتباه است';
     else if (e.code === 'auth/too-many-requests') msg = 'تلاش زیاد! ۵ دقیقه صبر کن';
+    else if (e.code === 'auth/network-request-failed') msg = 'خطای شبکه. اینترنت/VPN را بررسی کنید';
     toast('❌ ' + msg, 'danger');
   }
 }
@@ -885,7 +885,14 @@ async function createMosque() {
   var code = 'M' + Math.floor(1000 + Math.random()*9000);
   var adminEmail = 'mosque-' + code.toLowerCase() + '@masjed.app';
   try {
-    var cred = await firebase.auth().createUserWithEmailAndPassword(adminEmail, pin);
+    var cred = null;
+    for (var attempt = 0; attempt < 3 && !cred; attempt++) {
+      try { cred = await firebase.auth().createUserWithEmailAndPassword(adminEmail, pin); }
+      catch (err2) {
+        if (attempt === 2) throw err2;
+        await new Promise(function(r){ setTimeout(r, 1500); });
+      }
+    }
     var adminUid = cred.user.uid;
     await fbDb.collection('mosques').doc(code).set({
       code: code, name: name, address: address, adminUid: adminUid,
@@ -904,6 +911,7 @@ async function createMosque() {
   } catch(e) {
     var msg = e.message || 'خطا';
     if (e.code === 'auth/email-already-in-use') msg = 'این کد قبلاً استفاده شده';
+    else if (e.code === 'auth/network-request-failed') msg = 'خطای شبکه! لطفاً اینترنت/VPN را بررسی کنید';
     toast('خطا: ' + msg, 'danger');
   } finally { btn.disabled = false; btn.textContent = '✅ ساخت مسجد'; }
 }
@@ -955,7 +963,7 @@ function superLogin() {
   firebase.auth().signInWithEmailAndPassword(email, pass).then(function(cred) {
     if (cred.user.uid !== SUPER_UID) { firebase.auth().signOut(); toast('❌ شما سوپرادمین نیستید','danger'); return; }
     S.role = 'super'; enterSuper();
-  }).catch(function(e){ toast('❌ ' + (e.code === 'auth/too-many-requests' ? 'تلاش زیاد!' : 'ایمیل یا رمز اشتباه است'), 'danger'); });
+  }).catch(function(e){ toast('❌ ' + (e.code === 'auth/too-many-requests' ? 'تلاش زیاد!' : e.code === 'auth/network-request-failed' ? 'خطای شبکه' : 'ایمیل یا رمز اشتباه است'), 'danger'); });
 }
 function enterSuper() { goTo('super'); loadSuperList(); }
 function loadSuperList() {
@@ -1170,8 +1178,8 @@ function pmReset(btn) {
   twoTap(btn, function() {
     var p = pplCache.find(function(x){ return x.id === curPerson; }); if (!p) return;
     p.points = 0; fsSavePerson(S.code, p);
-    fsAddHistory(S.code,'reset', p.name + ' امتیاز صفر شد (بعد از جایزه)');
-    sendPersonNotif(S.code, p.id, '🎁 امتیازت صفر شد (جایزه‌ات را از مدیر بگیر)');
+    fsAddHistory(S.code,'reset', p.name + ' امتیاز صفر شد');
+    sendPersonNotif(S.code, p.id, '🎁 امتیازت صفر شد');
     toast('🔄 امتیاز صفر شد','success'); closeModal('personModal');
   });
 }
@@ -1243,8 +1251,10 @@ var annCache = [];
 function renderAnns() {
   fsGetAnns(S.code, function(anns) {
     annCache = anns;
-    $('annList').innerHTML = anns.filter(function(a){ return a.branch === S.branch; }).map(function(a) {
-      var exp = a.expireAt ? ' | انقضا: ' + new Date(a.expireAt).toLocaleDateString('fa-IR') : '';
+    var now = Date.now();
+    var list = anns.filter(function(a){ return a.branch === S.branch && (!a.expireAt || a.expireAt > now); });
+    $('annList').innerHTML = list.map(function(a) {
+      var exp = a.expireAt ? ' | انقضا: ' + new Date(a.expireAt).toLocaleString('fa-IR') : '';
       return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📢 اطلاعیه</div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+exp+'</div></div><div class="ann-body">'+esc(a.text)+'</div><div class="ann-actions"><button class="btn btn-outline btn-sm" data-action="edit-ann" data-id="'+a.id+'">✏</button><button class="btn btn-danger btn-sm" data-action="delete-ann" data-id="'+a.id+'">🗑</button></div></div>';
     }).join('');
   });
@@ -1272,8 +1282,11 @@ var pubAnnCache = [];
 function renderPubAnnsMgr() {
   fsGetPubAnns(function(anns) {
     pubAnnCache = anns;
-    $('pubAnnList').innerHTML = anns.map(function(a) {
-      return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 <span class="badge badge-info">'+esc(a.target||'همه')+'</span></div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+'</div></div><div class="ann-body">'+esc(a.text)+'</div><div class="ann-actions"><button class="btn btn-danger btn-sm" data-action="delete-pubann" data-id="'+a.id+'">🗑</button></div></div>';
+    var now = Date.now();
+    var list = anns.filter(function(a){ return !a.expireAt || a.expireAt > now; });
+    $('pubAnnList').innerHTML = list.map(function(a) {
+      var exp = a.expireAt ? ' | انقضا: ' + new Date(a.expireAt).toLocaleString('fa-IR') : '';
+      return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 <span class="badge badge-info">'+esc(a.target||'همه')+'</span></div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+exp+'</div></div><div class="ann-body">'+esc(a.text)+'</div><div class="ann-actions"><button class="btn btn-danger btn-sm" data-action="delete-pubann" data-id="'+a.id+'">🗑</button></div></div>';
     }).join('');
   });
 }
@@ -1292,7 +1305,8 @@ function renderPublicAnns() {
     var list = anns.filter(function(a){ return !a.expireAt || a.expireAt > now; });
     $('pubAnnEmpty').classList.toggle('hidden', list.length > 0);
     $('pubAnnouncements').innerHTML = list.map(function(a) {
-      return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 اطلاعیه عمومی</div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+'</div></div><div class="ann-body">'+esc(a.text)+'</div></div>';
+      var exp = a.expireAt ? ' | تا: ' + new Date(a.expireAt).toLocaleString('fa-IR') : '';
+      return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 اطلاعیه عمومی</div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+exp+'</div></div><div class="ann-body">'+esc(a.text)+'</div></div>';
     }).join('');
   });
 }
@@ -1452,8 +1466,8 @@ function saveTeenSettings() {
   toast('✅','success');
 }
 
-var AZAN_SOUND = 'azan.mp3';
-var AZAN_SOURCES = ['azan.mp3', 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
+var AZAN_SOUND = 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3';
+var AZAN_SOURCES = ['https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3', 'azan.mp3', 'اذان.mp3'];
 var azanUnlocked = false;
 function testAzan() {
   $('azanName').textContent = 'تست اذان';
@@ -1469,7 +1483,6 @@ function closeAzan() {
 function playAzanAudio() {
   var volume = 80;
   if (S.role === 'teen') volume = $('teenVolume') ? parseInt($('teenVolume').value) : volume;
-  else if (S.role === 'public') volume = $('pubVolume') ? parseInt($('pubVolume').value) : volume;
   var audio = $('azanAudio');
   audio.volume = (volume || 80) / 100;
   azanUnlocked = true;
@@ -1478,7 +1491,7 @@ function playAzanAudio() {
   function tryNext() {
     if (idx >= AZAN_SOURCES.length) {
       $('btnPlayAzan').classList.remove('hidden');
-      toast('⚠️ صدا در دسترس نیست — دکمه ▶ را بزن','warning');
+      toast('⚠️ صدا در دسترس نیست','warning');
       return;
     }
     audio.src = AZAN_SOURCES[idx];
@@ -1503,7 +1516,6 @@ function checkAzanTime() {
         LS.set('last_azan', key);
         var shouldPlay = false;
         if (S.role === 'teen') { var s = LS.get('teen_' + S.code + '_' + S.personId, {}); shouldPlay = s.autoAzan !== false && s[c.id] !== false; }
-        else if (S.role === 'public') { var s2 = LS.get('public_settings', {}); shouldPlay = s2.autoAzan !== false && s2[c.id] !== false; }
         else { var s3 = LS.get('cfg_' + S.code, {}); shouldPlay = s3.autoAzan !== false && s3[c.id] !== false; }
         if (shouldPlay) {
           $('azanName').textContent = c.name;
@@ -1572,7 +1584,7 @@ async function initQibla() {
   $('qiblaReading').textContent = faNum(Math.round(qiblaBrng)) + '°';
   setNeedle(qiblaBrng);
   status.innerHTML = usedDefault
-    ? '🧭 جهت قبله: <b>' + faNum(Math.round(qiblaBrng)) + '°</b> از شمال (پیش‌فرض: اصفهان)<br><span class="text-xs">عقربه قرمز جهت قبله است</span>'
+    ? '🧭 جهت قبله: <b>' + faNum(Math.round(qiblaBrng)) + '°</b> از شمال (پیش‌فرض: اصفهان)'
     : '✅ موقعیت یافت شد<br>جهت قبله: <b>' + faNum(Math.round(qiblaBrng)) + '°</b>';
   startOrientation();
   btn.textContent = '✓ فعال'; btn.classList.remove('btn-primary'); btn.classList.add('btn-success');
@@ -1659,11 +1671,10 @@ function registerServiceWorker() {
   if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(function(){}); }
 }
 function showAzanNotification(prayerName, mosqueName) {
-  if (!('Notification' in window)) { toast('مرورگر اعلان را پشتیبانی نمی‌کند','warning'); return; }
+  if (!('Notification' in window)) return;
   if (Notification.permission !== 'granted') {
     Notification.requestPermission().then(function(p){
       if (p === 'granted') toast('✅ اجازه اعلان داده شد','success');
-      else toast('🔕 اجازه اعلان رد شد','warning');
     });
     return;
   }
@@ -1679,7 +1690,7 @@ function showAzanNotification(prayerName, mosqueName) {
   try { if (!$('azanScreen').classList.contains('show')) playAzanAudio(); } catch(e) {}
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistration().then(function(reg) {
-      if (reg) { reg.showNotification(title, options); toast('🔔 اعلان نمایش داده شد','success'); }
+      if (reg) { reg.showNotification(title, options); }
     });
   }
 }
@@ -1696,7 +1707,6 @@ function checkAzanNotification() {
         LS.set('last_notif', key);
         var should = true;
         if (S.role === 'teen') { var s1 = LS.get('teen_' + S.code + '_' + S.personId, {}); should = s1.autoAzan !== false && s1[c.id] !== false; }
-        else if (S.role === 'public') { var s2 = LS.get('public_settings', {}); should = s2.autoAzan !== false && s2[c.id] !== false; }
         else if (S.role === 'manager') { var s3 = LS.get('cfg_' + S.code, {}); should = s3.autoAzan !== false && s3[c.id] !== false; }
         if (should) showAzanNotification(c.name, (S.mosque ? S.mosque.name : 'مسجد آقا منیر'));
       }
@@ -1731,8 +1741,6 @@ function initFcmPushFlow() {
     Notification.requestPermission().then(function(p) {
       if (p === 'granted') { toast('✅ اعلان‌های ابری فعال شد', 'success'); initFcmPush(); }
     });
-  } else if (Notification.permission === 'denied') {
-    if (LS.get('fcm_token', '')) LS.set('fcm_token', '');
   }
 }
 try {
