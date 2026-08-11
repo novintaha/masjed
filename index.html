@@ -321,6 +321,18 @@ textarea{resize:vertical;min-height:70px}
   <button class="btn btn-primary full-w" data-action="send-push">📨 ارسال پوش</button>
   <div class="text-xs text-muted mt-2">💡 پیام به همه کاربرانی که در آن مسجد وارد شده‌اند ارسال می‌شود</div>
 </div>
+<!-- جدید: مدیریت ادعیه توسط سوپرادمین -->
+<div class="card"><h3>🤲 مدیریت ادعیه (افزودن/ویرایش)</h3>
+  <input type="text" id="duaTitle" placeholder="عنوان دعا" style="margin-bottom:8px">
+  <input type="text" id="duaIcon" placeholder="آیکون (مثلاً 📜)" style="margin-bottom:8px">
+  <textarea id="duaText" placeholder="متن دعا — هر خط یک پاراگراف" style="min-height:120px;margin-bottom:8px"></textarea>
+  <input type="hidden" id="duaEditId">
+  <div class="flex gap-2">
+    <button class="btn btn-success full-w" data-action="save-dua">💾 ذخیره دعا</button>
+    <button class="btn btn-outline" data-action="dua-new">➕ جدید</button>
+  </div>
+  <div id="duaAdminList" class="mt-3"></div>
+</div>
 <div class="card" style="border:2px dashed #c8963e"><h3>🔧 اشکال‌یابی پوش</h3>
   <div id="debugStatus" style="font-family:monospace;font-size:.85em;line-height:1.8;padding:10px;background:#fdf8f0;border-radius:8px">در حال بررسی...</div>
   <div class="flex gap-2 mt-3">
@@ -518,7 +530,42 @@ textarea{resize:vertical;min-height:70px}
   <div class="section-divider"></div>
   <div class="card"><h3>📣 اطلاعیه‌های عمومی</h3><div id="pubAnnouncements"></div><div id="pubAnnEmpty" class="empty hidden"><div class="empty-icon">📣</div><div>اطلاعیه‌ای نیست</div></div></div>
   <div class="section-divider"></div>
+  <!-- تنظیمات اذان برای بخش عمومی -->
+  <div class="card"><h3>🔊 تنظیمات اذان‌گو</h3>
+    <div class="setting-row"><label>🔔 اذان‌گوی خودکار</label><span class="switch"><input type="checkbox" id="pubAutoAzan" checked data-change="save-public"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="pubFajr" checked data-change="save-public"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="pubDhuhr" checked data-change="save-public"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🌇 مغرب</label><span class="switch"><input type="checkbox" id="pubMaghrib" checked data-change="save-public"><span class="slider"></span></span></div>
+    <div class="setting-row"><label>🔉 حجم صدا</label></div>
+    <div class="vol-wrap"><span>🔈</span><input type="range" min="0" max="100" value="80" id="pubVolume" data-change="save-public" class="vol-slider"><span>🔊</span></div>
+    <button class="btn btn-outline mt-3 full-w" data-action="test-azan">🔊 تست اذان</button>
+  </div>
   <button class="btn btn-outline full-w mt-3" data-action="go" data-page="start">🚪 بازگشت</button>
+</div>
+
+<!-- صفحه کارنامه QR -->
+<div id="pageProfile" class="hidden">
+  <div class="start-box">
+    <div class="qr-card">
+      <div class="avatar" id="pfAvatar" style="width:70px;height:70px;margin:0 auto 10px;font-size:2em">👤</div>
+      <div class="fw-800" style="font-size:1.3em" id="pfName">—</div>
+      <div class="text-muted text-sm" id="pfMosque">—</div>
+    </div>
+    <div class="stats-grid" style="margin-top:12px">
+      <div class="stat-card"><div class="stat-value" id="pfPts">۰</div><div class="stat-label">⭐ امتیاز</div></div>
+      <div class="stat-card"><div class="stat-value" id="pfNights">۰</div><div class="stat-label">🌙 شب</div></div>
+      <div class="stat-card"><div class="stat-value" id="pfStreak">۰</div><div class="stat-label">🔥 متوالی</div></div>
+      <div class="stat-card"><div class="stat-value" id="pfRank">—</div><div class="stat-label">🏅 رتبه</div></div>
+    </div>
+    <div class="card"><h3>🕌 نمازهای امروز</h3>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="stat-value" id="pfFajr">۰</div><div class="stat-label">🌅 صبح</div></div>
+        <div class="stat-card"><div class="stat-value" id="pfDhuhr">۰</div><div class="stat-label">🌞 ظهر</div></div>
+        <div class="stat-card"><div class="stat-value" id="pfMaghrib">۰</div><div class="stat-label">🌇 مغرب</div></div>
+      </div>
+    </div>
+    <button class="btn btn-primary full-w" data-action="go" data-page="start">🏠 بازگشت</button>
+  </div>
 </div>
 
 <div class="footer">
@@ -741,7 +788,9 @@ function renderDailyDhikr() {
 var DUAS = [];
 function renderDuas(containerId) {
   var container = $(containerId); if (!container) return;
-  var list = (typeof window.DUAS_FULL !== 'undefined') ? window.DUAS_FULL : DUAS;
+  var defaultList = (typeof window.DUAS_FULL !== 'undefined') ? window.DUAS_FULL : DUAS;
+  var customList = window._customDuas || [];
+  var list = defaultList.concat(customList);
   container.innerHTML = list.map(function(d) {
     var audioHtml = d.audio ?
       '<div class="dua-audio-box"><button class="btn btn-gold btn-sm" data-action="dua-audio" data-id="'+d.id+'" data-url="'+d.audio+'">🎧 دانلود و پخش صوت</button> <span class="speed-btns hidden" id="speed-'+d.id+'"><button class="btn btn-outline btn-sm" data-action="dua-speed" data-id="'+d.id+'" data-rate="1">×1</button> <button class="btn btn-outline btn-sm" data-action="dua-speed" data-id="'+d.id+'" data-rate="1.5">×1.5</button> <button class="btn btn-outline btn-sm" data-action="dua-speed" data-id="'+d.id+'" data-rate="2">×2</button></span><div class="text-xs text-muted mt-2" id="astatus-'+d.id+'">اختیاری: یک‌بار دانلود می‌شود</div></div>' : '';
@@ -766,10 +815,48 @@ function setDuaSpeed(id, rate) {
   if (duaPlayers[id] && duaPlayers[id].el) { duaPlayers[id].el.playbackRate = rate; toast('⏩ سرعت: ×' + rate, 'info'); }
 }
 
+// ================== توابع جدید برای صفحه کارنامه QR و ادعیه سفارشی ==================
+function getParam(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
+
+function loadProfile(code, personId) {
+  goTo('profile');
+  fbDb.collection('mosques').doc(code).get().then(function(doc){
+    if (!doc.exists) { $('pfName').textContent = '❌ مسجد یافت نشد'; return; }
+    $('pfMosque').textContent = '🕌 ' + (doc.data().name||'');
+    fbDb.collection('mosques').doc(code).collection('people').get().then(function(snap){
+      var list=[]; var me=null;
+      snap.forEach(function(d){ var p={id:d.id,...d.data()}; list.push(p); if(p.id===personId) me=p; });
+      if(!me){ $('pfName').textContent='❌ فرد یافت نشد'; return; }
+      $('pfName').textContent=me.name; $('pfAvatar').textContent=(me.name||'؟').charAt(0);
+      $('pfPts').textContent=faNum(me.points||0); $('pfNights').textContent=faNum(me.nights||0);
+      $('pfStreak').textContent=faNum(me.streak||0);
+      var s=list.slice().sort(function(a,b){return (b.points||0)-(a.points||0);});
+      var r=0; for(var i=0;i<s.length;i++) if(s[i].id===personId) r=i+1;
+      $('pfRank').textContent=r?faNum(r):'—';
+      fbDb.collection('mosques').doc(code).collection('pray').doc(todayStr()).get().then(function(pd){
+        var rec=pd.exists?(pd.data().records||[]):[]; var f=0,d=0,m=0;
+        rec.forEach(function(x){ if(x.indexOf(personId+'|')===0){ if(x.indexOf('|صبح')>=0)f++; else if(x.indexOf('|ظهر')>=0)d++; else if(x.indexOf('|مغرب')>=0)m++; }});
+        $('pfFajr').textContent=faNum(f); $('pfDhuhr').textContent=faNum(d); $('pfMaghrib').textContent=faNum(m);
+      });
+    });
+  });
+}
+
+window._customDuas = [];
+function loadCustomDuas(cb){ if(!fbDb){cb([]);return;} fbDb.collection('customDuas').onSnapshot(function(snap){ var l=[]; snap.forEach(function(d){ l.push({id:d.id,...d.data()}); }); window._customDuas=l; cb(l); }, function(){cb([]);}); }
+function renderDuaAdmin(){ loadCustomDuas(function(l){ $('duaAdminList').innerHTML = l.map(function(d){ return '<div class="list-item"><div class="body"><div class="name">'+(d.icon||'📜')+' '+esc(d.title)+'</div></div><button class="btn btn-outline btn-sm" data-action="dua-edit" data-id="'+d.id+'">✏</button><button class="btn btn-danger btn-sm" data-action="dua-del" data-id="'+d.id+'">🗑</button></div>'; }).join('') || '<div class="empty">دعای سفارشی نیست</div>'; }); }
+function saveDua(){ var t=$('duaTitle').value.trim(); var x=$('duaText').value.trim(); if(!t||!x){toast('عنوان و متن','warning');return;} var id=$('duaEditId').value||uid(); var icon=$('duaIcon').value||'📜';
+  var html = x.split('\n').map(function(l){ return l.trim()? '<p>'+l+'</p>':''; }).join('');
+  fbDb.collection('customDuas').doc(id).set({id:id,title:t,icon:icon,text:html,ts:Date.now()}).then(function(){ toast('✅ ذخیره شد','success'); $('duaTitle').value='';$('duaText').value='';$('duaIcon').value='';$('duaEditId').value=''; }); }
+function duaNew(){ $('duaEditId').value=''; $('duaTitle').value=''; $('duaText').value=''; $('duaIcon').value=''; }
+function duaEdit(id){ var d=window._customDuas.find(function(x){return x.id===id;}); if(!d)return; $('duaEditId').value=d.id; $('duaTitle').value=d.title; $('duaIcon').value=d.icon||''; $('duaText').value=(d.text||'').replace(/<p>/g,'').replace(/<\/p>/g,'\n'); }
+function duaDel(id,btn){ twoTap(btn,function(){ fbDb.collection('customDuas').doc(id).delete().then(function(){toast('🗑 حذف شد','info');}); }); }
+// =========================================================================
+
 function goTo(page) {
-  ['pageStart','pageMgrAuth','pageTeenLogin','pageManager','pageTeen','pagePublic','pageSuperLogin','pageSuper'].forEach(function(p){ $(p).classList.add('hidden'); });
+  ['pageStart','pageMgrAuth','pageTeenLogin','pageManager','pageTeen','pagePublic','pageSuperLogin','pageSuper','pageProfile'].forEach(function(p){ $(p).classList.add('hidden'); });
   $('sharedHeader').classList.add('hidden');
-  var map = {start:'pageStart',mgrAuth:'pageMgrAuth',teenLogin:'pageTeenLogin',manager:'pageManager',teen:'pageTeen',publicHome:'pagePublic',superLogin:'pageSuperLogin',super:'pageSuper'};
+  var map = {start:'pageStart',mgrAuth:'pageMgrAuth',teenLogin:'pageTeenLogin',manager:'pageManager',teen:'pageTeen',publicHome:'pagePublic',superLogin:'pageSuperLogin',super:'pageSuper',profile:'pageProfile'};
   var el = $(map[page]); if (el) el.classList.remove('hidden');
   if (['manager','teen','publicHome'].indexOf(page) >= 0) $('sharedHeader').classList.remove('hidden');
   if (page === 'mgrAuth' || page === 'teenLogin') {
@@ -965,7 +1052,7 @@ function superLogin() {
     S.role = 'super'; enterSuper();
   }).catch(function(e){ toast('❌ ' + (e.code === 'auth/too-many-requests' ? 'تلاش زیاد!' : e.code === 'auth/network-request-failed' ? 'خطای شبکه' : 'ایمیل یا رمز اشتباه است'), 'danger'); });
 }
-function enterSuper() { goTo('super'); loadSuperList(); }
+function enterSuper() { goTo('super'); loadSuperList(); renderDuaAdmin(); }
 function loadSuperList() {
   fbDb.collection('mosques').onSnapshot(function(snap) {
     superCache = [];
@@ -1040,7 +1127,9 @@ function enterTeen() {
   $('hdrSub').textContent = S.branch + ' | ' + S.personName;
   $('hdrChip').textContent = '🧒 ' + S.personName;
   $('teenCodeShow').textContent = S.personName;
-  $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent('MASJID|' + S.code + '|' + S.personName);
+  // QR کد با لینک واقعی
+  var baseUrl = location.origin + location.pathname;
+  $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(baseUrl + '?card=' + S.code + '&person=' + S.personId);
   goTo('teen');
   renderDates(); renderPrayerBar(); loadPrayerTimes(); renderTeenAll(); renderQuizStart();
   listenPersonNotifs(); showTeenWelcome();
@@ -1466,7 +1555,19 @@ function saveTeenSettings() {
   toast('✅','success');
 }
 
-var AZAN_SOUND = 'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3';
+function loadPublicSettings() {
+  var s = LS.get('public_settings', {});
+  if (s.autoAzan !== undefined) $('pubAutoAzan').checked = s.autoAzan;
+  if (s.fajr !== undefined) $('pubFajr').checked = s.fajr;
+  if (s.dhuhr !== undefined) $('pubDhuhr').checked = s.dhuhr;
+  if (s.maghrib !== undefined) $('pubMaghrib').checked = s.maghrib;
+  if (s.volume !== undefined) $('pubVolume').value = s.volume;
+}
+function savePublicSettings() {
+  LS.set('public_settings', {autoAzan: $('pubAutoAzan').checked, fajr: $('pubFajr').checked, dhuhr: $('pubDhuhr').checked, maghrib: $('pubMaghrib').checked, volume: parseInt($('pubVolume').value)});
+  toast('✅','success');
+}
+
 var AZAN_SOURCES = ['https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3', 'azan.mp3', 'اذان.mp3'];
 var azanUnlocked = false;
 function testAzan() {
@@ -1483,6 +1584,7 @@ function closeAzan() {
 function playAzanAudio() {
   var volume = 80;
   if (S.role === 'teen') volume = $('teenVolume') ? parseInt($('teenVolume').value) : volume;
+  else if (S.role === 'public') volume = $('pubVolume') ? parseInt($('pubVolume').value) : volume;
   var audio = $('azanAudio');
   audio.volume = (volume || 80) / 100;
   azanUnlocked = true;
@@ -1516,6 +1618,7 @@ function checkAzanTime() {
         LS.set('last_azan', key);
         var shouldPlay = false;
         if (S.role === 'teen') { var s = LS.get('teen_' + S.code + '_' + S.personId, {}); shouldPlay = s.autoAzan !== false && s[c.id] !== false; }
+        else if (S.role === 'public') { var s2 = LS.get('public_settings', {}); shouldPlay = s2.autoAzan !== false && s2[c.id] !== false; }
         else { var s3 = LS.get('cfg_' + S.code, {}); shouldPlay = s3.autoAzan !== false && s3[c.id] !== false; }
         if (shouldPlay) {
           $('azanName').textContent = c.name;
@@ -1707,6 +1810,7 @@ function checkAzanNotification() {
         LS.set('last_notif', key);
         var should = true;
         if (S.role === 'teen') { var s1 = LS.get('teen_' + S.code + '_' + S.personId, {}); should = s1.autoAzan !== false && s1[c.id] !== false; }
+        else if (S.role === 'public') { var s2 = LS.get('public_settings', {}); should = s2.autoAzan !== false && s2[c.id] !== false; }
         else if (S.role === 'manager') { var s3 = LS.get('cfg_' + S.code, {}); should = s3.autoAzan !== false && s3[c.id] !== false; }
         if (should) showAzanNotification(c.name, (S.mosque ? S.mosque.name : 'مسجد آقا منیر'));
       }
@@ -1806,6 +1910,10 @@ document.addEventListener('click', function(e) {
   else if (a === 'super-delete-all') superDeleteAll(el);
   else if (a === 'super-enter') superEnter(el.dataset.id);
   else if (a === 'send-push') sendPush();
+  else if (a === 'save-dua') saveDua();
+  else if (a === 'dua-new') duaNew();
+  else if (a === 'dua-edit') duaEdit(el.dataset.id);
+  else if (a === 'dua-del') duaDel(el.dataset.id, el);
   else if (a === 'logout') logout();
   else if (a === 'add-person') addPerson();
   else if (a === 'open-person') openPersonMenu(el.dataset.id);
@@ -1849,6 +1957,7 @@ document.addEventListener('change', function(e) {
   var a = el.dataset.change;
   if (a === 'save-config') saveConfig();
   else if (a === 'save-teen') saveTeenSettings();
+  else if (a === 'save-public') savePublicSettings();
 });
 
 document.addEventListener('input', function(e) {
@@ -1899,11 +2008,21 @@ function restoreSession() {
 }
 function boot() {
   setTimeout(function(){ $('splash').classList.add('hide'); }, 800);
+  
+  // کارنامه QR از لینک
+  var cardCode = getParam('card');
+  var personId = getParam('person');
+  if (cardCode && personId) {
+    loadProfile(cardCode, personId);
+    return;
+  }
+
   dhikrCount = LS.get('dhikr_count', 0);
   S.branch = LS.get('session_branch', 'برادران');
   try { var bp = new URLSearchParams(location.search).get('branch'); if (bp === 'girls' || bp === 'خواهران') S.branch = 'خواهران'; if (bp === 'boys' || bp === 'برادران') S.branch = 'برادران'; } catch(e) {}
   setBranch(S.branch);
   loadMosquesFromFirestore();
+  loadCustomDuas(function(){});
   renderDates(); setInterval(renderDates, 600000);
   setInterval(checkAzanTime, 30000);
   setInterval(checkAzanNotification, 30000);
