@@ -234,7 +234,6 @@ textarea{resize:vertical;min-height:70px}
 .daily-dhikr-arabic{font-size:2em;font-weight:800;line-height:1.6;margin-bottom:8px;text-shadow:0 2px 4px rgba(0,0,0,.3)}
 .daily-dhikr-fa{font-size:1.1em;color:#e0c87a;margin-bottom:12px}
 .daily-dhikr-count{font-size:.85em;opacity:.8}
-/* ===== تم تاریک ===== */
 .theme-fab{position:fixed;bottom:16px;left:16px;z-index:3500;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#c8963e,#8b6914);color:#fff;font-size:1.4em;box-shadow:0 6px 18px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center}
 body[data-theme="dark"]{background:#101613;color:#e8e6e1}
 body[data-theme="dark"] .card,body[data-theme="dark"] .start-box,body[data-theme="dark"] .modal{background:#1a221d;border-color:#2c3a32;box-shadow:0 2px 10px rgba(0,0,0,.4)}
@@ -664,6 +663,8 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <div id="pmReasons"></div>
 <div class="text-sm fw-700 mb-2 mt-3">➕ امتیاز دلخواه:</div>
 <div class="flex gap-2"><input type="number" id="pmCustom" step="any" placeholder="امتیاز"><button class="btn btn-primary" data-action="pm-custom">ثبت</button></div>
+<div class="text-sm fw-700 mb-2 mt-3">✏️ ویرایش کل امتیازات:</div>
+<div class="flex gap-2"><input type="number" id="pmSetPoints" placeholder="مقدار جدید امتیاز"><button class="btn btn-warning" data-action="pm-set-points">تنظیم</button></div>
 <div class="text-sm fw-700 mb-2 mt-3">عملیات:</div>
 <div class="flex gap-2" style="flex-wrap:wrap">
 <button class="btn btn-gold btn-sm" data-action="pm-prayer">🕌 نماز</button>
@@ -783,7 +784,6 @@ appId: "1:23821410712:web:1789bb8cc4659377544bed"
 fbDb = firebase.firestore();
 fbDb.enablePersistence({ synchronizeTabs: true }).catch(function(e){});
 } catch(e) {}
-// ====== FIRESTORE HELPERS ======
 function fsGetPeople(code, cb) {
 if (!fbDb) { cb([]); return; }
 fbDb.collection('mosques').doc(code).collection('people').onSnapshot(function(snap) {
@@ -881,7 +881,6 @@ var card = $('dailyDhikrCard'); if (!card) return;
 var dh = getTodayDhikr();
 card.innerHTML = '<div class="daily-dhikr-label">✨ ذکر مخصوص امروز</div><div class="daily-dhikr-day">📅 ' + dh.day + '</div><div class="daily-dhikr-arabic">' + dh.ar + '</div><div class="daily-dhikr-fa">' + dh.fa + '</div><div class="daily-dhikr-count">📿 ' + faNum(dh.count) + ' مرتبه | ' + dh.desc + '</div>';
 }
-// ====== DUA CACHE ======
 function cacheDuas() { if (window.DUAS_FULL) LS.set('duas_cache', window.DUAS_FULL); }
 function getDuas() { if (window.DUAS_FULL) return window.DUAS_FULL; return LS.get('duas_cache', []); }
 var DUAS = [];
@@ -923,7 +922,6 @@ el.play().catch(function(){ if (st) st.textContent = '▶ دکمه 🎧 را ب�
 function setDuaSpeed(id, rate) {
 if (duaPlayers[id] && duaPlayers[id].el) { duaPlayers[id].el.playbackRate = rate; toast('⏩ سرعت: ×' + rate, 'info'); }
 }
-// ====== PROFILE QR ======
 function getParam(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
 function loadProfile(code, personId) {
 goTo('profile');
@@ -948,7 +946,6 @@ $('pfFajr').textContent=faNum(f); $('pfDhuhr').textContent=faNum(d); $('pfMaghri
 });
 });
 }
-// ====== DUA ADMIN (Super) ======
 window._customDuas = [];
 function loadCustomDuas(cb){ if(!fbDb){cb([]);return;} fbDb.collection('customDuas').onSnapshot(function(snap){ var l=[]; snap.forEach(function(d){ l.push({id:d.id,...d.data()}); }); window._customDuas=l; cb(l); }, function(){cb([]);}); }
 function renderDuaAdmin(){
@@ -984,7 +981,6 @@ return '<div class="list-item" style="'+(d.hidden?'opacity:.5':'')+'"><div class
 '</div>';
 }).join('') || '<div class="empty">دعایی نیست</div>';
 }
-// ====== توابع ذخیره/ویرایش دعا (نسخه نهایی و ضدِ خرابی) ======
 var NL = String.fromCharCode(10);
 function saveDua(){
 var t = $('duaTitle').value.trim();
@@ -1035,7 +1031,6 @@ toast('🗑 حذف شد', 'info');
 renderDuaAdmin();
 });
 }
-// ====== RESET PASSWORD (اصلاح شده با ترتیب درست) ======
 function openResetPass(code) {
 resetPassCode = code;
 var m = superCache.find(function(x){ return x.code === code; });
@@ -1078,7 +1073,6 @@ else if (e.code === 'auth/too-many-requests') msg = 'تعداد درخواست �
 toast('❌ ' + msg, 'danger');
 });
 }
-// ====== RECITER SELECT ======
 var RECITERS = [
 {id:'afasy',     name:'مشاری العفاسی',  url:'https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'},
 {id:'hamathani', name:'ماجد الحماثانی', url:'https://archive.org/download/adhan.notifications/Majed_al_Hamathani_Adhan.mp3'},
@@ -1096,7 +1090,6 @@ var chosenRec = null;
 for (var i=0;i<RECITERS.length;i++) if (RECITERS[i].id === sel) chosenRec = RECITERS[i];
 var chosen = chosenRec ? [chosenRec.url] : [];
 var rest = RECITERS.map(function(r){ return r.url; }).filter(function(u){ return chosen.indexOf(u) < 0; });
-// ۱) فایل محلی اول  ۲) قاری انتخابی  ۳) بقیه قاری‌ها
 return ['اذان.mp3', 'azan.mp3'].concat(chosen).concat(rest);
 }
 function fillReciterSelects() {
@@ -1107,7 +1100,6 @@ s.innerHTML = RECITERS.map(function(r){ return '<option value="'+r.id+'">'+r.nam
 s.value = sel;
 });
 }
-// ====== SMART PUSH ======
 function sendPush(){
 var mosqueVal = $('pushMosque').value;
 var branch = $('pushBranch').value;
@@ -1169,7 +1161,6 @@ try { new Notification('📣 اطلاعیه سراسری', {body:n.text, icon:'h
 });
 }, function(){});
 }
-// ====== AZAN ======
 var azanUnlocked = false;
 function testAzan() {
 $('azanName').textContent = 'تست اذان';
@@ -1193,7 +1184,6 @@ $('btnPlayAzan').classList.add('hidden');
 var SOURCES = buildAzanSources();
 var idx = 0, timer = null, settled = false;
 function stopWatchdog(){ if (timer) { clearTimeout(timer); timer = null; } }
-// وقتی واقعاً شروع به پخش کرد، واچ‌داگ خاموش شود
 audio.onplaying = function(){ settled = true; stopWatchdog(); };
 function tryNext() {
 stopWatchdog();
@@ -1210,7 +1200,6 @@ audio.src = SOURCES[my];
 audio.load();
 var p = audio.play();
 if (p && p.catch) p.catch(advance);
-// ⏱ واچ‌داگ: اگر تا ۶ ثانیه پخش نشد، برو به منبع بعدی
 timer = setTimeout(advance, 6000);
 }
 tryNext();
@@ -1243,7 +1232,6 @@ setTimeout(closeAzan, 180000);
 }
 }
 }
-// ====== AZAN REMINDER (10 min before) ======
 function checkAzanReminder() {
 var now = new Date();
 var cs = pad(now.getHours()) + ':' + pad(now.getMinutes());
@@ -1274,7 +1262,6 @@ try { new Notification('⏰ یادآور', {body:'۱۰ دقیقه تا ' + c.nam
 }
 }
 }
-// ====== NAVIGATION ======
 function goTo(page) {
 ['pageStart','pageMgrAuth','pageTeenLogin','pageManager','pageTeen','pagePublic','pageSuperLogin','pageSuper','pageProfile'].forEach(function(p){ $(p).classList.add('hidden'); });
 $('sharedHeader').classList.add('hidden');
@@ -1300,7 +1287,6 @@ btn.classList.add('active');
 document.querySelectorAll('[id^="'+group+'-"]').forEach(function(p){ if (p.classList.contains('panel')) p.classList.remove('active'); });
 var target = $(group + '-' + name); if (target) target.classList.add('active');
 }
-// ====== DATE / PRAYER ======
 function toJalali(gy,gm,gd){var g=[0,31,59,90,120,151,181,212,243,273,304,334];var gy2=gm>2?gy+1:gy;var days=355666+365*gy+Math.floor((gy2+3)/4)-Math.floor((gy2+99)/100)+Math.floor((gy2+399)/400)+gd+g[gm-1];var jy=-1595+33*Math.floor(days/12053);days%=12053;jy+=4*Math.floor(days/1461);days%=1461;if(days>365){jy+=Math.floor((days-1)/365);days=(days-1)%365;}var jm,jd;if(days<186){jm=1+Math.floor(days/31);jd=1+days%31;}else{jm=7+Math.floor((days-186)/30);jd=1+(days-186)%30;}return[jy,jm,jd];}
 function toHijri(gy,gm,gd){var m14=Math.floor((gm-14)/12);var a=Math.floor((1461*(gy+4800+m14))/4);var b=Math.floor((367*(gm-2-12*m14))/12);var c=Math.floor((3*Math.floor((gy+4900+m14)/100))/4);var jd=a+b-c+gd-32075;var l=jd-1948440+10632;var n=Math.floor((l-1)/10631);l=l-10631*n+354;var j=Math.floor((10985-l)/5316)*Math.floor((50*l)/17719)+Math.floor(l/5670)*Math.floor((43*l)/15238);l=l-Math.floor((30-j)/15)*Math.floor((17719*j)/50)-Math.floor(j/16)*Math.floor((15238*j)/43)+29;var hm=Math.floor((24*l)/709);var hd=l-Math.floor((709*hm)/24);var hy=30*n+j-30;return[hy,hm,hd];}
 var SH_M=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
@@ -1327,7 +1313,6 @@ var bar = $('prayerBar'); if (!bar) return;
 var items = [{p:'Fajr',n:'🌅 فجر'},{p:'Dhuhr',n:'🌞 ظهر'},{p:'Maghrib',n:'🌇 مغرب'}];
 bar.innerHTML = items.map(function(x){ return '<div class="prayer-item" data-p="'+x.p+'"><div class="prayer-name">'+x.n+'</div><div class="prayer-time">--:--</div></div>'; }).join('');
 }
-// ====== MOSQUE CACHE ======
 var mosqueCache = [];
 function loadMosquesFromFirestore() {
 if (!fbDb) return;
@@ -1354,7 +1339,6 @@ var displayEl = $(type + 'SelectedMosque'); displayEl.classList.remove('hidden')
 displayEl.innerHTML = '<div class="smi">🕌</div><div class="smn">'+esc(mosque.name)+'</div>';
 if (type === 'mgr') $('mgrPinBox').classList.remove('hidden');
 }
-// ====== MANAGER LOGIN ======
 async function mgrLogin() {
 if (!S.code) { toast('اول مسجد را انتخاب کنید','warning'); return; }
 var pin = $('mgrPin').value.trim();
@@ -1379,7 +1363,6 @@ else if (e.code === 'auth/network-request-failed') msg = 'خطای شبکه. ا�
 toast('❌ ' + msg, 'danger');
 }
 }
-// ====== CREATE MOSQUE ======
 async function createMosque() {
 var btn = $('btnCreate');
 var name = $('setupName').value.trim();
@@ -1425,7 +1408,6 @@ else if (e.code === 'auth/network-request-failed') msg = 'خطای شبکه! ل�
 toast('خطا: ' + msg, 'danger');
 } finally { btn.disabled = false; btn.textContent = '✅ ساخت مسجد'; }
 }
-// ====== DELETE MOSQUE ======
 function deleteMosque() {
 if (!S.code) return;
 var isSuper = firebase.auth().currentUser && firebase.auth().currentUser.uid === SUPER_UID;
@@ -1439,7 +1421,6 @@ loadMosquesFromFirestore(); searchMosques('', 'mgr');
 }).catch(function(e){ toast('خطا: '+e.message,'danger'); });
 });
 }
-// ====== TEEN LOGIN ======
 function teenLogin() {
 var name = $('teenName').value.trim();
 var pw = $('teenPw').value.trim();
@@ -1464,7 +1445,6 @@ showSuccess(); enterTeen();
 });
 setTimeout(function(){ if (!found) toast('این نام در بخش ' + S.branch + ' ثبت نشده','warning'); }, 2000);
 }
-// ====== SUPER PANEL ======
 var superCache = [];
 function superLogin() {
 var email = $('superEmail').value.trim();
@@ -1531,7 +1511,6 @@ S.branch = m.branch || S.branch;
 LS.set('session', {role:'manager', code:id, branch:S.branch});
 enterManager();
 }
-// ====== ENTER MANAGER / TEEN ======
 function enterManager() {
 if (!S.mosque) { goTo('start'); return; }
 listenPushes(S.code);
@@ -1579,7 +1558,6 @@ showSuccess();
 }
 function renderPublic() { renderDates(); renderPrayerBar(); loadPrayerTimes(); renderPublicAnns(); }
 function renderManager() { renderPeople(); renderAttendance(); renderRewards(); renderReasons(); renderAnns(); renderPubAnnsMgr(); renderHistory(); }
-// ====== PEOPLE (با صفحه‌بندی) ======
 var pplCache = [];
 function renderPeople() {
 fsGetPeople(S.code, function(list) {
@@ -1605,7 +1583,6 @@ fsSavePerson(S.code, p); fsAddHistory(S.code, 'add', 'افزودن: ' + name + '
 toast('✅ ' + name + ' اضافه شد! رمز: ' + makePassword(name), 'success');
 $('newName').value = ''; $('pwHint').classList.add('hidden'); showSuccess();
 }
-// ====== ATTENDANCE ======
 var attCache = [];
 function renderAttendance() {
 fsGetPeople(S.code, function(ppl) {
@@ -1653,7 +1630,6 @@ toast('✅ ' + faNum(added) + ' نفر','success'); showSuccess();
 });
 }
 function clearAtt() { twoTap($('clearAttBtn'), function() { fsSaveAtt(S.code, todayStr(), []); toast('🗑 پاک شد','info'); }); }
-// ====== PERSON MODAL ======
 var curPerson = null;
 function openPersonMenu(id) {
 var p = pplCache.find(function(x){ return x.id === id; }); if (!p) return;
@@ -1691,6 +1667,16 @@ fsAddHistory(S.code,'points', p.name + ' ' + (v>0?'+':'') + v);
 sendPersonNotif(S.code, p.id, '⭐ ' + (v>0?'+':'') + v + ' امتیاز دریافت کردی!');
 toast('✅ ثبت شد','success'); $('pmCustom').value = ''; closeModal('personModal');
 }
+function pmSetPoints() {
+var v = parseInt($('pmSetPoints').value, 10);
+if (isNaN(v) || v < 0) { toast('مقدار معتبر وارد کنید','warning'); return; }
+var p = pplCache.find(function(x){ return x.id === curPerson; }); if (!p) return;
+p.points = v;
+fsSavePerson(S.code, p);
+fsAddHistory(S.code,'points', p.name + ' امتیاز به ' + v + ' تنظیم شد');
+sendPersonNotif(S.code, p.id, '⭐ امتیاز شما به ' + faNum(v) + ' تنظیم شد');
+toast('✅ امتیاز ویرایش شد','success'); $('pmSetPoints').value = ''; closeModal('personModal');
+}
 function pmAtt() { toggleAtt(curPerson); closeModal('personModal'); }
 function pmReset(btn) {
 twoTap(btn, function() {
@@ -1704,7 +1690,6 @@ toast('🔄 امتیاز صفر شد','success'); closeModal('personModal');
 function pmDelete(btn) {
 twoTap(btn, function() { fsDeletePerson(S.code, curPerson); fsAddHistory(S.code,'delete','حذف فرد'); toast('🗑 حذف شد','info'); closeModal('personModal'); });
 }
-// ====== PRAYER ======
 function openPrayerModal(id) {
 var p = pplCache.find(function(x){ return x.id === id; }); if (!p) return;
 curPerson = id; $('prName').textContent = p.name;
@@ -1729,7 +1714,6 @@ else if (p) sendPersonNotif(S.code, p.id, '🕌 نماز ' + prayer + ' برای
 toast('🕌 نماز ' + prayer + ' ثبت شد', 'success'); showSuccess(); closeModal('prayerModal');
 });
 }
-// ====== REWARDS ======
 var rwCache = [];
 function renderRewards() {
 fsGetRewards(S.code, function(rw) {
@@ -1747,7 +1731,6 @@ fsSaveReward(S.code, {id:uid(), name:name, pointsRequired:pts, icon:icon});
 $('newRwName').value = ''; $('newRwPts').value = ''; toast('✅','success');
 }
 function deleteReward(id, btn) { twoTap(btn, function() { fsDeleteReward(S.code, id); toast('🗑','info'); }); }
-// ====== REASONS ======
 var rsCache = [];
 function renderReasons() {
 fsGetReasons(S.code, function(rs) {
@@ -1764,7 +1747,6 @@ fsSaveReason(S.code, {id:uid(), name:name, points:pts});
 $('newRsName').value = ''; $('newRsPts').value = ''; toast('✅','success');
 }
 function deleteReason(id, btn) { twoTap(btn, function() { fsDeleteReason(S.code, id); toast('🗑','info'); }); }
-// ====== ANNS ======
 var annCache = [];
 function renderAnns() {
 fsGetAnns(S.code, function(anns) {
@@ -1795,7 +1777,6 @@ a.text = $('editAnnText').value.trim() || a.text;
 fsSaveAnn(S.code, a); closeModal('editAnnModal'); toast('✅ ویرایش شد','success');
 }
 function deleteAnn(id, btn) { twoTap(btn, function() { fsDeleteAnn(S.code, id); toast('🗑','info'); }); }
-// ====== PUB ANNS ======
 var pubAnnCache = [];
 function renderPubAnnsMgr() {
 fsGetPubAnns(function(anns) {
@@ -1804,7 +1785,11 @@ var now = Date.now();
 var list = anns.filter(function(a){ return !a.expireAt || a.expireAt > now; });
 $('pubAnnList').innerHTML = list.map(function(a) {
 var exp = a.expireAt ? ' | انقضا: ' + new Date(a.expireAt).toLocaleString('fa-IR') : '';
-return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 <span class="badge badge-info">'+esc(a.target||'همه')+'</span></div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+exp+'</div></div><div class="ann-body">'+esc(a.text)+'</div><div class="ann-actions"><button class="btn btn-danger btn-sm" data-action="delete-pubann" data-id="'+a.id+'">🗑</button></div></div>';
+var badge = '';
+if (a.target === 'همه') badge = '<span class="badge badge-success">عمومی</span>';
+else if (a.target === 'برادران') badge = '<span class="badge badge-info">مخصوص برادران</span>';
+else if (a.target === 'خواهران') badge = '<span class="badge badge-danger">مخصوص خواهران</span>';
+return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 ' + badge + '</div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+exp+'</div></div><div class="ann-body">'+esc(a.text)+'</div><div class="ann-actions"><button class="btn btn-danger btn-sm" data-action="delete-pubann" data-id="'+a.id+'">🗑</button></div></div>';
 }).join('');
 });
 }
@@ -1820,15 +1805,14 @@ function renderPublicAnns() {
 fsGetPubAnns(function(anns) {
 pubAnnCache = anns;
 var now = Date.now();
-var list = anns.filter(function(a){ return !a.expireAt || a.expireAt > now; });
+var list = anns.filter(function(a){ return a.target === 'همه' && (!a.expireAt || a.expireAt > now); });
 $('pubAnnEmpty').classList.toggle('hidden', list.length > 0);
 $('pubAnnouncements').innerHTML = list.map(function(a) {
 var exp = a.expireAt ? ' | تا: ' + new Date(a.expireAt).toLocaleString('fa-IR') : '';
-return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 اطلاعیه عمومی</div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+exp+'</div></div><div class="ann-body">'+esc(a.text)+'</div></div>';
+return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 <span class="badge badge-success">عمومی</span></div><div class="ann-time">'+new Date(a.time).toLocaleDateString('fa-IR')+exp+'</div></div><div class="ann-body">'+esc(a.text)+'</div></div>';
 }).join('');
 });
 }
-// ====== HISTORY (با صفحه‌بندی) ======
 function renderHistory() {
 var icons = {add:'➕',delete:'🗑',points:'⭐',att:'🌙',att_all:'🌙',prayer:'🕌',ann:'📢',reset:'🔄',password_change:'🔑'};
 fsGetHistory(S.code, function(h) {
@@ -1841,7 +1825,6 @@ if (h.length > histShown) html += '<button class="btn btn-outline full-w mt-2" d
 $('histList').innerHTML = html;
 });
 }
-// ====== TOP / CHAMP BANNER ======
 function getTop(branch) {
 var top = null;
 pplCache.forEach(function(p) { if (p.branch === branch) { if (!top || (p.points||0) > (top.points||0)) top = p; } });
@@ -1849,7 +1832,7 @@ return top;
 }
 function updateChampBanner() {
 var el = $('champBanner'); if (!el) return;
-if (S.role === 'public') { el.classList.add('hidden'); return; }
+if (!S.role) { el.classList.add('hidden'); return; }
 var top = getTop(S.branch);
 if (!top) { el.classList.add('hidden'); return; }
 el.classList.remove('hidden');
@@ -1858,8 +1841,12 @@ el.innerHTML = '<span class="trophy">🏆</span><span>برترین ' + S.branch 
 var topBannerInterval = null;
 function updateTopBanner() {
 var now = Date.now(); var active = [];
+if (!S.role) {
+pubAnnCache.forEach(function(a) { if (a.target === 'همه' && (!a.expireAt || a.expireAt > now)) active.push({text:a.text, type:'public'}); });
+} else {
 pubAnnCache.forEach(function(a) { if (!a.expireAt || a.expireAt > now) { if (a.target === 'همه' || a.target === S.branch) active.push({text:a.text, type:'public'}); } });
 annCache.forEach(function(a) { if (a.branch === S.branch && (!a.expireAt || a.expireAt > now)) active.push({text:a.text, type:'internal'}); });
+}
 var banner = $('topBanner');
 if (!active.length) { banner.classList.add('hidden'); return; }
 banner.classList.remove('hidden');
@@ -1869,7 +1856,6 @@ update();
 if (topBannerInterval) clearInterval(topBannerInterval);
 topBannerInterval = setInterval(function(){ idx++; update(); }, 5000);
 }
-// ====== TEEN DASHBOARD ======
 function renderTeenAll() { renderTeenHome(); renderLeader(); renderTeenAnns(); }
 function renderTeenHome() {
 fsGetPeople(S.code, function(people) {
@@ -1925,13 +1911,21 @@ return '<div class="list-item" style="cursor:default;' + (isMe ? 'background:lin
 }
 function renderTeenAnns() {
 var now = Date.now(); var list = [];
-annCache.forEach(function(a) { if (a.branch === S.branch && (!a.expireAt || a.expireAt > now)) list.push({id:a.id, text:a.text, time:a.time, type:'internal'}); });
-pubAnnCache.forEach(function(a) { if ((a.target === 'همه' || a.target === S.branch) && (!a.expireAt || a.expireAt > now)) list.push({id:a.id, text:a.text, time:a.time, type:'public'}); });
+annCache.forEach(function(a) { if (a.branch === S.branch && (!a.expireAt || a.expireAt > now)) list.push({id:a.id, text:a.text, time:a.time, type:'internal', target: a.branch}); });
+pubAnnCache.forEach(function(a) { if ((a.target === 'همه' || a.target === S.branch) && (!a.expireAt || a.expireAt > now)) list.push({id:a.id, text:a.text, time:a.time, type:'public', target: a.target}); });
 $('teenAnnEmpty').classList.toggle('hidden', list.length > 0);
 var readIds = LS.get('readAnn_' + S.code + '_' + S.personId, []);
 $('teenAnnList').innerHTML = list.map(function(a) {
 var isRead = readIds.indexOf(a.id) >= 0;
-return '<div class="ann-item ' + (isRead ? 'read' : 'unread') + '" data-action="mark-ann-read" data-id="' + a.id + '"><div class="ann-head"><div class="ann-title">' + (a.type==='public'?'📣':'') + ' ' + (isRead ? '' : '<span class="badge badge-new">جدید</span>') + '</div><div class="ann-time">' + new Date(a.time).toLocaleDateString('fa-IR') + '</div></div><div class="ann-body">' + esc(a.text) + '</div></div>';
+var badge = '';
+if (a.type === 'public') {
+if (a.target === 'همه') badge = '<span class="badge badge-success">عمومی</span>';
+else if (a.target === 'برادران') badge = '<span class="badge badge-info">مخصوص برادران</span>';
+else if (a.target === 'خواهران') badge = '<span class="badge badge-danger">مخصوص خواهران</span>';
+} else {
+badge = '<span class="badge badge-gold">داخلی</span>';
+}
+return '<div class="ann-item ' + (isRead ? 'read' : 'unread') + '" data-action="mark-ann-read" data-id="' + a.id + '"><div class="ann-head"><div class="ann-title">' + badge + ' ' + (isRead ? '' : '<span class="badge badge-new">جدید</span>') + '</div><div class="ann-time">' + new Date(a.time).toLocaleDateString('fa-IR') + '</div></div><div class="ann-body">' + esc(a.text) + '</div></div>';
 }).join('');
 }
 function markAnnRead(id, el) {
@@ -1941,7 +1935,6 @@ if (readIds.indexOf(id) < 0) { readIds.push(id); LS.set(key, readIds); }
 el.classList.remove('unread'); el.classList.add('read');
 var badge = el.querySelector('.badge-new'); if (badge) badge.remove();
 }
-// ====== MOTIVATION ======
 var MOTIVATION = {
 first: ['{name} عزیز، اولین قدم همیشه سخت‌ترین قدم است. تبریک! 🌱','خوش آمدی {name}! هر مسیر بزرگ با یک قدم کوچک شروع می‌شود. ✨'],
 streak: ['آفرین {name}! {n} روز پشت سر هم. استمرار تو قابل تحسین است. 🌟','{name} جان، {n} روز استمرار! تو الگوی دیگرانی! 🏆'],
@@ -1964,7 +1957,6 @@ else if (points >= 50) { type = 'milestone'; n = points; }
 el.innerHTML = '<div class="mot-text">' + getMotivationMsg(S.personName, type, n) + '</div><div class="mot-foot">✨ ' + new Date().toLocaleDateString('fa-IR') + '</div>';
 }
 function showMotivational(name, type, n) { toast(getMotivationMsg(name, type, n), 'success'); }
-// ====== SETTINGS ======
 function loadConfig() {
 var cfg = LS.get('cfg_' + S.code, {});
 if (cfg.autoAzan !== undefined) $('cfgAutoAzan').checked = cfg.autoAzan;
@@ -2000,7 +1992,6 @@ function savePublicSettings() {
 LS.set('public_settings', {autoAzan: $('pubAutoAzan').checked, fajr: $('pubFajr').checked, dhuhr: $('pubDhuhr').checked, maghrib: $('pubMaghrib').checked, volume: parseInt($('pubVolume').value)});
 toast('✅','success');
 }
-// ====== QIBLA ======
 var qiblaBrng = 0, qiblaHandler = null;
 function qiblaBearing(lat, lon) {
 var toRad = function(x){ return x * Math.PI / 180; };
@@ -2052,7 +2043,6 @@ window.addEventListener('deviceorientation', qiblaHandler, true);
 }
 }
 }
-// ====== DHIKR ======
 var dhikrCount = 0;
 function dhikrTap() {
 dhikrCount++; $('dhikrCount').textContent = faNum(dhikrCount);
@@ -2069,7 +2059,6 @@ function dhikrReset() {
 dhikrCount = 0; $('dhikrCount').textContent = faNum(0);
 LS.set('dhikr_count', 0); toast('🔄','info');
 }
-// ====== QUIZ ======
 var QUIZ = [
 {q:'نماز صبح چند رکعت است؟', a:['۲','۳','۴','۱'], c:0},
 {q:'نماز مغرب چند رکعت است؟', a:['۲','۳','۴','۵'], c:1},
@@ -2107,7 +2096,6 @@ if (quizState.score > best) LS.set('quiz_best', quizState.score);
 $('quizBox').innerHTML = '<div class="text-center"><div class="stat-value" style="font-size:2.5em;color:#2d8f65">🎉</div><div class="fw-800" style="font-size:1.3em;margin:10px 0">' + faNum(quizState.score) + ' از ' + faNum(QUIZ.length) + '</div><button class="btn btn-primary btn-lg" data-action="quiz-start">🔄 دوباره</button></div>';
 } else showQuestion();
 }
-// ====== LOGOUT / SW / NOTIFICATIONS ======
 function logout() {
 S.role = null; S.code = null; S.mosque = null; S.personId = null;
 LS.set('session', null); goTo('start'); toast('👋','info');
@@ -2233,7 +2221,6 @@ vibrate: [200, 100, 200]
 });
 if (b2) b2.addEventListener('click', updateDebugStatus);
 });
-// ====== EVENT DISPATCHER ======
 document.addEventListener('click', function(e) {
 var el = e.target.closest ? e.target.closest('[data-action]') : null; if (!el) return;
 var a = el.dataset.action;
@@ -2264,6 +2251,7 @@ else if (a === 'open-person') openPersonMenu(el.dataset.id);
 else if (a === 'open-prayer') openPrayerModal(el.dataset.id);
 else if (a === 'pm-give') pmGive(el.dataset.id);
 else if (a === 'pm-custom') pmCustom();
+else if (a === 'pm-set-points') pmSetPoints();
 else if (a === 'pm-att') pmAtt();
 else if (a === 'pm-reset') pmReset(el);
 else if (a === 'pm-prayer') openPrayerModal(curPerson);
@@ -2322,7 +2310,6 @@ if (name.length > 0) { hint.innerHTML = '🔑 رمز ورود: <b>' + esc(makePa
 else hint.classList.add('hidden');
 }
 });
-// ====== SESSION & BOOT ======
 function getRoleParam() {
 try {
 var q = new URLSearchParams(location.search).get('role');
@@ -2356,9 +2343,7 @@ return true;
 return false;
 }
 function boot() {
-// تم
 applyTheme(LS.get('theme','light'));
-// بنر نصب (بعد ۳ ثانیه)
 setTimeout(function(){
 var isMobile = /Android|iPhone|iPad|iPod/.test(navigator.userAgent);
 var standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
