@@ -1524,7 +1524,7 @@ $('listBranchLabel').textContent = S.branch;
 $('attBranchLabel').textContent = S.branch;
 $('annBranchLabel').textContent = S.branch;
 goTo('manager');
-renderDates(); renderPrayerBar(); loadPrayerTimes(); renderManager();
+renderDates(); renderPrayerBar(); loadPrayerTimes(); renderManager(); loadConfig();
 }
 function enterTeen() {
 if (!S.mosque) { goTo('start'); return; }
@@ -1536,7 +1536,7 @@ $('teenCodeShow').textContent = S.personName;
 var baseUrl = location.origin + location.pathname;
 $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(baseUrl + '?card=' + S.code + '&person=' + S.personId);
 goTo('teen');
-renderDates(); renderPrayerBar(); loadPrayerTimes(); renderTeenAll(); renderQuizStart();
+renderDates(); renderPrayerBar(); loadPrayerTimes(); renderTeenAll(); loadTeenSettings(); renderQuizStart();
 listenPersonNotifs(); showTeenWelcome();
 }
 function showTeenWelcome() {
@@ -1556,7 +1556,7 @@ showSuccess();
 });
 });
 }
-function renderPublic() { renderDates(); renderPrayerBar(); loadPrayerTimes(); renderPublicAnns(); }
+function renderPublic() { renderDates(); renderPrayerBar(); loadPrayerTimes(); renderPublicAnns(); loadPublicSettings(); }
 function renderManager() { renderPeople(); renderAttendance(); renderRewards(); renderReasons(); renderAnns(); renderPubAnnsMgr(); renderHistory(); }
 var pplCache = [];
 function renderPeople() {
