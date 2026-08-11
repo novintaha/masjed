@@ -315,16 +315,29 @@ textarea{resize:vertical;min-height:70px}
   <button class="btn btn-danger full-w mb-3" id="btnSuperDeleteAll" data-action="super-delete-all">⚠️ حذف همه مساجد (خطرناک)</button>
   <div id="superList"></div>
 </div>
-<div class="card"><h3>📨 ارسال پوش به مسجد</h3>
-  <select id="pushMosque" style="margin-bottom:10px"></select>
+<!-- پوش هوشمند -->
+<div class="card"><h3>📨 ارسال پوش هوشمند</h3>
+  <label class="text-sm fw-700 mb-2" style="display:block">🎯 مقصد:</label>
+  <select id="pushMosque" style="margin-bottom:10px">
+    <option value="__ALL__">🌐 همه مساجد</option>
+  </select>
+  <label class="text-sm fw-700 mb-2" style="display:block">👥 بخش گیرنده:</label>
+  <select id="pushBranch" style="margin-bottom:10px">
+    <option value="__ALL__">همه بخش‌ها (برادران + خواهران)</option>
+    <option value="برادران">فقط برادران</option>
+    <option value="خواهران">فقط خواهران</option>
+  </select>
+  <label class="text-sm fw-700 mb-2" style="display:block">📝 متن پیام:</label>
   <textarea id="pushText" placeholder="متن پیام دلخواه..." style="margin-bottom:10px"></textarea>
   <button class="btn btn-primary full-w" data-action="send-push">📨 ارسال پوش</button>
-  <div class="text-xs text-muted mt-2">💡 پیام به همه کاربرانی که در آن مسجد وارد شده‌اند ارسال می‌شود</div>
+  <div class="text-xs text-muted mt-2">💡 پوش به همه کاربرانی که وارد بخش انتخابی شده‌اند ارسال می‌شود</div>
 </div>
-<!-- جدید: مدیریت ادعیه توسط سوپرادمین -->
-<div class="card"><h3>🤲 مدیریت ادعیه (افزودن/ویرایش)</h3>
-  <input type="text" id="duaTitle" placeholder="عنوان دعا" style="margin-bottom:8px">
-  <input type="text" id="duaIcon" placeholder="آیکون (مثلاً 📜)" style="margin-bottom:8px">
+<!-- مدیریت ادعیه کامل -->
+<div class="card"><h3>🤲 مدیریت ادعیه (پیش‌فرض + سفارشی)</h3>
+  <div class="flex gap-2 mb-2">
+    <input type="text" id="duaTitle" placeholder="عنوان دعا" style="flex:2">
+    <input type="text" id="duaIcon" placeholder="آیکون" style="max-width:70px" value="📜">
+  </div>
   <textarea id="duaText" placeholder="متن دعا — هر خط یک پاراگراف" style="min-height:120px;margin-bottom:8px"></textarea>
   <input type="hidden" id="duaEditId">
   <div class="flex gap-2">
@@ -339,6 +352,28 @@ textarea{resize:vertical;min-height:70px}
     <button class="btn btn-primary btn-sm" id="debugLocalBtn">🔔 تست محلی</button>
     <button class="btn btn-outline btn-sm" id="debugRefreshBtn">🔄 بررسی مجدد</button>
   </div>
+</div>
+</div>
+
+<!-- مودال تغییر رمز مسجد -->
+<div class="modal-bg" id="resetPassModal">
+<div class="modal">
+<button class="modal-close" data-action="close-modal" data-target="resetPassModal">✕</button>
+<h3>🔑 تغییر رمز عبور مسجد</h3>
+<div class="text-sm fw-700 mb-2" id="resetPassInfo" style="background:#fdf8f0;padding:10px;border-radius:10px;border:1px solid #e8dcc8">در حال بارگذاری...</div>
+
+<div class="text-sm fw-700 mb-2 mt-3">رمز جدید:</div>
+<input type="password" id="resetNewPin" placeholder="رمز جدید (حداقل ۶ کاراکتر)" style="margin-bottom:10px">
+<input type="password" id="resetNewPin2" placeholder="تکرار رمز جدید" style="margin-bottom:10px">
+
+<div style="background:#fff9e6;border:1px solid #e0c87a;border-radius:10px;padding:10px;margin-bottom:12px;font-size:.82em;color:#5c4030">
+<b>⚠️ توجه:</b><br>
+• سوپرادمین موقتاً از حساب خود خارج می‌شود<br>
+• پس از تغییر رمز، به‌صورت خودکار به حساب سوپرادمین بازمی‌گردید<br>
+• رمز جدید فوراً برای مدیر مسجد فعال می‌شود
+</div>
+
+<button class="btn btn-primary full-w" data-action="reset-password">🔐 تغییر رمز عبور</button>
 </div>
 </div>
 
@@ -530,7 +565,6 @@ textarea{resize:vertical;min-height:70px}
   <div class="section-divider"></div>
   <div class="card"><h3>📣 اطلاعیه‌های عمومی</h3><div id="pubAnnouncements"></div><div id="pubAnnEmpty" class="empty hidden"><div class="empty-icon">📣</div><div>اطلاعیه‌ای نیست</div></div></div>
   <div class="section-divider"></div>
-  <!-- تنظیمات اذان برای بخش عمومی -->
   <div class="card"><h3>🔊 تنظیمات اذان‌گو</h3>
     <div class="setting-row"><label>🔔 اذان‌گوی خودکار</label><span class="switch"><input type="checkbox" id="pubAutoAzan" checked data-change="save-public"><span class="slider"></span></span></div>
     <div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="pubFajr" checked data-change="save-public"><span class="slider"></span></span></div>
@@ -652,6 +686,7 @@ var abjad = function(str){ if(!str) return 0; var sum=0; for(var i=0;i<str.lengt
 var makePassword = function(name){ return name.trim() + ' ' + abjad(name.trim()); };
 
 var S = { role:null, code:null, mosque:null, branch:'برادران', personId:null, personName:'', me:null };
+var resetPassCode = null;
 
 function toast(msg, type) {
   type = type || 'info';
@@ -788,10 +823,20 @@ function renderDailyDhikr() {
 var DUAS = [];
 function renderDuas(containerId) {
   var container = $(containerId); if (!container) return;
-  var defaultList = (typeof window.DUAS_FULL !== 'undefined') ? window.DUAS_FULL : DUAS;
+  var defaultList = (typeof window.DUAS_FULL !== 'undefined') ? window.DUAS_FULL : [];
   var customList = window._customDuas || [];
-  var list = defaultList.concat(customList);
-  container.innerHTML = list.map(function(d) {
+  var hiddenIds = (LS.get('hidden_duas', [])) || [];
+  var overrideMap = {};
+  customList.forEach(function(d){ overrideMap[d.id] = d; });
+  var list = [];
+  defaultList.forEach(function(d){
+    if (hiddenIds.indexOf(d.id) >= 0) return;
+    list.push(overrideMap[d.id] || d);
+  });
+  customList.forEach(function(d){
+    if (!defaultList.some(function(x){ return x.id === d.id; })) list.push(d);
+  });
+  container.innerHTML = list.map(function(d){
     var audioHtml = d.audio ?
       '<div class="dua-audio-box"><button class="btn btn-gold btn-sm" data-action="dua-audio" data-id="'+d.id+'" data-url="'+d.audio+'">🎧 دانلود و پخش صوت</button> <span class="speed-btns hidden" id="speed-'+d.id+'"><button class="btn btn-outline btn-sm" data-action="dua-speed" data-id="'+d.id+'" data-rate="1">×1</button> <button class="btn btn-outline btn-sm" data-action="dua-speed" data-id="'+d.id+'" data-rate="1.5">×1.5</button> <button class="btn btn-outline btn-sm" data-action="dua-speed" data-id="'+d.id+'" data-rate="2">×2</button></span><div class="text-xs text-muted mt-2" id="astatus-'+d.id+'">اختیاری: یک‌بار دانلود می‌شود</div></div>' : '';
     return '<details class="dua-item' + (d.important ? ' dua-important' : '') + '"><summary>' + d.icon + ' ' + d.title + '</summary><div class="dua-content">' + audioHtml + d.text + '</div></details>';
@@ -815,9 +860,8 @@ function setDuaSpeed(id, rate) {
   if (duaPlayers[id] && duaPlayers[id].el) { duaPlayers[id].el.playbackRate = rate; toast('⏩ سرعت: ×' + rate, 'info'); }
 }
 
-// ================== توابع جدید برای صفحه کارنامه QR و ادعیه سفارشی ==================
+// ================== توابع صفحه کارنامه QR ==================
 function getParam(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
-
 function loadProfile(code, personId) {
   goTo('profile');
   fbDb.collection('mosques').doc(code).get().then(function(doc){
@@ -841,17 +885,261 @@ function loadProfile(code, personId) {
     });
   });
 }
+// ============================================================
 
+// ================== مدیریت ادعیه (پیش‌فرض + سفارشی) ==================
 window._customDuas = [];
 function loadCustomDuas(cb){ if(!fbDb){cb([]);return;} fbDb.collection('customDuas').onSnapshot(function(snap){ var l=[]; snap.forEach(function(d){ l.push({id:d.id,...d.data()}); }); window._customDuas=l; cb(l); }, function(){cb([]);}); }
-function renderDuaAdmin(){ loadCustomDuas(function(l){ $('duaAdminList').innerHTML = l.map(function(d){ return '<div class="list-item"><div class="body"><div class="name">'+(d.icon||'📜')+' '+esc(d.title)+'</div></div><button class="btn btn-outline btn-sm" data-action="dua-edit" data-id="'+d.id+'">✏</button><button class="btn btn-danger btn-sm" data-action="dua-del" data-id="'+d.id+'">🗑</button></div>'; }).join('') || '<div class="empty">دعای سفارشی نیست</div>'; }); }
-function saveDua(){ var t=$('duaTitle').value.trim(); var x=$('duaText').value.trim(); if(!t||!x){toast('عنوان و متن','warning');return;} var id=$('duaEditId').value||uid(); var icon=$('duaIcon').value||'📜';
-  var html = x.split('\n').map(function(l){ return l.trim()? '<p>'+l+'</p>':''; }).join('');
-  fbDb.collection('customDuas').doc(id).set({id:id,title:t,icon:icon,text:html,ts:Date.now()}).then(function(){ toast('✅ ذخیره شد','success'); $('duaTitle').value='';$('duaText').value='';$('duaIcon').value='';$('duaEditId').value=''; }); }
-function duaNew(){ $('duaEditId').value=''; $('duaTitle').value=''; $('duaText').value=''; $('duaIcon').value=''; }
-function duaEdit(id){ var d=window._customDuas.find(function(x){return x.id===id;}); if(!d)return; $('duaEditId').value=d.id; $('duaTitle').value=d.title; $('duaIcon').value=d.icon||''; $('duaText').value=(d.text||'').replace(/<p>/g,'').replace(/<\/p>/g,'\n'); }
-function duaDel(id,btn){ twoTap(btn,function(){ fbDb.collection('customDuas').doc(id).delete().then(function(){toast('🗑 حذف شد','info');}); }); }
-// =========================================================================
+
+function renderDuaAdmin(){
+  var defaultList = (typeof window.DUAS_FULL !== 'undefined') ? window.DUAS_FULL : [];
+  var customList = window._customDuas || [];
+  var hiddenIds = (LS.get('hidden_duas', [])) || [];
+  var overrideMap = {};
+  customList.forEach(function(d){ overrideMap[d.id] = d; });
+  var all = [];
+  defaultList.forEach(function(d){
+    if (hiddenIds.indexOf(d.id) >= 0) {
+      all.push({id:d.id, title:d.title, icon:d.icon, source:'default', hidden:true});
+    } else if (overrideMap[d.id]) {
+      all.push({id:d.id, title:overrideMap[d.id].title, icon:overrideMap[d.id].icon, source:'override', data:overrideMap[d.id]});
+    } else {
+      all.push({id:d.id, title:d.title, icon:d.icon, source:'default', data:d});
+    }
+  });
+  customList.forEach(function(d){
+    if (!overrideMap[d.id] || defaultList.every(function(x){return x.id !== d.id;})) {
+      all.push({id:d.id, title:d.title, icon:d.icon, source:'custom', data:d});
+    }
+  });
+  $('duaAdminList').innerHTML = all.map(function(d){
+    var badge = d.source === 'default' ? '<span class="badge badge-info">پیش‌فرض</span>' :
+                d.source === 'override' ? '<span class="badge badge-gold">ویرایش‌شده</span>' :
+                '<span class="badge badge-success">سفارشی</span>';
+    var hiddenBadge = d.hidden ? ' <span class="badge badge-danger">مخفی</span>' : '';
+    return '<div class="list-item" style="'+(d.hidden?'opacity:.5':'')+'"><div class="body"><div class="name">'+(d.icon||'📜')+' '+esc(d.title)+' '+badge+hiddenBadge+'</div></div>'+
+      '<button class="btn btn-outline btn-sm" data-action="dua-edit" data-id="'+d.id+'">✏</button>'+
+      (d.source==='default' && !d.hidden ? '<button class="btn btn-warning btn-sm" data-action="dua-hide" data-id="'+d.id+'">🙈</button>' : '')+
+      (d.source!=='default' || d.hidden ? '<button class="btn btn-danger btn-sm" data-action="dua-del" data-id="'+d.id+'" data-source="'+d.source+'">🗑</button>' : '')+
+      '</div>';
+  }).join('') || '<div class="empty">دعایی نیست</div>';
+}
+
+function saveDua(){
+  var t = $('duaTitle').value.trim();
+  var x = $('duaText').value.trim();
+  if (!t || !x) { toast('عنوان و متن را وارد کنید', 'warning'); return; }
+  var id = $('duaEditId').value || ('custom_' + uid());
+  var icon = $('duaIcon').value || '📜';
+  var html = x.split('\n').map(function(l){ return l.trim() ? '<p>'+l+'</p>' : ''; }).join('');
+  fbDb.collection('customDuas').doc(id).set({id:id, title:t, icon:icon, text:html, ts:Date.now()})
+    .then(function(){
+      toast('✅ ذخیره شد', 'success');
+      $('duaTitle').value=''; $('duaText').value=''; $('duaIcon').value=''; $('duaEditId').value='';
+      renderDuaAdmin();
+    });
+}
+function duaNew(){
+  $('duaEditId').value = '';
+  $('duaTitle').value = '';
+  $('duaText').value = '';
+  $('duaIcon').value = '';
+}
+function duaEdit(id){
+  var defaultList = (typeof window.DUAS_FULL !== 'undefined') ? window.DUAS_FULL : [];
+  var custom = window._customDuas.find(function(x){ return x.id === id; });
+  var defaultDua = defaultList.find(function(x){ return x.id === id; });
+  var d = custom || defaultDua;
+  if (!d) return;
+  $('duaEditId').value = d.id;
+  $('duaTitle').value = d.title;
+  $('duaIcon').value = d.icon || '';
+  var text = (d.text || '').replace(/<p>/g, '').replace(/<\/p>/g, '\n').replace(/<div class="verse">/g, '').replace(/<\/div>/g, '\n');
+  $('duaText').value = text.trim();
+}
+function duaHide(id, btn){
+  twoTap(btn, function(){
+    var hidden = LS.get('hidden_duas', []) || [];
+    if (hidden.indexOf(id) < 0) hidden.push(id);
+    LS.set('hidden_duas', hidden);
+    toast('🙈 ادعیه از نمایش مخفی شد', 'info');
+    renderDuaAdmin();
+  });
+}
+function duaDel(id, btn){
+  var source = btn.dataset.source;
+  twoTap(btn, function(){
+    if (source === 'default') {
+      var hidden = LS.get('hidden_duas', []) || [];
+      hidden = hidden.filter(function(x){ return x !== id; });
+      LS.set('hidden_duas', hidden);
+      toast('✅ ادعیه پیش‌فرض دوباره نمایش داده می‌شود', 'success');
+    } else {
+      fbDb.collection('customDuas').doc(id).delete().then(function(){
+        toast('🗑 حذف شد', 'info');
+      });
+    }
+    renderDuaAdmin();
+  });
+}
+// ================================================================
+
+// ================== تغییر رمز مسجد (روش صحیح) ==================
+function openResetPass(code) {
+  resetPassCode = code;
+  var m = superCache.find(function(x){ return x.code === code; });
+  if (!m) { toast('مسجد یافت نشد','danger'); return; }
+  $('resetPassInfo').textContent = '🕌 ' + esc(m.name) + ' (' + esc(m.code) + ') | ایمیل: ' + esc(m.adminEmail||'—');
+  $('resetNewPin').value = '';
+  $('resetNewPin2').value = '';
+  openModal('resetPassModal');
+}
+
+function resetPassword() {
+  if (!resetPassCode) { toast('کد مسجد مشخص نیست','warning'); return; }
+  var m = superCache.find(function(x){ return x.code === resetPassCode; });
+  if (!m) { toast('مسجد یافت نشد','danger'); return; }
+  if (!m.adminEmail) { toast('ایمیل مدیر مسجد موجود نیست','danger'); return; }
+  
+  var oldPin = m.pin || '';
+  var newPin = $('resetNewPin').value.trim();
+  var newPin2 = $('resetNewPin2').value.trim();
+  
+  if (newPin.length < 6) { toast('رمز جدید حداقل ۶ کاراکتر باشد','warning'); return; }
+  if (newPin !== newPin2) { toast('تکرار رمز یکسان نیست','warning'); return; }
+  if (newPin === oldPin) { toast('رمز جدید باید با رمز قدیمی متفاوت باشد','warning'); return; }
+  if (!oldPin) { toast('رمز فعلی این مسجد در سیستم ثبت نشده است','danger'); return; }
+  
+  var mosqueName = m.name;
+  var mosqueCode = m.code;
+  var adminEmail = m.adminEmail;
+  
+  toast('⏳ در حال تغییر رمز...','info');
+  
+  // ۱) ورود با رمز قدیمی (session سوپرادمین جایگزین می‌شود)
+  firebase.auth().signInWithEmailAndPassword(adminEmail, oldPin)
+    .then(function() {
+      // ۲) تغییر رمز واقعی Firebase Auth
+      return firebase.auth().currentUser.updatePassword(newPin);
+    })
+    .then(function() {
+      // ۳) خروج از حساب مسجد
+      return firebase.auth().signOut();
+    })
+    .then(function() {
+      // ۴) به‌روزرسانی فیلد pin در Firestore
+      return fbDb.collection('mosques').doc(mosqueCode).update({ 
+        pin: newPin,
+        lastPasswordChange: new Date().toISOString()
+      });
+    })
+    .then(function() {
+      // ۵) ثبت در تاریخچه
+      return fbDb.collection('mosques').doc(mosqueCode).collection('history').add({
+        type: 'password_change',
+        text: 'تغییر رمز عبور توسط سوپرادمین',
+        time: new Date().toISOString()
+      });
+    })
+    .then(function() {
+      closeModal('resetPassModal');
+      toast('✅ رمز مسجد «' + mosqueName + '» با موفقیت تغییر کرد', 'success');
+      toast('🔐 لطفاً دوباره به عنوان سوپرادمین وارد شوید', 'info');
+      
+      // به‌روزرسانی کش محلی
+      var idx = superCache.findIndex(function(x){ return x.code === mosqueCode; });
+      if (idx >= 0) superCache[idx].pin = newPin;
+      
+      // خروج از حساب فعلی و بازگشت به صفحه ورود سوپرادمین
+      firebase.auth().signOut().then(function(){
+        S.role = null;
+        goTo('superLogin');
+      });
+    })
+    .catch(function(e) {
+      var msg = e.message || 'خطا';
+      if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+        msg = 'رمز ثبت‌شده با رمز واقعی حساب Firebase نمی‌خواند';
+      } else if (e.code === 'auth/requires-recent-login') {
+        msg = 'لطفاً چند دقیقه صبر کنید و دوباره تلاش کنید';
+      } else if (e.code === 'auth/too-many-requests') {
+        msg = 'تعداد درخواست زیاد است؛ چند دقیقه صبر کنید';
+      } else if (e.code === 'auth/weak-password') {
+        msg = 'رمز جدید ضعیف است (حداقل ۶ کاراکتر)';
+      } else if (e.code === 'auth/network-request-failed') {
+        msg = 'خطای شبکه! اینترنت/VPN را بررسی کنید';
+      }
+      toast('❌ ' + msg, 'danger');
+    });
+}
+// ================================================================
+
+// ================== پوش هوشمند ==================
+function sendPush(){
+  var mosqueVal = $('pushMosque').value;
+  var branch = $('pushBranch').value;
+  var text = $('pushText').value.trim();
+  if (!text) { toast('متن پیام را وارد کنید', 'warning'); return; }
+
+  if (mosqueVal === '__ALL__') {
+    fbDb.collection('globalPushes').add({
+      text: text,
+      branch: branch,
+      ts: Date.now(),
+      from: 'super'
+    }).then(function(){
+      toast('📨 پوش به همه مساجد ارسال شد', 'success');
+      $('pushText').value = '';
+    }).catch(function(e){ toast('خطا: ' + e.message, 'danger'); });
+  } else {
+    fbDb.collection('mosques').doc(mosqueVal).collection('pushes').add({
+      text: text,
+      branch: branch,
+      ts: Date.now(),
+      from: 'super'
+    }).then(function(){
+      var m = superCache.find(function(x){ return x.code === mosqueVal; });
+      toast('📨 پوش به ' + (m ? m.name : 'مسجد') + ' ارسال شد', 'success');
+      $('pushText').value = '';
+    }).catch(function(e){ toast('خطا: ' + e.message, 'danger'); });
+  }
+}
+function listenPushes(code){
+  if (!fbDb || !code) return;
+  var lastLocal = LS.get('push_seen_' + code, 0);
+  var lastGlobal = LS.get('push_global_seen', 0);
+
+  fbDb.collection('mosques').doc(code).collection('pushes').orderBy('ts', 'desc').limit(10)
+    .onSnapshot(function(snap){
+      snap.forEach(function(doc){
+        var n = doc.data();
+        if ((n.ts || 0) > lastLocal) {
+          if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
+          lastLocal = n.ts; LS.set('push_seen_' + code, lastLocal);
+          toast('📨 ' + n.text, 'success');
+          if ('Notification' in window && Notification.permission === 'granted') {
+            try { new Notification('🕌 ' + (S.mosque ? S.mosque.name : 'مسجد'), {body:n.text, icon:'https://i.ibb.co/S2b6YjQ/unnamed.jpg'}); } catch(e){}
+          }
+        }
+      });
+    }, function(){});
+
+  fbDb.collection('globalPushes').orderBy('ts', 'desc').limit(10)
+    .onSnapshot(function(snap){
+      snap.forEach(function(doc){
+        var n = doc.data();
+        if ((n.ts || 0) > lastGlobal) {
+          if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
+          lastGlobal = n.ts; LS.set('push_global_seen', lastGlobal);
+          toast('📣 ' + n.text, 'success');
+          if ('Notification' in window && Notification.permission === 'granted') {
+            try { new Notification('📣 اطلاعیه سراسری', {body:n.text, icon:'https://i.ibb.co/S2b6YjQ/unnamed.jpg'}); } catch(e){}
+          }
+        }
+      });
+    }, function(){});
+}
+// ================================================================
 
 function goTo(page) {
   ['pageStart','pageMgrAuth','pageTeenLogin','pageManager','pageTeen','pagePublic','pageSuperLogin','pageSuper','pageProfile'].forEach(function(p){ $(p).classList.add('hidden'); });
@@ -1073,10 +1361,14 @@ function renderSuperList() {
         '<button class="btn btn-primary btn-sm" data-action="super-enter" data-id="' + m.code + '">🚪 ورود</button>' +
         '<button class="btn ' + (dis?'btn-success':'btn-danger') + ' btn-sm" data-action="super-toggle" data-id="' + m.code + '">' + (dis?'✅ فعال':'🛑 قطع') + '</button>' +
         '<button class="btn btn-outline btn-sm" data-action="super-delete" data-id="' + m.code + '">🗑 حذف</button>' +
+        '<button class="btn btn-warning btn-sm" data-action="open-resetpass" data-code="' + m.code + '">🔑 تغییر رمز</button>' +
       '</div></div>';
   }).join('') || '<div class="empty">مسجدی ثبت نشده</div>';
   var sel = $('pushMosque');
-  if (sel) sel.innerHTML = superCache.map(function(m){ return '<option value="'+m.code+'">'+esc(m.name)+' ('+m.code+')</option>'; }).join('');
+  if (sel) {
+    sel.innerHTML = '<option value="__ALL__">🌐 همه مساجد</option>' +
+      superCache.map(function(m){ return '<option value="'+m.code+'">'+esc(m.name)+' ('+m.code+')</option>'; }).join('');
+  }
 }
 function superToggle(id, btn) {
   var m = superCache.find(function(x){ return x.code === id; }); if (!m) return;
@@ -1127,7 +1419,6 @@ function enterTeen() {
   $('hdrSub').textContent = S.branch + ' | ' + S.personName;
   $('hdrChip').textContent = '🧒 ' + S.personName;
   $('teenCodeShow').textContent = S.personName;
-  // QR کد با لینک واقعی
   var baseUrl = location.origin + location.pathname;
   $('teenQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(baseUrl + '?card=' + S.code + '&person=' + S.personId);
   goTo('teen');
@@ -1400,7 +1691,7 @@ function renderPublicAnns() {
   });
 }
 function renderHistory() {
-  var icons = {add:'➕',delete:'🗑',points:'⭐',att:'🌙',att_all:'🌙',prayer:'🕌',ann:'📢',reset:'🔄'};
+  var icons = {add:'➕',delete:'🗑',points:'⭐',att:'🌙',att_all:'🌙',prayer:'🕌',ann:'📢',reset:'🔄',password_change:'🔑'};
   fsGetHistory(S.code, function(h) {
     $('histEmpty').classList.toggle('hidden', h.length > 0);
     $('histList').innerHTML = h.map(function(x) {
@@ -1631,32 +1922,6 @@ function checkAzanTime() {
       }
     }
   }
-}
-
-function sendPush() {
-  var code = $('pushMosque').value;
-  var text = $('pushText').value.trim();
-  if (!code || !text) { toast('مسجد و متن را انتخاب کن','warning'); return; }
-  fbDb.collection('mosques').doc(code).collection('pushes').add({ text:text, ts:Date.now(), from:'super' })
-    .then(function(){ toast('📨 پیام ارسال شد','success'); $('pushText').value=''; })
-    .catch(function(e){ toast('خطا: '+e.message,'danger'); });
-}
-function listenPushes(code) {
-  if (!fbDb || !code) return;
-  var last = LS.get('push_seen_'+code, 0);
-  fbDb.collection('mosques').doc(code).collection('pushes').orderBy('ts','desc').limit(5)
-    .onSnapshot(function(snap){
-      snap.forEach(function(doc){
-        var n = doc.data();
-        if ((n.ts||0) > last) {
-          last = n.ts; LS.set('push_seen_'+code, last);
-          toast('📨 ' + n.text, 'success');
-          if ('Notification' in window && Notification.permission==='granted') {
-            try { new Notification('🕌 مسجد آقا منیر', {body:n.text, icon:'https://i.ibb.co/S2b6YjQ/unnamed.jpg'}); } catch(e){}
-          }
-        }
-      });
-    }, function(){});
 }
 
 var qiblaBrng = 0, qiblaHandler = null;
@@ -1914,6 +2179,9 @@ document.addEventListener('click', function(e) {
   else if (a === 'dua-new') duaNew();
   else if (a === 'dua-edit') duaEdit(el.dataset.id);
   else if (a === 'dua-del') duaDel(el.dataset.id, el);
+  else if (a === 'dua-hide') duaHide(el.dataset.id, el);
+  else if (a === 'open-resetpass') openResetPass(el.dataset.code);
+  else if (a === 'reset-password') resetPassword();
   else if (a === 'logout') logout();
   else if (a === 'add-person') addPerson();
   else if (a === 'open-person') openPersonMenu(el.dataset.id);
@@ -2009,7 +2277,6 @@ function restoreSession() {
 function boot() {
   setTimeout(function(){ $('splash').classList.add('hide'); }, 800);
   
-  // کارنامه QR از لینک
   var cardCode = getParam('card');
   var personId = getParam('person');
   if (cardCode && personId) {
