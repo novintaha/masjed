@@ -1,10 +1,12 @@
-var CACHE = 'masjed-v53';
-var SHELL = ['./', './index.html', './duas-data.js', './azan.mp3'];
+var CACHE = 'masjed-v56';
+var SHELL = ['./', './index.html', './duas-data.js'];
+var AZAN_CACHE = ['https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE).then(function(cache) {
       var jobs = SHELL.map(function(u){ return cache.add(u).catch(function(){}); });
+      AZAN_CACHE.forEach(function(u){ jobs.push(cache.add(u).catch(function(){})); });
       return Promise.all(jobs);
     }).then(function(){ return self.skipWaiting(); })
   );
@@ -23,8 +25,7 @@ self.addEventListener('fetch', function(e) {
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request).then(function(res) {
-        var clone = res.clone();
-        caches.open(CACHE).then(function(c){ c.put('./index.html', clone); });
+        var clone = res.clone(); caches.open(CACHE).then(function(c){ c.put('./index.html', clone); });
         return res;
       }).catch(function() { return caches.match('./index.html'); })
     );
@@ -36,18 +37,16 @@ self.addEventListener('fetch', function(e) {
       caches.match(e.request).then(function(cached) {
         if (cached) return cached;
         return fetch(e.request).then(function(res) {
-          if (res && res.status === 200) {
-            var clone = res.clone();
-            caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
-          }
+          if (res && res.status === 200) { var clone = res.clone(); caches.open(CACHE).then(function(c){ c.put(e.request, clone); }); }
           return res;
         }).catch(function(){ return caches.match(e.request); });
       })
     );
   }
 });
-importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
+
+importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js');
 firebase.initializeApp({
   apiKey: "AIzaSyDT0sQ_ZcT_Jl9_vvjgsgVojP_TCCLaEFM",
   authDomain: "masjed-a6505.firebaseapp.com",
