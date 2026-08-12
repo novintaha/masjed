@@ -1,0 +1,1 @@
+{ "name": "سامانه جامع اطلاع رسانی مساجد", "short_name": "مساجد", "start_url": "./", "display": "standalone", "background_color": "#fdf8f0", "theme_color": "#1a6b4a", "dir": "rtl", "lang": "fa", "icons": [{ "src": "https://i.ibb.co/S2b6YjQ/unnamed.jpg", "sizes": "512x512", "type": "image/jpeg" }] }
