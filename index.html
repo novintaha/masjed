@@ -403,6 +403,20 @@ body[data-theme="dark"] .help-list li{background:#141b17;border-color:#2c3a32}
 <button class="btn btn-primary full-w" data-action="reset-password">🔐 تغییر رمز عبور</button>
 </div>
 </div>
+<div class="modal-bg" id="linksModal">
+<div class="modal">
+<button class="modal-close" data-action="close-modal" data-target="linksModal">✕</button>
+<h3>🔗 لینک‌های مسجد <span id="linksMosqueName"></span></h3>
+<div class="text-xs text-muted mb-2">💡 لینک‌های ذخیره‌شده اینجا، در پنل مدیر همان مسجد اعمال می‌شود. اگر فیلدی خالی بماند، لینک پیش‌فرض خودکار ساخته می‌شود.</div>
+<label class="text-sm fw-700">👦 نوجوان پسر</label><input id="lk-teenBoy" style="margin-bottom:8px">
+<label class="text-sm fw-700">👧 نوجوان دختر</label><input id="lk-teenGirl" style="margin-bottom:8px">
+<label class="text-sm fw-700">🕌 مدیریت برادران</label><input id="lk-mgrBoy" style="margin-bottom:8px">
+<label class="text-sm fw-700">🕌 مدیریت خواهران</label><input id="lk-mgrGirl" style="margin-bottom:8px">
+<label class="text-sm fw-700">🌍 بخش عمومی</label><input id="lk-public" style="margin-bottom:8px">
+<label class="text-sm fw-700">✨ لینک کوتاه (نام مسجد)</label><input id="lk-short" style="margin-bottom:12px">
+<button class="btn btn-primary full-w" data-action="save-links">💾 ذخیره لینک‌ها</button>
+</div>
+</div>
 <div id="sharedHeader" class="hidden">
 <div class="hdr">
 <button class="help-top" data-action="open-help">📖 راهنما</button>
@@ -488,8 +502,8 @@ body[data-theme="dark"] .help-list li{background:#141b17;border-color:#2c3a32}
 <div class="setting-row"><label>🕌 مدیریت برادران</label><button class="btn btn-outline btn-sm" data-action="copy-link" data-kind="mgr-boy">📋 کپی</button></div>
 <div class="setting-row"><label>🕌 مدیریت خواهران</label><button class="btn btn-outline btn-sm" data-action="copy-link" data-kind="mgr-girl">📋 کپی</button></div>
 <div class="setting-row"><label>🌍 بخش عمومی</label><button class="btn btn-outline btn-sm" data-action="copy-link" data-kind="public">📋 کپی</button></div>
-<div class="setting-row"><label>✨ لینک کوتاه عمومی (نام مسجد)</label><button class="btn btn-gold btn-sm" data-action="copy-link" data-kind="short">📋 کپی</button></div>
-<div class="text-xs text-muted mt-2">💡 هر لینک، کاربر را مستقیم به بخش خودش می‌برد. برای حذف عبارت github از لینک‌ها، دامنه اختصاصی وصل کنید.</div>
+<div class="setting-row"><label>✨ لینک کوتاه عمومی</label><button class="btn btn-gold btn-sm" data-action="copy-link" data-kind="short">📋 کپی</button></div>
+<div class="text-xs text-muted mt-2">💡 این لینک‌ها توسط سوپرادمین قابل ویرایش است و تغییرات همین‌جا اعمال می‌شود.</div>
 </div>
 <div class="card" style="border:2px solid #c8963e"><h3>✏️ امتیازات سراسری</h3>
 <div class="setting-row"><label>🕌 امتیاز هر نماز</label><input type="number" id="cfgPrayerPts" value="1" style="max-width:100px"></div>
@@ -1076,35 +1090,47 @@ fbDb.collection('customDuas').doc(id).delete().then(function(){ toast('🗑 حذ
 renderDuaAdmin();
 });
 }
-/* حدیث زنده + چرخش خودکار هر ۱۰ ثانیه */
-var hadithList = [];
-function loadHadith() {
-$('hadithBar').classList.remove('hidden');
-$('hadithText').textContent = 'در حال دریافت حدیث...';
-var apply = function(arr){ hadithList = arr; pickHadith(); };
-var fetchRemote = function(){
-fetch('https://raw.githubusercontent.com/novintaha/masjed/main/hadiths.json?' + Date.now(), {cache:'no-store'})
-.then(function(r){ if (!r.ok) throw 0; return r.json(); })
-.then(function(j){ apply(j.hadiths || j); })
-.catch(function(){ $('hadithText').textContent = 'اتصال برقرار نشد؛ 🔄 را بزنید'; });
-};
-if (fbDb) {
-fbDb.collection('hadiths').get().then(function(snap){
-if (!snap.empty) { var arr=[]; snap.forEach(function(d){ arr.push(d.data().text); }); apply(arr); }
-else fetchRemote();
-}).catch(fetchRemote);
-} else fetchRemote();
+/* ===== لینک‌های قابل ویرایش توسط سوپرادمین ===== */
+var linksCode = null;
+var LINK_KINDS = ['teenBoy','teenGirl','mgrBoy','mgrGirl','public','short'];
+function defaultLink(kind, code, name){
+var base = location.origin + location.pathname;
+if (kind === 'teenBoy') return base + '?role=teen&branch=boys';
+if (kind === 'teenGirl') return base + '?role=teen&branch=girls';
+if (kind === 'mgrBoy') return base + '?role=manager&branch=boys';
+if (kind === 'mgrGirl') return base + '?role=manager&branch=girls';
+if (kind === 'public') return base + '?role=public&m=' + code;
+return base + '#' + encodeURIComponent((name||'').trim());
 }
-function pickHadith(){
-if (!hadithList.length) return;
-$('hadithText').textContent = hadithList[Math.floor(Math.random() * hadithList.length)];
+function openLinksModal(code){
+var m = superCache.find(function(x){ return x.code === code; }); if (!m) return;
+linksCode = code;
+$('linksMosqueName').textContent = m.name;
+var cl = m.customLinks || {};
+LINK_KINDS.forEach(function(k){ $('lk-'+k).value = cl[k] || defaultLink(k, code, m.name); });
+openModal('linksModal');
 }
-function addHadith() {
-var t = $('newHadith').value.trim();
-if (!t) { toast('متن حدیث را بنویسید','warning'); return; }
-fbDb.collection('hadiths').add({text:t, ts:Date.now()}).then(function(){
-toast('✅ حدیث اضافه شد','success'); $('newHadith').value=''; loadHadith();
-});
+function saveLinks(){
+if (!linksCode) return;
+var obj = {};
+LINK_KINDS.forEach(function(k){ obj[k] = $('lk-'+k).value.trim(); });
+fbDb.collection('mosques').doc(linksCode).update({customLinks: obj}).then(function(){
+var idx = superCache.findIndex(function(x){ return x.code === linksCode; });
+if (idx >= 0) superCache[idx].customLinks = obj;
+centerToast('✅ لینک‌ها ذخیره شد و در پنل مدیر اعمال می‌شود');
+closeModal('linksModal');
+}).catch(function(e){ toast('خطا: ' + e.message, 'danger'); });
+}
+function getLink(kind){
+var cl = (S.mosque && S.mosque.customLinks) ? S.mosque.customLinks : null;
+if (cl && cl[kind]) return cl[kind];
+return defaultLink(kind, S.code, S.mosque ? S.mosque.name : '');
+}
+function copyLink(kind){
+var url = getLink(kind);
+if (navigator.clipboard && navigator.clipboard.writeText) {
+navigator.clipboard.writeText(url).then(function(){ centerToast('🔗 لینک کپی شد'); });
+} else { prompt('لینک را کپی کنید:', url); }
 }
 function openResetPass(code) {
 resetPassCode = code;
@@ -1625,6 +1651,7 @@ return '<div class="list-item"><div class="avatar">🕌</div><div class="body"><
 '<div style="display:flex;flex-direction:column;gap:4px">' +
 '<button class="btn btn-primary btn-sm" data-action="super-enter" data-id="' + m.code + '">🚪 ورود</button>' +
 '<button class="btn ' + (dis?'btn-success':'btn-danger') + ' btn-sm" data-action="super-toggle" data-id="' + m.code + '">' + (dis?'✅ فعال':'🛑 قطع') + '</button>' +
+'<button class="btn btn-gold btn-sm" data-action="open-links" data-id="' + m.code + '">🔗 لینک‌ها</button>' +
 '<button class="btn btn-ghost btn-sm" data-action="super-clear-history" data-id="' + m.code + '">🧹 پاک کردن تاریخچه</button>' +
 '<button class="btn btn-outline btn-sm" data-action="super-delete" data-id="' + m.code + '">🗑 حذف</button>' +
 '<button class="btn btn-warning btn-sm" data-action="open-resetpass" data-code="' + m.code + '">🔑 تغییر رمز</button>' +
@@ -1928,19 +1955,6 @@ fsAddHistory(S.code,'points','تنظیم سراسری جدید: نماز ' + faN
 centerToast('✅ تغییر ثبت شد؛ از این لحظه به بعد اعمال می‌شود');
 renderPeople();
 }
-function copyLink(kind) {
-var base = location.origin + location.pathname;
-var url = '';
-if (kind === 'teen-boy') url = base + '?role=teen&branch=boys';
-else if (kind === 'teen-girl') url = base + '?role=teen&branch=girls';
-else if (kind === 'mgr-boy') url = base + '?role=manager&branch=boys';
-else if (kind === 'mgr-girl') url = base + '?role=manager&branch=girls';
-else if (kind === 'public') url = base + '?role=public&m=' + S.code;
-else url = base + '#' + encodeURIComponent((S.mosque.name||'').trim());
-if (navigator.clipboard && navigator.clipboard.writeText) {
-navigator.clipboard.writeText(url).then(function(){ centerToast('🔗 لینک کپی شد'); });
-} else { prompt('لینک را کپی کنید:', url); }
-}
 var rwCache = [];
 function renderRewards() {
 fsGetRewards(S.code, function(rw) {
@@ -2070,28 +2084,28 @@ if (h.length > histShown) html += '<button class="btn btn-outline full-w mt-2" d
 $('histList').innerHTML = html;
 });
 }
-function getTop(branch) {
-var top = null;
-pplCache.forEach(function(p) { if (p.branch === branch) { if (!top || (p.points||0) > (top.points||0)) top = p; } });
-return top;
-}
-/* برترین نمازگزار — بدون انیمیشن، با تعداد نماز و فعالیت واقعی */
+/* ===== بنر برترین نمازگزار — پویا، هر دو بخش، بدون هاردکد ===== */
 function updateChampBanner() {
 var el = $('champBanner'); if (!el) return;
-if (!S.role || !S.code) { el.classList.add('hidden'); return; }
-var top = getTop(S.branch);
-if (!top) { el.classList.add('hidden'); return; }
-if (!fbDb) { el.classList.add('hidden'); return; }
-fbDb.collection('mosques').doc(S.code).collection('pray').get().then(function(snap){
-var cnt = 0;
-snap.forEach(function(d){ (d.data().records||[]).forEach(function(r){ if (r.indexOf(top.id + '|') === 0) cnt++; }); });
-var prefix = S.branch === 'خواهران' ? 'خواهر ' : 'برادر ';
-el.classList.remove('hidden');
-el.innerHTML = '<span class="trophy">🏆</span><span>برترین نمازگزار تا این لحظه (' + S.branch + '): ' + prefix + esc(top.name) + ' با ' + faNum(cnt) + ' نماز و ' + faNum(top.nights||0) + ' شب حضور در مسجد</span>';
-}).catch(function(){
-el.classList.remove('hidden');
-el.innerHTML = '<span class="trophy">🏆</span><span>برترین نمازگزار تا این لحظه (' + S.branch + '): ' + esc(top.name) + '</span>';
+if (!S.role || !S.code || !fbDb) { el.classList.add('hidden'); return; }
+fbDb.collection('mosques').doc(S.code).collection('people').get().then(function(snap){
+var topBoy = null, topGirl = null;
+snap.forEach(function(d){
+var p = {id:d.id, ...d.data()};
+if (p.branch === 'برادران') { if (!topBoy || (p.points||0) > (topBoy.points||0)) topBoy = p; }
+else if (p.branch === 'خواهران') { if (!topGirl || (p.points||0) > (topGirl.points||0)) topGirl = p; }
 });
+if (!topBoy && !topGirl) { el.classList.add('hidden'); return; }
+return fbDb.collection('mosques').doc(S.code).collection('pray').get().then(function(ps){
+var cnt = {};
+ps.forEach(function(d){ (d.data().records||[]).forEach(function(r){ var pid = r.split('|')[0]; cnt[pid] = (cnt[pid]||0) + 1; }); });
+var sects = [], parts = [];
+if (topBoy) { sects.push('برادران'); parts.push('برادر ' + esc(topBoy.name) + ' با ' + faNum(cnt[topBoy.id]||0) + ' نماز'); }
+if (topGirl) { sects.push('خواهران'); parts.push('خواهر ' + esc(topGirl.name) + ' با ' + faNum(cnt[topGirl.id]||0) + ' نماز'); }
+el.classList.remove('hidden');
+el.innerHTML = '<span class="trophy">🏆</span><span>برترین نمازگزار تا این لحظه در بخش ' + sects.join(' و ') + ': ' + parts.join(' و ') + '</span>';
+});
+}).catch(function(){ el.classList.add('hidden'); });
 }
 var topBannerInterval = null;
 function updateTopBanner() {
@@ -2137,14 +2151,14 @@ $('teenMaghribC').textContent = faNum(maghribC);
 fsGetRewards(S.code, function(rw) {
 var nr = null;
 rw.forEach(function(r) { if ((me.points||0) < r.pointsRequired && (!nr || r.pointsRequired < nr.pointsRequired)) nr = r; });
-var got = null;
-rw.forEach(function(r) { if ((me.points||0) >= r.pointsRequired) got = r; });
-var distance = nr ? nr.pointsRequired - (me.points||0) : 0;
-var threshold = nr ? Math.max(3, Math.ceil(nr.pointsRequired * 0.2)) : 0;
-var isNear = !!nr && distance <= threshold;
 var card = $('teenRewardCard');
+if (!nr) { card.classList.add('hidden'); }
+else {
+card.classList.remove('hidden');
+var distance = nr.pointsRequired - (me.points||0);
+var threshold = Math.max(3, Math.ceil(nr.pointsRequired * 0.2));
+var isNear = distance <= threshold;
 card.classList.toggle('near', isNear);
-if (nr) {
 var pct = Math.min(100, Math.round((me.points||0) / nr.pointsRequired * 100));
 if (isNear) {
 $('rewardTitle').innerHTML = '🔥 ' + nr.icon + ' به جایزه «' + esc(nr.name) + '» نزدیک شدی!';
@@ -2154,14 +2168,6 @@ $('rewardTitle').innerHTML = nr.icon + ' ' + esc(nr.name);
 $('rewardSub').textContent = faNum(distance) + ' امتیاز تا دریافت';
 }
 $('rewardProgress').style.width = pct + '%';
-} else if (got) {
-$('rewardTitle').innerHTML = '🏆 مستحق: ' + esc(got.name);
-$('rewardSub').textContent = 'برای دریافت به مدیر مراجعه کنید';
-$('rewardProgress').style.width = '100%';
-} else {
-$('rewardTitle').innerHTML = '🎁 جایزه‌ای تعریف نشده';
-$('rewardSub').textContent = '';
-$('rewardProgress').style.width = '0%';
 }
 $('teenRewardsList').innerHTML = rw.slice().sort(function(a,b){ return (a.pointsRequired||0)-(b.pointsRequired||0); }).map(function(r) {
 var isGot = (me.points||0) >= r.pointsRequired;
@@ -2174,19 +2180,26 @@ return '<div class="list-item' + (isNr ? ' reward-near-item' : '') + '" style="'
 '</div><div class="meta">' + faNum(r.pointsRequired) + ' امتیاز' + (isGot ? '' : ' | ' + faNum(Math.max(0, r.pointsRequired - (me.points||0))) + ' مانده') + '</div>' +
 '<div class="progress-bar"><div class="progress-fill" style="width:' + pct2 + '%"></div></div></div></div>';
 }).join('') || '<div class="empty"><div class="empty-icon">🎁</div><div>جایزه‌ای تعریف نشده</div></div>';
-if (isNear) {
+if (nr && isNearSafe()) {}
+function isNearSafe(){ return false; }
+if (nr) {
+var distance2 = nr.pointsRequired - (me.points||0);
+var threshold2 = Math.max(3, Math.ceil(nr.pointsRequired * 0.2));
+if (distance2 <= threshold2) {
 var nk = 'nearNotified_' + S.code + '_' + S.personId;
 var notified = LS.get(nk, []);
 if (notified.indexOf(nr.id) < 0) {
 notified.push(nr.id); LS.set(nk, notified);
-var nearReward = nr, nearDist = distance;
+var nearReward = nr, nearDist = distance2;
 setTimeout(function(){
 toast('🔥 ' + S.personName + ' عزیز، تو به جایزه «' + nearReward.name + '» نزدیک شدی! فقط ' + faNum(nearDist) + ' امتیاز مانده 🎁', 'success');
 showSuccess();
 }, 1400);
 }
 }
+}
 updateMotivation();
+updateChampBanner();
 });
 });
 }
@@ -2246,108 +2259,36 @@ else if (points >= 50) { type = 'milestone'; n = points; }
 el.innerHTML = '<div class="mot-text">' + getMotivationMsg(S.personName, type, n) + '</div><div class="mot-foot">✨ ' + new Date().toLocaleDateString('fa-IR') + '</div>';
 }
 function showMotivational(name, type, n) { toast(getMotivationMsg(name, type, n), 'success'); }
-/* ===== مسابقه ۱۰ سطحی ===== */
-var QUIZ_LEVELS = [
-[
-{q:'نماز صبح چند رکعت است؟',a:['۲','۳','۴'],c:0},
-{q:'به کدام سمت نماز می‌خوانیم؟',a:['قبله','مشهد','کربلا'],c:0},
-{q:'وقتی پدر یا مادر چیزی می‌گویند، جواب محترمانه چیست؟',a:['چشم','نه','بعداً'],c:0}
-],
-[
-{q:'نماز مغرب چند رکعت است؟',a:['۳','۲','۴'],c:0},
-{q:'شستن صورت و دست‌ها قبل از نماز چه نام دارد؟',a:['وضو','غسل','تیمم'],c:0},
-{q:'طبق قرآن، گفتن کدام حرف به پدر و مادر حرام است؟',a:['اف','سلام','مرسی'],c:0}
-],
-[
-{q:'نماز عشا چند رکعت است؟',a:['۴','۳','۲'],c:0},
-{q:'بعد از سوره حمد در نماز چه می‌خوانیم؟',a:['یک سوره دیگر','دعا','اذان'],c:0},
-{q:'چند نماز واجب روزانه داریم؟',a:['۵','۳','۷'],c:0}
-],
-[
-{q:'نمازی که با جماعت خوانده می‌شود چه نام دارد؟',a:['نماز جماعت','نماز شب','نماز قضا'],c:0},
-{q:'طبق حدیث، بهشت کجاست؟',a:['زیر پای مادران','بالای کوه‌ها','پشت دریاها'],c:0},
-{q:'کدام مورد وضو را باطل می‌کند؟',a:['خواب','راه رفتن','صحبت کردن'],c:0}
-],
-[
-{q:'سن تکلیف پسران چند سال قمری است؟',a:['۱۵','۱۲','۱۸'],c:0},
-{q:'نماز مسافر شرعی چگونه است؟',a:['شکسته (۲ رکعتی)','کامل','سقوط می‌شود'],c:0},
-{q:'طبق حدیث، نگاه محبت‌آمیز به چهره پدر و مادر چیست؟',a:['عبادت','گناه','مکروه'],c:0}
-],
-[
-{q:'کدام یک از اجزای نماز «رکن» است؟',a:['رکوع','قنوت','سلام'],c:0},
-{q:'سجده‌ای که برای جبران خطای نماز انجام می‌شود؟',a:['سجده سهو','سجده شکر','سجده تلاوت'],c:0},
-{q:'هنگام صحبت پدر و مادر، رفتار محترمانه چیست؟',a:['وسط حرفشان نپریم','بلندتر صحبت کنیم','برویم اتاق دیگر'],c:0}
-],
-[
-{q:'مسافت شرعی سفر (تقریبی) چقدر است؟',a:['حدود ۴۵ کیلومتر','حدود ۱۰ کیلومتر','حدود ۱۰۰ کیلومتر'],c:0},
-{q:'اگر در نماز سهواً حرف بزنیم، چه چیزی واجب می‌شود؟',a:['سجده سهو','نماز قضا','غسل'],c:0},
-{q:'طبق قرآن، وقتی پدر و مادر به پیری می‌رسند چه باید کرد؟',a:['با مهربانی و احترام رفتار کنیم','به حرفشان گوش ندهیم','تنهایشان بگذاریم'],c:0}
-],
-[
-{q:'کدام غسل به جای وضو هم کافی است؟',a:['غسل جنابت','غسل مسّ میت','غسل زیارت'],c:0},
-{q:'کسی که در نماز زیاد شک می‌کند (کثیرالشک) چه باید بکند؟',a:['به شک خود اعتنا نکند','نماز را بشکند','دوباره وضو بگیرد'],c:0},
-{q:'در حقوق والدین، حق کدام یک بیشتر شمرده شده است؟',a:['مادر','پدر','برادر'],c:0}
-],
-[
-{q:'تکبیری که نماز را شروع می‌کند چه نام دارد؟',a:['تکبیرة الاحرام','تکبیر قنوت','تکبیر رکوع'],c:0},
-{q:'اگر یک سجده فراموش شود و بعد از رکوعِ رکعت بعد یاد بیفتد، چه باید کرد؟',a:['بعد از نماز قضای سجده و سجده سهو','نماز باطل است','هیچ'],c:0},
-{q:'نماز مسافر دائم (کثیرالسفر) چگونه است؟',a:['کامل','شکسته','ساقط'],c:0}
-],
-[
-{q:'کدام جزء نماز رکن است و با فراموشی عمدی یا سهوی، نماز باطل می‌شود؟',a:['دو سجده یک رکعت','قنوت','سلام'],c:0},
-{q:'نماز شب چند رکعت است؟',a:['۱۱','۸','۴'],c:0},
-{q:'طبق حدیث، «رضایت خداوند» در گرو چیست؟',a:['رضایت والدین','پول زیاد','سفر زیاد'],c:0}
-]
-];
-function quizKey(){ return 'quizlv_' + (S.personId || 'guest'); }
-function quizDone(){ return LS.get(quizKey(), []); }
-function renderQuiz() {
-var done = quizDone();
-var html = '<div class="text-sm text-muted mb-2">📚 احکام، نماز و احترام به والدین — هر سطح را کامل درست جواب بده تا تیک بخورد و سطح بعد باز شود.</div>';
-html += '<div class="flex gap-2" style="flex-wrap:wrap">';
-for (var i=1;i<=10;i++){
-var unlocked = (i===1) || done.indexOf(i-1)>=0;
-var isDone = done.indexOf(i)>=0;
-html += '<button class="btn '+(isDone?'btn-gold':(unlocked?'btn-primary':'btn-outline'))+'" '+(unlocked?'data-action="quiz-start" data-lv="'+i+'"':'disabled')+' style="min-width:56px">'+(isDone?'✅ ':'')+faNum(i)+'</button>';
+/* ===== حدیث زنده + چرخش ۱۰ ثانیه ===== */
+var hadithList = [];
+function loadHadith() {
+$('hadithBar').classList.remove('hidden');
+$('hadithText').textContent = 'در حال دریافت حدیث...';
+var apply = function(arr){ hadithList = arr; pickHadith(); };
+var fetchRemote = function(){
+fetch('https://raw.githubusercontent.com/novintaha/masjed/main/hadiths.json?' + Date.now(), {cache:'no-store'})
+.then(function(r){ if (!r.ok) throw 0; return r.json(); })
+.then(function(j){ apply(j.hadiths || j); })
+.catch(function(){ $('hadithText').textContent = 'اتصال برقرار نشد؛ 🔄 را بزنید'; });
+};
+if (fbDb) {
+fbDb.collection('hadiths').get().then(function(snap){
+if (!snap.empty) { var arr=[]; snap.forEach(function(d){ arr.push(d.data().text); }); apply(arr); }
+else fetchRemote();
+}).catch(fetchRemote);
+} else fetchRemote();
 }
-html += '</div><div id="quizPlay" class="mt-3"></div>';
-$('quizBox').innerHTML = html;
+function pickHadith(){
+if (!hadithList.length) return;
+$('hadithText').textContent = hadithList[Math.floor(Math.random() * hadithList.length)];
 }
-var quizCur = null;
-function startQuiz(lv){
-quizCur = {lv:lv, idx:0, answers:[], qs: QUIZ_LEVELS[lv-1]};
-showQuizQuestion();
+function addHadith() {
+var t = $('newHadith').value.trim();
+if (!t) { toast('متن حدیث را بنویسید','warning'); return; }
+fbDb.collection('hadiths').add({text:t, ts:Date.now()}).then(function(){
+toast('✅ حدیث اضافه شد','success'); $('newHadith').value=''; loadHadith();
+});
 }
-function showQuizQuestion(){
-var q = quizCur.qs[quizCur.idx];
-var html = '<div class="text-xs text-muted mb-2">سطح ' + faNum(quizCur.lv) + ' | سؤال ' + faNum(quizCur.idx+1) + ' از ' + faNum(quizCur.qs.length) + '</div><div class="fw-800 mb-3">' + esc(q.q) + '</div>';
-for (var i=0;i<q.a.length;i++) html += '<button class="btn btn-outline full-w mb-2" data-action="answer-quiz" data-idx="'+i+'">'+esc(q.a[i])+'</button>';
-$('quizPlay').innerHTML = html;
-}
-function answerQuiz(idx){
-var q = quizCur.qs[quizCur.idx];
-quizCur.answers.push(idx);
-quizCur.idx++;
-if (quizCur.idx < quizCur.qs.length) { showQuizQuestion(); return; }
-var correct = 0, review = '';
-for (var i=0;i<quizCur.qs.length;i++){
-var qq = quizCur.qs[i];
-var ok = quizCur.answers[i] === qq.c;
-if (ok) correct++;
-review += '<div class="list-item" style="cursor:default"><div class="body"><div class="name">'+(ok?'✅':'❌')+' '+esc(qq.q)+'</div><div class="meta">جواب درست: '+esc(qq.a[qq.c])+(ok?'':' | جواب شما: '+esc(qq.a[quizCur.answers[i]]))+'</div></div></div>';
-}
-var passed = (correct === quizCur.qs.length);
-var done = quizDone();
-if (passed && done.indexOf(quizCur.lv)<0) { done.push(quizCur.lv); LS.set(quizKey(), done); }
-var html = '<div class="card" style="border:2px solid '+(passed?'#2d8f65':'#b5343a')+'"><h3>'+(passed?'🎉 آفرین! سطح '+faNum(quizCur.lv)+' کامل شد':'❌ چند اشتباه داشتی؛ جواب‌های درست را ببین و دوباره تلاش کن')+'</h3>' + review +
-'<div class="flex gap-2 mt-2"><button class="btn btn-outline" data-action="quiz-back">📚 سطح‌ها</button>' +
-(passed && quizCur.lv<10 ? '<button class="btn btn-primary" data-action="quiz-start" data-lv="'+(quizCur.lv+1)+'">➡️ سطح '+faNum(quizCur.lv+1)+'</button>' : '') +
-(passed ? '' : '<button class="btn btn-gold" data-action="quiz-start" data-lv="'+quizCur.lv+'">🔄 تلاش دوباره</button>') +
-'</div></div>';
-$('quizPlay').innerHTML = html;
-if (passed) { toast('🎉 سطح '+faNum(quizCur.lv)+' تیک خورد','success'); showSuccess(); }
-}
-function quizBack(){ renderQuiz(); }
 function loadConfig() {
 var cfg = LS.get('cfg_' + S.code, {});
 if (cfg.autoAzan !== undefined) $('cfgAutoAzan').checked = cfg.autoAzan;
@@ -2458,6 +2399,108 @@ function dhikrReset() {
 dhikrCount = 0; $('dhikrCount').textContent = faNum(0);
 LS.set('dhikr_count', 0); toast('🔄','info');
 }
+/* ===== مسابقه ۱۰ سطحی ===== */
+var QUIZ_LEVELS = [
+[
+{q:'نماز صبح چند رکعت است؟',a:['۲','۳','۴'],c:0},
+{q:'به کدام سمت نماز می‌خوانیم؟',a:['قبله','مشهد','کربلا'],c:0},
+{q:'وقتی پدر یا مادر چیزی می‌گویند، جواب محترمانه چیست؟',a:['چشم','نه','بعداً'],c:0}
+],
+[
+{q:'نماز مغرب چند رکعت است؟',a:['۳','۲','۴'],c:0},
+{q:'شستن صورت و دست‌ها قبل از نماز چه نام دارد؟',a:['وضو','غسل','تیمم'],c:0},
+{q:'طبق قرآن، گفتن کدام حرف به پدر و مادر حرام است؟',a:['اف','سلام','مرسی'],c:0}
+],
+[
+{q:'نماز عشا چند رکعت است؟',a:['۴','۳','۲'],c:0},
+{q:'بعد از سوره حمد در نماز چه می‌خوانیم؟',a:['یک سوره دیگر','دعا','اذان'],c:0},
+{q:'چند نماز واجب روزانه داریم؟',a:['۵','۳','۷'],c:0}
+],
+[
+{q:'نمازی که با جماعت خوانده می‌شود چه نام دارد؟',a:['نماز جماعت','نماز شب','نماز قضا'],c:0},
+{q:'طبق حدیث، بهشت کجاست؟',a:['زیر پای مادران','بالای کوه‌ها','پشت دریاها'],c:0},
+{q:'کدام مورد وضو را باطل می‌کند؟',a:['خواب','راه رفتن','صحبت کردن'],c:0}
+],
+[
+{q:'سن تکلیف پسران چند سال قمری است؟',a:['۱۵','۱۲','۱۸'],c:0},
+{q:'نماز مسافر شرعی چگونه است؟',a:['شکسته (۲ رکعتی)','کامل','سقوط می‌شود'],c:0},
+{q:'طبق حدیث، نگاه محبت‌آمیز به چهره پدر و مادر چیست؟',a:['عبادت','گناه','مکروه'],c:0}
+],
+[
+{q:'کدام یک از اجزای نماز «رکن» است؟',a:['رکوع','قنوت','سلام'],c:0},
+{q:'سجده‌ای که برای جبران خطای نماز انجام می‌شود؟',a:['سجده سهو','سجده شکر','سجده تلاوت'],c:0},
+{q:'هنگام صحبت پدر و مادر، رفتار محترمانه چیست؟',a:['وسط حرفشان نپریم','بلندتر صحبت کنیم','برویم اتاق دیگر'],c:0}
+],
+[
+{q:'مسافت شرعی سفر (تقریبی) چقدر است؟',a:['حدود ۴۵ کیلومتر','حدود ۱۰ کیلومتر','حدود ۱۰۰ کیلومتر'],c:0},
+{q:'اگر در نماز سهواً حرف بزنیم، چه چیزی واجب می‌شود؟',a:['سجده سهو','نماز قضا','غسل'],c:0},
+{q:'طبق قرآن، وقتی پدر و مادر به پیری می‌رسند چه باید کرد؟',a:['با مهربانی و احترام رفتار کنیم','به حرفشان گوش ندهیم','تنهایشان بگذاریم'],c:0}
+],
+[
+{q:'کدام غسل به جای وضو هم کافی است؟',a:['غسل جنابت','غسل مسّ میت','غسل زیارت'],c:0},
+{q:'کسی که در نماز زیاد شک می‌کند (کثیرالشک) چه باید بکند؟',a:['به شک خود اعتنا نکند','نماز را بشکند','دوباره وضو بگیرد'],c:0},
+{q:'در حقوق والدین، حق کدام یک بیشتر شمرده شده؟',a:['مادر','پدر','برادر'],c:0}
+],
+[
+{q:'تکبیری که نماز را شروع می‌کند چه نام دارد؟',a:['تکبیرة الاحرام','تکبیر قنوت','تکبیر رکوع'],c:0},
+{q:'اگر یک سجده فراموش شود و بعد از رکوعِ رکعت بعد یاد بیفتد، چه باید کرد؟',a:['بعد از نماز قضای سجده و سجده سهو','نماز باطل است','هیچ'],c:0},
+{q:'نماز مسافر دائم (کثیرالسفر) چگونه است؟',a:['کامل','شکسته','ساقط'],c:0}
+],
+[
+{q:'کدام جزء نماز رکن است و با فراموشی عمدی یا سهوی، نماز باطل می‌شود؟',a:['دو سجده یک رکعت','قنوت','سلام'],c:0},
+{q:'نماز شب چند رکعت است؟',a:['۱۱','۸','۴'],c:0},
+{q:'طبق حدیث، «رضایت خداوند» در گرو چیست؟',a:['رضایت والدین','پول زیاد','سفر زیاد'],c:0}
+]
+];
+function quizKey(){ return 'quizlv_' + (S.personId || 'guest'); }
+function quizDone(){ return LS.get(quizKey(), []); }
+function renderQuiz() {
+var done = quizDone();
+var html = '<div class="text-sm text-muted mb-2">📚 احکام، نماز و احترام به والدین — هر سطح را کامل درست جواب بده تا تیک بخورد و سطح بعد باز شود.</div>';
+html += '<div class="flex gap-2" style="flex-wrap:wrap">';
+for (var i=1;i<=10;i++){
+var unlocked = (i===1) || done.indexOf(i-1)>=0;
+var isDone = done.indexOf(i)>=0;
+html += '<button class="btn '+(isDone?'btn-gold':(unlocked?'btn-primary':'btn-outline'))+'" '+(unlocked?'data-action="quiz-start" data-lv="'+i+'"':'disabled')+' style="min-width:56px">'+(isDone?'✅ ':'')+faNum(i)+'</button>';
+}
+html += '</div><div id="quizPlay" class="mt-3"></div>';
+$('quizBox').innerHTML = html;
+}
+var quizCur = null;
+function startQuiz(lv){
+quizCur = {lv:lv, idx:0, answers:[], qs: QUIZ_LEVELS[lv-1]};
+showQuizQuestion();
+}
+function showQuizQuestion(){
+var q = quizCur.qs[quizCur.idx];
+var html = '<div class="text-xs text-muted mb-2">سطح ' + faNum(quizCur.lv) + ' | سؤال ' + faNum(quizCur.idx+1) + ' از ' + faNum(quizCur.qs.length) + '</div><div class="fw-800 mb-3">' + esc(q.q) + '</div>';
+for (var i=0;i<q.a.length;i++) html += '<button class="btn btn-outline full-w mb-2" data-action="answer-quiz" data-idx="'+i+'">'+esc(q.a[i])+'</button>';
+$('quizPlay').innerHTML = html;
+}
+function answerQuiz(idx){
+var q = quizCur.qs[quizCur.idx];
+quizCur.answers.push(idx);
+quizCur.idx++;
+if (quizCur.idx < quizCur.qs.length) { showQuizQuestion(); return; }
+var correct = 0, review = '';
+for (var i=0;i<quizCur.qs.length;i++){
+var qq = quizCur.qs[i];
+var ok = quizCur.answers[i] === qq.c;
+if (ok) correct++;
+review += '<div class="list-item" style="cursor:default"><div class="body"><div class="name">'+(ok?'✅':'❌')+' '+esc(qq.q)+'</div><div class="meta">جواب درست: '+esc(qq.a[qq.c])+(ok?'':' | جواب شما: '+esc(qq.a[quizCur.answers[i]]))+'</div></div></div>';
+}
+var passed = (correct === quizCur.qs.length);
+var done = quizDone();
+if (passed && done.indexOf(quizCur.lv)<0) { done.push(quizCur.lv); LS.set(quizKey(), done); }
+var html = '<div class="card" style="border:2px solid '+(passed?'#2d8f65':'#b5343a')+'"><h3>'+(passed?'🎉 آفرین! سطح '+faNum(quizCur.lv)+' کامل شد':'❌ چند اشتباه داشتی؛ جواب‌های درست را ببین و دوباره تلاش کن')+'</h3>' + review +
+'<div class="flex gap-2 mt-2"><button class="btn btn-outline" data-action="quiz-back">📚 سطح‌ها</button>' +
+(passed && quizCur.lv<10 ? '<button class="btn btn-primary" data-action="quiz-start" data-lv="'+(quizCur.lv+1)+'">➡️ سطح '+faNum(quizCur.lv+1)+'</button>' : '') +
+(passed ? '' : '<button class="btn btn-gold" data-action="quiz-start" data-lv="'+quizCur.lv+'">🔄 تلاش دوباره</button>') +
+'</div></div>';
+$('quizPlay').innerHTML = html;
+if (passed) { toast('🎉 سطح '+faNum(quizCur.lv)+' تیک خورد','success'); showSuccess(); }
+}
+function quizBack(){ renderQuiz(); }
 function logout() {
 S.role = null; S.code = null; S.mosque = null; S.personId = null;
 LS.set('session', null); goTo('start'); toast('👋','info');
@@ -2575,8 +2618,8 @@ items = [
 '🕌 دکمه طلایی کنار هر نفر: ثبت نماز صبح/ظهر/مغرب با امتیاز تعریف‌شده.',
 '🌙 تب «حضور»: حضور امشب را ثبت کنید؛ «همه حاضر» برای ثبت گروهی.',
 '✏️ تب «تنظیمات» → «امتیازات سراسری»: امتیاز هر نماز یا حضور را عوض کنید؛ فقط از لحظه ذخیره به بعد اعمال می‌شود.',
+'🔗 تب «تنظیمات» → «لینک‌های اختصاصی»: لینک هر گروه را کپی و برای همان گروه بفرستید. این لینک‌ها توسط سوپرادمین قابل ویرایش است.',
 '🎁 تب «جوایز» و 🎯 دلایل امتیاز: با دکمه ✏️ نام یا امتیاز هر کدام را ویرایش کنید.',
-'🔗 تب «تنظیمات» → «لینک‌های اختصاصی»: لینک جداگانه نوجوان پسر/دختر، مدیریت برادران/خواهران و بخش عمومی را کپی و برای هر گروه بفرستید.',
 '📢 تب «اطلاعیه»: اطلاعیه داخلی فقط برای نمازگزاران خودتان؛ اطلاعیه عمومی فقط برای اهالی همین مسجد.',
 '📜 تب «تاریخچه»: همه عملیات ثبت می‌شود و با دکمه «پاک کردن» خلوت می‌شود.'
 ];
@@ -2641,6 +2684,8 @@ else if (a === 'super-clear-history') superClearHistory(el.dataset.id, el);
 else if (a === 'super-clear-all-history') superClearAllHistory(el);
 else if (a === 'mgr-clear-history') mgrClearHistory(el);
 else if (a === 'super-enter') superEnter(el.dataset.id);
+else if (a === 'open-links') openLinksModal(el.dataset.id);
+else if (a === 'save-links') saveLinks();
 else if (a === 'send-push') sendPush();
 else if (a === 'add-hadith') addHadith();
 else if (a === 'reload-hadith') loadHadith();
