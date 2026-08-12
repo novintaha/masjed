@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a6b4a">
-<title>سامانه مسجد آقا منیر</title>
+<title>سامانه جامع اطلاع رسانی مساجد</title>
 <link rel="apple-touch-icon" href="https://i.ibb.co/S2b6YjQ/unnamed.jpg">
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -61,7 +61,7 @@ textarea{resize:vertical;min-height:70px}
 .btn.armed{background:#b5343a!important;color:#fff!important}
 .start-box{max-width:500px;margin:20px auto;background:#fff;border-radius:22px;padding:24px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.1);animation:scaleIn .5s cubic-bezier(.175,.885,.32,1.275)}
 .start-img{width:140px;height:140px;border-radius:70px 70px 20px 20px;border:4px solid #e0c87a;margin:0 auto 16px;object-fit:cover;animation:float 3s ease-in-out infinite;box-shadow:0 4px 14px rgba(0,0,0,.2)}
-.start-title{font-size:1.5em;font-weight:800;color:#0f3d2a;margin-bottom:4px}
+.start-title{font-size:1.4em;font-weight:800;color:#0f3d2a;margin-bottom:4px}
 .start-sub{font-size:.88em;color:#5c4030;margin-bottom:14px}
 .credit{font-size:.72em;color:#888;padding:8px 14px;background:#fdf8f0;border-radius:10px;margin-bottom:18px}
 .credit b{color:#1a6b4a}
@@ -217,9 +217,11 @@ textarea{resize:vertical;min-height:70px}
 .progress-bar{height:10px;background:rgba(200,150,62,.2);border-radius:5px;overflow:hidden;margin-top:8px}
 .progress-fill{height:100%;background:linear-gradient(90deg,#c8963e,#8b6914);border-radius:5px;transition:width .8s;position:relative}
 .progress-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 2s infinite;background-size:1000px 100%}
-.reward-card{background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #e0c87a;border-radius:16px;padding:16px;margin-bottom:12px}
+.reward-card{background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #e0c87a;border-radius:16px;padding:16px;margin-bottom:12px;transition:all .4s}
+.reward-card.near{border-color:#ff8c1a;background:linear-gradient(135deg,#fff3cd,#ffe3b3);animation:pulse 1.4s infinite;box-shadow:0 6px 22px rgba(255,140,26,.45)}
 .reward-title{font-weight:800;margin-bottom:4px}
 .reward-sub{font-size:.85em;color:#5c4030;margin-bottom:8px}
+.reward-near-item{border:2px solid #ff8c1a!important;background:linear-gradient(135deg,#fff9e6,#ffe3b3)!important;animation:pulse 1.3s infinite}
 .qr-card{background:#fff;border-radius:16px;padding:16px;text-align:center;border:2px solid #e0c87a}
 .qr-img{width:140px;height:140px;border-radius:10px;margin-bottom:8px}
 .section-divider{height:2px;background:linear-gradient(90deg,transparent,#e0c87a,transparent);margin:20px 0}
@@ -253,6 +255,7 @@ body[data-theme="dark"] .dua-content{color:#e8e6e1}
 body[data-theme="dark"] .motivation{background:#202a24;border-color:#3a4a40}
 body[data-theme="dark"] .mot-text{color:#e8e6e1}
 body[data-theme="dark"] .reward-card{background:#202a24;border-color:#3a4a40}
+body[data-theme="dark"] .reward-sub{color:#c9d4cc}
 body[data-theme="dark"] .toast{background:#1a221d;color:#e8e6e1}
 body[data-theme="dark"] .install-box{background:#1a221d;border-color:#3a7d5c;color:#e8e6e1}
 body[data-theme="dark"] .install-sub{color:#9aa89f}
@@ -263,7 +266,7 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <body>
 <div class="splash" id="splash">
 <div class="splash-icon">🕌</div>
-<div class="splash-title">مسجد آقا منیر</div>
+<div class="splash-title">سامانه جامع اطلاع رسانی مساجد</div>
 <div class="splash-sub">سامانه هوشمند</div>
 <div class="splash-loader"></div>
 </div>
@@ -273,7 +276,7 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <div id="pageStart">
 <div class="start-box">
 <img class="start-img" src="mosque.webp" onerror="this.onerror=null;this.src='https://i.ibb.co/S2b6YjQ/unnamed.jpg'" alt="مسجد">
-<div class="start-title">مسجد آقا منیر</div>
+<div class="start-title">سامانه جامع اطلاع رسانی مساجد</div>
 <div class="start-sub">سامانه هوشمند امتیازدهی، اذان و اطلاع‌رسانی</div>
 <div class="credit">طراح: <b>محمد وزیری</b> | 📞 <span class="phone">09909936883</span></div>
 <div class="branch-tabs">
@@ -343,7 +346,10 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <div class="card"><h3>📊 آمار کل سیستم</h3><div id="superStats" class="text-sm"></div></div>
 <div class="card"><h3>🕌 همه مساجد (با اطلاعات ورود)</h3>
 <input type="text" id="superSearch" data-input="super-search" placeholder="🔍 جستجوی نام یا کد مسجد..." style="margin-bottom:10px">
-<button class="btn btn-danger full-w mb-3" id="btnSuperDeleteAll" data-action="super-delete-all">⚠️ حذف همه مساجد (خطرناک)</button>
+<div class="flex gap-2 mb-3">
+<button class="btn btn-warning full-w" id="btnSuperClearAllHist" data-action="super-clear-all-history">🧹 پاک کردن تاریخچه همه مساجد</button>
+<button class="btn btn-danger full-w" id="btnSuperDeleteAll" data-action="super-delete-all">⚠️ حذف همه مساجد</button>
+</div>
 <div id="superList"></div>
 </div>
 <div class="card"><h3>📨 ارسال پوش هوشمند</h3>
@@ -404,7 +410,7 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <!-- ====== SHARED HEADER ====== -->
 <div id="sharedHeader" class="hidden">
 <div class="hdr">
-<h1 id="hdrTitle">مسجد آقا منیر</h1>
+<h1 id="hdrTitle">سامانه جامع اطلاع رسانی مساجد</h1>
 <p class="sub" id="hdrSub">سامانه هوشمند</p>
 <span class="chip" id="hdrChip">—</span>
 </div>
@@ -463,6 +469,7 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <div class="card"><h3>➕ جایزه جدید</h3>
 <div class="flex gap-2 mb-2"><input type="text" id="newRwName" placeholder="نام جایزه"><input type="number" id="newRwPts" placeholder="امتیاز" style="max-width:100px"></div>
 <div class="flex gap-2"><select id="newRwIcon" style="max-width:90px"><option>📖</option><option>🎁</option><option>🕋</option><option>📿</option><option>⚽</option><option>🏆</option><option>💰</option></select><button class="btn btn-gold full-w" data-action="add-reward">➕</button></div>
+<div class="text-xs text-muted mt-2">💡 برای ویرایش هر جایزه روی دکمه ✏️ بزنید</div>
 </div>
 <div class="card"><h3>🎁 لیست جوایز</h3><div id="rwList"></div><div id="rwEmpty" class="empty hidden"><div class="empty-icon">🎁</div><div>جایزه‌ای نیست</div></div></div>
 </div>
@@ -479,21 +486,30 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 </div>
 </div>
 <div class="panel" id="mgr-cfg">
+<div class="card" style="border:2px solid #c8963e"><h3>✏️ امتیازات سراسری (بخش <span id="ptsBranchLabel">برادران</span>)</h3>
+<div class="setting-row"><label>🕌 امتیاز هر نماز</label><input type="number" id="cfgPrayerPts" value="1" style="max-width:100px"></div>
+<div class="setting-row"><label>🌙 امتیاز هر حضور شب</label><input type="number" id="cfgAttPts" value="0" style="max-width:100px"></div>
+<button class="btn btn-gold full-w mt-2" data-action="save-global-pts">💾 ذخیره و اعمال روی همه نمازگزاران بخش</button>
+<div class="text-xs text-muted mt-2">💡 با تغییر امتیاز، مابه‌التفاوت برای همه افراد این بخش که نماز یا حضور ثبت‌شده دارند به‌صورت خودکار محاسبه و اعمال می‌شود.</div>
+</div>
 <div class="card"><h3>🔊 تنظیمات اذان</h3>
 <div class="setting-row"><label>🔔 پخش خودکار</label><span class="switch"><input type="checkbox" id="cfgAutoAzan" checked data-change="save-config"><span class="slider"></span></span></div>
 <div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="cfgFajr" checked data-change="save-config"><span class="slider"></span></span></div>
 <div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="cfgDhuhr" checked data-change="save-config"><span class="slider"></span></span></div>
 <div class="setting-row"><label>🌇 مغرب</label><span class="switch"><input type="checkbox" id="cfgMaghrib" checked data-change="save-config"><span class="slider"></span></span></div>
 <div class="setting-row"><label>🎙 قاری اذان</label><select id="cfgReciter" data-change="save-reciter" style="max-width:160px"></select></div>
+<div class="setting-row"><label>🔉 حجم صدا</label></div>
+<div class="vol-wrap"><span>🔈</span><input type="range" min="0" max="100" value="80" id="cfgVolume" data-change="save-config" class="vol-slider"><span>🔊</span></div>
 <button class="btn btn-outline mt-2" data-action="test-azan">🔊 تست</button>
 </div>
 <div class="card"><h3>🎯 دلایل امتیاز</h3>
 <div id="rsList"></div>
 <div class="flex gap-2 mt-2"><input type="text" id="newRsName" placeholder="عنوان" style="flex:2"><input type="number" id="newRsPts" placeholder="امتیاز" style="flex:1"><button class="btn btn-primary" data-action="add-reason">➕</button></div>
+<div class="text-xs text-muted mt-2">💡 برای ویرایش امتیاز هر دلیل روی ✏️ بزنید</div>
 </div>
 </div>
 <div class="panel" id="mgr-hist">
-<div class="card"><h3>📜 تاریخچه</h3><div id="histList"></div><div id="histEmpty" class="empty hidden"><div class="empty-icon">📜</div><div>فعالیتی نیست</div></div></div>
+<div class="card"><h3>📜 تاریخچه <span style="flex:1"></span><button class="btn btn-danger btn-sm" id="mgrClearHistBtn" data-action="mgr-clear-history">🧹 پاک کردن</button></h3><div id="histList"></div><div id="histEmpty" class="empty hidden"><div class="empty-icon">📜</div><div>فعالیتی نیست</div></div></div>
 </div>
 </div>
 <!-- ====== TEEN PANEL ====== -->
@@ -512,11 +528,12 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 </div>
 </div>
 <div id="teenMotivation" class="motivation"></div>
-<div class="reward-card">
+<div class="reward-card" id="teenRewardCard">
 <div class="reward-title" id="rewardTitle">🎁 در حال محاسبه...</div>
 <div class="reward-sub" id="rewardSub"></div>
 <div class="progress-bar"><div class="progress-fill" id="rewardProgress" style="width:0%"></div></div>
 </div>
+<div class="card"><h3>🎁 جوایز و پیشرفت من</h3><div id="teenRewardsList"></div></div>
 <div class="tabs">
 <button class="tab active" data-action="tab" data-group="teen" data-tab="home">🏠 خانه</button>
 <button class="tab" data-action="tab" data-group="teen" data-tab="ann">📢 اطلاعیه‌ها</button>
@@ -545,12 +562,13 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <div class="panel" id="teen-settings">
 <div class="card"><h3>🔊 تنظیمات اذان‌گو</h3>
 <div class="setting-row"><label>🔔 اذان‌گوی خودکار</label><span class="switch"><input type="checkbox" id="teenAutoAzan" checked data-change="save-teen"><span class="slider"></span></span></div>
-<div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="teenFajr" checked data-change="save-teen"><span class="slider"></span></span></div>
-<div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="teenDhuhr" checked data-change="save-teen"><span class="slider"></span></span></div>
-<div class="setting-row"><label>🌇 مغرب</label><span class="switch"><input type="checkbox" id="teenMaghrib" checked data-change="save-teen"><span class="slider"></span></span></div>
+<div class="setting-row"><label>🌅 اذان صبح</label><span class="switch"><input type="checkbox" id="teenFajr" checked data-change="save-teen"><span class="slider"></span></span></div>
+<div class="setting-row"><label>🌞 اذان ظهر</label><span class="switch"><input type="checkbox" id="teenDhuhr" checked data-change="save-teen"><span class="slider"></span></span></div>
+<div class="setting-row"><label>🌇 اذان مغرب</label><span class="switch"><input type="checkbox" id="teenMaghrib" checked data-change="save-teen"><span class="slider"></span></span></div>
 <div class="setting-row"><label>🎙 قاری اذان</label><select id="teenReciter" data-change="save-reciter" style="max-width:160px"></select></div>
 <div class="setting-row"><label>🔉 حجم صدا</label></div>
 <div class="vol-wrap"><span>🔈</span><input type="range" min="0" max="100" value="80" id="teenVolume" data-change="save-teen" class="vol-slider"><span>🔊</span></div>
+<div class="text-xs text-muted mt-2">💡 با غیرفعال کردن هر گزینه، آن اذان برای شما پخش نمی‌شود</div>
 <button class="btn btn-outline mt-3 full-w" data-action="test-azan">🔊 تست</button>
 </div>
 </div>
@@ -591,12 +609,13 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <div class="section-divider"></div>
 <div class="card"><h3>🔊 تنظیمات اذان‌گو</h3>
 <div class="setting-row"><label>🔔 اذان‌گوی خودکار</label><span class="switch"><input type="checkbox" id="pubAutoAzan" checked data-change="save-public"><span class="slider"></span></span></div>
-<div class="setting-row"><label>🌅 صبح</label><span class="switch"><input type="checkbox" id="pubFajr" checked data-change="save-public"><span class="slider"></span></span></div>
-<div class="setting-row"><label>🌞 ظهر</label><span class="switch"><input type="checkbox" id="pubDhuhr" checked data-change="save-public"><span class="slider"></span></span></div>
-<div class="setting-row"><label>🌇 مغرب</label><span class="switch"><input type="checkbox" id="pubMaghrib" checked data-change="save-public"><span class="slider"></span></span></div>
+<div class="setting-row"><label>🌅 اذان صبح</label><span class="switch"><input type="checkbox" id="pubFajr" checked data-change="save-public"><span class="slider"></span></span></div>
+<div class="setting-row"><label>🌞 اذان ظهر</label><span class="switch"><input type="checkbox" id="pubDhuhr" checked data-change="save-public"><span class="slider"></span></span></div>
+<div class="setting-row"><label>🌇 اذان مغرب</label><span class="switch"><input type="checkbox" id="pubMaghrib" checked data-change="save-public"><span class="slider"></span></span></div>
 <div class="setting-row"><label>🎙 قاری اذان</label><select id="pubReciter" data-change="save-reciter" style="max-width:160px"></select></div>
 <div class="setting-row"><label>🔉 حجم صدا</label></div>
 <div class="vol-wrap"><span>🔈</span><input type="range" min="0" max="100" value="80" id="pubVolume" data-change="save-public" class="vol-slider"><span>🔊</span></div>
+<div class="text-xs text-muted mt-2">💡 با غیرفعال کردن هر گزینه، آن اذان برای شما پخش نمی‌شود</div>
 <button class="btn btn-outline mt-3 full-w" data-action="test-azan">🔊 تست اذان</button>
 </div>
 <button class="btn btn-outline full-w mt-3" data-action="go" data-page="start">🚪 بازگشت</button>
@@ -628,7 +647,7 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <!-- ====== FOOTER ====== -->
 <div class="footer">
 <p>📞 <span class="phone">09909936883</span></p>
-<p style="margin-top:4px">🕌 مسجد آقا منیر | طراح: محمد وزیری</p>
+<p style="margin-top:4px">🕌 سامانه جامع اطلاع رسانی مساجد | طراح: محمد وزیری</p>
 <p style="margin-top:6px"><button class="btn btn-ghost btn-sm" data-action="go" data-page="superLogin">👑 ورود سوپرادمین</button></p>
 </div>
 <!-- ====== INSTALL BANNER ====== -->
@@ -688,7 +707,7 @@ body[data-theme="dark"] .install-sub{color:#9aa89f}
 <button class="modal-close" data-action="close-azan" style="color:#fff;background:rgba(255,255,255,.2)">✕</button>
 <div class="azan-arabic">اللهُ أَكْبَر</div>
 <div class="azan-title" id="azanName">اذان</div>
-<div style="opacity:.9">🕌 مسجد آقا منیر</div>
+<div style="opacity:.9">🕌 سامانه جامع اطلاع رسانی مساجد</div>
 <div class="azan-waves"><div class="azan-wave"></div><div class="azan-wave"></div><div class="azan-wave"></div><div class="azan-wave"></div><div class="azan-wave"></div></div>
 <button class="btn btn-gold mt-3 hidden" id="btnPlayAzan" data-action="play-azan">▶ پخش اذان</button>
 </div>
@@ -844,9 +863,39 @@ fbDb.collection('mosques').doc(code).collection('history').orderBy('time', 'desc
 var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
 }, function(){ cb([]); });
 }
+var HISTORY_LIMIT = 300;
+function trimHistory(code) {
+if (!fbDb) return;
+try {
+var col = fbDb.collection('mosques').doc(code).collection('history');
+if (typeof col.count === 'function') {
+col.count().get().then(function(s){
+var n = s.data().count;
+if (n > HISTORY_LIMIT) {
+col.orderBy('time','asc').limit(n - HISTORY_LIMIT).get().then(function(snap){
+if (snap.empty) return;
+var b = fbDb.batch();
+snap.forEach(function(d){ b.delete(d.ref); });
+b.commit().catch(function(){});
+}).catch(function(){});
+}
+}).catch(function(){});
+}
+} catch(e) {}
+}
 function fsAddHistory(code, type, text) {
 if (!fbDb) return;
-fbDb.collection('mosques').doc(code).collection('history').add({ type: type, text: text, time: new Date().toISOString() });
+fbDb.collection('mosques').doc(code).collection('history').add({ type: type, text: text, time: new Date().toISOString() }).then(function(){ trimHistory(code); }).catch(function(){});
+}
+function clearMosqueHistory(code) {
+if (!fbDb) return Promise.resolve(0);
+return fbDb.collection('mosques').doc(code).collection('history').get().then(function(snap){
+if (snap.empty) return 0;
+var n = snap.size;
+var b = fbDb.batch();
+snap.forEach(function(d){ b.delete(d.ref); });
+return b.commit().then(function(){ return n; });
+});
 }
 function sendPersonNotif(code, personId, text) {
 if (!fbDb || !code || !personId) return;
@@ -1161,7 +1210,83 @@ try { new Notification('📣 اطلاعیه سراسری', {body:n.text, icon:'h
 });
 }, function(){});
 }
+/* ============================================================
+   🔊 سیستم پخش اذان — اول فایل لوکال، بعد ۶ ثانیه اینترنت
+   بدون نیاز به اجازه کاربر (پس از اولین لمس صفحه فعال می‌شود)
+   ============================================================ */
 var azanUnlocked = false;
+var audioCtx = null;
+var azanBuffer = null;
+var azanBufferSource = null;
+var azanLoadPromise = null;
+var LOCAL_TIMEOUT = 6000;
+function ensureAudioCtx(){
+if (audioCtx) return audioCtx;
+var AC = window.AudioContext || window.webkitAudioContext;
+if (!AC) return null;
+try { audioCtx = new AC(); } catch(e) { return null; }
+return audioCtx;
+}
+function getVolume(){
+var v = 80;
+try {
+if (S.role === 'teen' && $('teenVolume')) v = parseInt($('teenVolume').value, 10);
+else if (S.role === 'public' && $('pubVolume')) v = parseInt($('pubVolume').value, 10);
+else { var cfg = LS.get('cfg_' + S.code, {}); if (cfg.volume !== undefined) v = cfg.volume; }
+} catch(e) {}
+if (isNaN(v)) v = 80;
+return v / 100;
+}
+function fetchWithTimeout(url, ms){
+return new Promise(function(res, rej){
+var ctrl = (window.AbortController) ? new AbortController() : null;
+var opts = ctrl ? {signal: ctrl.signal} : {};
+var t = setTimeout(function(){ if (ctrl) ctrl.abort(); rej(new Error('timeout')); }, ms);
+fetch(url, opts).then(function(r){
+clearTimeout(t);
+if (!r.ok) throw new Error('bad');
+return r.arrayBuffer();
+}).then(res).catch(function(e){ clearTimeout(t); rej(e); });
+});
+}
+function decodeAudio(ab){
+var ctx = ensureAudioCtx();
+if (!ctx) return Promise.reject(new Error('noctx'));
+return new Promise(function(res, rej){
+try {
+var p = ctx.decodeAudioData(ab, function(b){ res(b); }, function(e){ rej(e); });
+if (p && p.then) p.then(res).catch(rej);
+} catch(e) { rej(e); }
+});
+}
+function loadAzanBuffer(force){
+if (azanBuffer && !force) return Promise.resolve(azanBuffer);
+if (azanLoadPromise) return azanLoadPromise;
+if (!ensureAudioCtx()) return Promise.reject(new Error('noctx'));
+var sources = buildAzanSources();
+azanLoadPromise = (function next(i){
+if (i >= sources.length) { azanLoadPromise = null; return Promise.reject(new Error('no-source')); }
+return fetchWithTimeout(sources[i], LOCAL_TIMEOUT)
+.then(decodeAudio)
+.catch(function(){ return next(i + 1); });
+})(0).then(function(buf){
+azanBuffer = buf;
+azanLoadPromise = null;
+return buf;
+}).catch(function(e){
+azanLoadPromise = null;
+throw e;
+});
+return azanLoadPromise;
+}
+function stopAzanBuffer(){
+if (azanBufferSource) { try { azanBufferSource.stop(); } catch(e) {} azanBufferSource = null; }
+}
+function stopAzanElement(){
+var audio = $('azanAudio');
+audio.onplaying = null; audio.onerror = null;
+try { audio.pause(); } catch(e) {}
+}
 function testAzan() {
 $('azanName').textContent = 'تست اذان';
 $('azanScreen').classList.add('show');
@@ -1169,17 +1294,42 @@ playAzanAudio();
 }
 function closeAzan() {
 $('azanScreen').classList.remove('show');
-$('azanAudio').pause();
+stopAzanElement();
+stopAzanBuffer();
 $('btnPlayAzan').classList.add('hidden');
 document.querySelectorAll('.prayer-item').forEach(function(e){ e.classList.remove('active'); });
 }
 function playAzanAudio() {
-var volume = 80;
-if (S.role === 'teen') volume = $('teenVolume') ? parseInt($('teenVolume').value) : volume;
-else if (S.role === 'public') volume = $('pubVolume') ? parseInt($('pubVolume').value) : volume;
-var audio = $('azanAudio');
-audio.volume = (volume || 80) / 100;
 azanUnlocked = true;
+$('btnPlayAzan').classList.add('hidden');
+stopAzanElement();
+stopAzanBuffer();
+var ctx = ensureAudioCtx();
+var startBuffer = function(){
+loadAzanBuffer().then(function(buf){
+if (!ctx) throw new Error('noctx');
+if (ctx.state === 'suspended') ctx.resume();
+var src = ctx.createBufferSource();
+src.buffer = buf;
+var g = ctx.createGain();
+g.gain.value = getVolume();
+src.connect(g); g.connect(ctx.destination);
+azanBufferSource = src;
+src.start(0);
+toast('🔊 در حال پخش اذان', 'info');
+}).catch(function(){ playAzanElement(); });
+};
+if (ctx && ctx.state === 'suspended') {
+var p = ctx.resume();
+if (p && p.then) p.then(startBuffer, function(){ playAzanElement(); });
+else startBuffer();
+} else {
+startBuffer();
+}
+}
+function playAzanElement() {
+var audio = $('azanAudio');
+audio.volume = getVolume();
 $('btnPlayAzan').classList.add('hidden');
 var SOURCES = buildAzanSources();
 var idx = 0, timer = null, settled = false;
@@ -1200,9 +1350,22 @@ audio.src = SOURCES[my];
 audio.load();
 var p = audio.play();
 if (p && p.catch) p.catch(advance);
-timer = setTimeout(advance, 6000);
+timer = setTimeout(advance, LOCAL_TIMEOUT);
 }
 tryNext();
+}
+function unlockAllAudio() {
+azanUnlocked = true;
+var ctx = ensureAudioCtx();
+if (ctx && ctx.state === 'suspended') { var p = ctx.resume(); if (p && p.catch) p.catch(function(){}); }
+var a = $('azanAudio');
+try {
+a.muted = true;
+var pp = a.play();
+if (pp && pp.catch) pp.catch(function(){});
+setTimeout(function(){ try { a.pause(); a.muted = false; } catch(e){} }, 120);
+} catch(e) {}
+loadAzanBuffer().catch(function(){});
 }
 function checkAzanTime() {
 var now = new Date();
@@ -1225,7 +1388,7 @@ $('azanName').textContent = c.name;
 $('azanScreen').classList.add('show');
 var item = document.querySelector('[data-p="' + c.p + '"]');
 if (item) item.classList.add('active');
-if (azanUnlocked) playAzanAudio(); else $('btnPlayAzan').classList.remove('hidden');
+playAzanAudio();
 setTimeout(closeAzan, 180000);
 }
 }
@@ -1390,13 +1553,14 @@ var adminUid = cred.user.uid;
 await fbDb.collection('mosques').doc(code).set({
 code: code, name: name, address: address, adminUid: adminUid,
 adminEmail: adminEmail, pin: pin, branch: S.branch, status: 'active',
+prayerPoints: 1, attPoints: 0,
 createdAt: new Date().toISOString()
 });
 var reasons = [{id:uid(),name:'نماز جماعت',points:1},{id:uid(),name:'شرکت در کلاس',points:5},{id:uid(),name:'حفظ قرآن',points:10},{id:uid(),name:'کمک به نظافت',points:3},{id:uid(),name:'فعالیت فرهنگی',points:4}];
 var rewards = [{id:uid(),name:'کتاب دعا',pointsRequired:20,icon:'📖'},{id:uid(),name:'هدیه ویژه',pointsRequired:50,icon:'🎁'}];
 for (var r of reasons) await fbDb.collection('mosques').doc(code).collection('reasons').doc(r.id).set(r);
 for (var w of rewards) await fbDb.collection('mosques').doc(code).collection('rewards').doc(w.id).set(w);
-S.code = code; S.mosque = {code:code,name:name,address:address,adminUid:adminUid,adminEmail:adminEmail,pin:pin,status:'active'};
+S.code = code; S.mosque = {code:code,name:name,address:address,adminUid:adminUid,adminEmail:adminEmail,pin:pin,status:'active',prayerPoints:1,attPoints:0};
 S.role = 'manager';
 LS.set('session', {role:'manager', code:code, branch:S.branch});
 toast('✅ مسجد ساخته شد! کد: ' + code + ' | رمز: ' + pin, 'success');
@@ -1475,6 +1639,7 @@ return '<div class="list-item"><div class="avatar">🕌</div><div class="body"><
 '<div style="display:flex;flex-direction:column;gap:4px">' +
 '<button class="btn btn-primary btn-sm" data-action="super-enter" data-id="' + m.code + '">🚪 ورود</button>' +
 '<button class="btn ' + (dis?'btn-success':'btn-danger') + ' btn-sm" data-action="super-toggle" data-id="' + m.code + '">' + (dis?'✅ فعال':'🛑 قطع') + '</button>' +
+'<button class="btn btn-ghost btn-sm" data-action="super-clear-history" data-id="' + m.code + '">🧹 پاک کردن تاریخچه</button>' +
 '<button class="btn btn-outline btn-sm" data-action="super-delete" data-id="' + m.code + '">🗑 حذف</button>' +
 '<button class="btn btn-warning btn-sm" data-action="open-resetpass" data-code="' + m.code + '">🔑 تغییر رمز</button>' +
 '</div></div>';
@@ -1504,6 +1669,36 @@ fbDb.collection('mosques').doc(m.code).delete().then(function(){ count++; toast(
 });
 });
 }
+function superClearHistory(code, btn) {
+twoTap(btn, function() {
+toast('⏳ در حال پاک کردن تاریخچه...', 'info');
+clearMosqueHistory(code).then(function(n){
+toast('🧹 تاریخچه پاک شد (' + faNum(n) + ' مورد)', 'success');
+}).catch(function(e){ toast('خطا: ' + (e.message||''), 'danger'); });
+});
+}
+function superClearAllHistory(btn) {
+twoTap(btn, function() {
+if (!confirm('⚠️ تاریخچه همه مساجد پاک شود؟')) return;
+toast('⏳ در حال پاک کردن تاریخچه همه مساجد...', 'info');
+var done = 0, total = superCache.length;
+if (total === 0) { toast('مسجدی وجود ندارد', 'warning'); return; }
+superCache.forEach(function(m) {
+clearMosqueHistory(m.code).then(function(){
+done++;
+if (done === total) toast('🧹 تاریخچه همه مساجد پاک شد (' + faNum(total) + ' مسجد)', 'success');
+}).catch(function(){ done++; });
+});
+});
+}
+function mgrClearHistory(btn) {
+twoTap(btn, function() {
+clearMosqueHistory(S.code).then(function(n){
+toast('🧹 ' + faNum(n) + ' مورد از تاریخچه پاک شد', 'success');
+fsAddHistory(S.code, 'reset', 'تاریخچه توسط مدیر پاک شد');
+}).catch(function(){ toast('خطا در پاک کردن', 'danger'); });
+});
+}
 function superEnter(id) {
 var m = superCache.find(function(x){ return x.code === id; }); if (!m) return;
 S.role = 'manager'; S.code = id; S.mosque = m;
@@ -1523,6 +1718,9 @@ $('addBranchLabel').textContent = S.branch;
 $('listBranchLabel').textContent = S.branch;
 $('attBranchLabel').textContent = S.branch;
 $('annBranchLabel').textContent = S.branch;
+$('ptsBranchLabel').textContent = S.branch;
+$('cfgPrayerPts').value = (S.mosque.prayerPoints !== undefined) ? S.mosque.prayerPoints : 1;
+$('cfgAttPts').value = (S.mosque.attPoints !== undefined) ? S.mosque.attPoints : 0;
 goTo('manager');
 renderDates(); renderPrayerBar(); loadPrayerTimes(); renderManager(); loadConfig();
 }
@@ -1559,6 +1757,8 @@ showSuccess();
 function renderPublic() { renderDates(); renderPrayerBar(); loadPrayerTimes(); renderPublicAnns(); loadPublicSettings(); }
 function renderManager() { renderPeople(); renderAttendance(); renderRewards(); renderReasons(); renderAnns(); renderPubAnnsMgr(); renderHistory(); }
 var pplCache = [];
+function prayerPts() { return (S.mosque && S.mosque.prayerPoints !== undefined) ? S.mosque.prayerPoints : 1; }
+function attPtsVal() { return (S.mosque && S.mosque.attPoints !== undefined) ? S.mosque.attPoints : 0; }
 function renderPeople() {
 fsGetPeople(S.code, function(list) {
 pplCache = list;
@@ -1602,10 +1802,11 @@ var newAtt = has ? attCache.filter(function(x){ return x !== id; }) : attCache.c
 fsSaveAtt(S.code, todayStr(), newAtt);
 var p = pplCache.find(function(x){ return x.id === id; });
 if (p) {
-if (has) { p.nights = Math.max(0,(p.nights||0)-1); p.streak = Math.max(0,(p.streak||0)-1); }
-else { p.nights=(p.nights||0)+1; p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1; p.lastAtt=todayStr();
+var apt = attPtsVal();
+if (has) { p.nights = Math.max(0,(p.nights||0)-1); p.streak = Math.max(0,(p.streak||0)-1); p.points = Math.max(0,(p.points||0)-apt); }
+else { p.nights=(p.nights||0)+1; p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1; p.lastAtt=todayStr(); p.points=(p.points||0)+apt;
 fsAddHistory(S.code,'att','حضور: '+p.name);
-sendPersonNotif(S.code, p.id, '🌙 حضور امشب شما ثبت شد! آفرین ' + p.name);
+sendPersonNotif(S.code, p.id, '🌙 حضور امشب شما ثبت شد! آفرین ' + p.name + (apt>0 ? ' (+' + faNum(apt) + ' امتیاز)' : ''));
 }
 fsSavePerson(S.code, p);
 }
@@ -1615,11 +1816,12 @@ function markAll() {
 fsGetPeople(S.code, function(list) {
 fsGetAtt(S.code, todayStr(), function(att) {
 var added = 0, newAtt = att.slice();
+var apt = attPtsVal();
 list.forEach(function(p) {
 if (p.branch !== S.branch) return;
 if (newAtt.indexOf(p.id) < 0) {
 newAtt.push(p.id); added++;
-p.nights=(p.nights||0)+1; p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1; p.lastAtt=todayStr();
+p.nights=(p.nights||0)+1; p.streak=(p.lastAtt===yesterdayStr())?(p.streak||0)+1:1; p.lastAtt=todayStr(); p.points=(p.points||0)+apt;
 fsSavePerson(S.code, p); sendPersonNotif(S.code, p.id, '🌙 حضور امشب شما ثبت شد!');
 }
 });
@@ -1697,7 +1899,7 @@ var prayers = [{n:'صبح',icon:'🌅'},{n:'ظهر',icon:'🌞'},{n:'مغرب',i
 fsGetPray(S.code, todayStr(), function(pray) {
 $('prOptions').innerHTML = prayers.map(function(pr) {
 var done = pray.indexOf(id + '|' + pr.n) >= 0;
-return '<div class="list-item" data-action="prayer-give" data-id="'+id+'" data-prayer="'+pr.n+'" style="'+(done?'opacity:.5':'')+'"><div style="font-size:1.5em">'+pr.icon+'</div><div class="body"><div class="name">'+pr.n+'</div></div>'+(done?'<span class="badge badge-success">✓</span>':'<span class="badge badge-gold">+۱</span>')+'</div>';
+return '<div class="list-item" data-action="prayer-give" data-id="'+id+'" data-prayer="'+pr.n+'" style="'+(done?'opacity:.5':'')+'"><div style="font-size:1.5em">'+pr.icon+'</div><div class="body"><div class="name">'+pr.n+'</div></div>'+(done?'<span class="badge badge-success">✓</span>':'<span class="badge badge-gold">+'+faNum(prayerPts())+'</span>')+'</div>';
 }).join(''); openModal('prayerModal');
 });
 }
@@ -1706,12 +1908,65 @@ fsGetPray(S.code, todayStr(), function(pray) {
 if (pray.indexOf(id + '|' + prayer) >= 0) { toast('قبلاً ثبت شده','warning'); return; }
 pray.push(id + '|' + prayer);
 fsSavePray(S.code, todayStr(), pray);
+var pts = prayerPts();
 var p = pplCache.find(function(x){ return x.id === id; });
-if (p) { p.points = (p.points||0) + 1; fsSavePerson(S.code, p); }
+if (p) { p.points = (p.points||0) + pts; fsSavePerson(S.code, p); }
 fsAddHistory(S.code,'prayer', (p?p.name:'') + ' نماز ' + prayer);
 if (S.role === 'teen' && S.personId === id) showMotivational(p ? p.name : '', 'prayer');
-else if (p) sendPersonNotif(S.code, p.id, '🕌 نماز ' + prayer + ' برایت ثبت شد! ' + getMotivationMsg(p.name, 'prayer'));
-toast('🕌 نماز ' + prayer + ' ثبت شد', 'success'); showSuccess(); closeModal('prayerModal');
+else if (p) sendPersonNotif(S.code, p.id, '🕌 نماز ' + prayer + ' برایت ثبت شد! (+' + faNum(pts) + ' امتیاز)');
+toast('🕌 نماز ' + prayer + ' ثبت شد (+' + faNum(pts) + ')', 'success'); showSuccess(); closeModal('prayerModal');
+});
+}
+/* ✏️ امتیازات سراسری: ذخیره + اعمال مابه‌التفاوت روی همه افراد بخش */
+function saveGlobalPts() {
+var newPrayer = parseFloat($('cfgPrayerPts').value);
+var newAtt = parseFloat($('cfgAttPts').value);
+if (isNaN(newPrayer) || newPrayer < 0 || isNaN(newAtt) || newAtt < 0) { toast('مقادیر معتبر وارد کنید','warning'); return; }
+var oldPrayer = prayerPts();
+var oldAtt = attPtsVal();
+var dp = newPrayer - oldPrayer;
+var da = newAtt - oldAtt;
+S.mosque.prayerPoints = newPrayer;
+S.mosque.attPoints = newAtt;
+fbDb.collection('mosques').doc(S.code).update({ prayerPoints: newPrayer, attPoints: newAtt }).catch(function(){});
+if (dp === 0 && da === 0) { toast('✅ ذخیره شد (تغییری برای اعمال نبود)','success'); return; }
+toast('⏳ در حال اعمال روی همه نمازگزاران بخش ' + S.branch + '...', 'info');
+fsGetPeople(S.code, function(people) {
+var branchPeople = people.filter(function(p){ return p.branch === S.branch; });
+var applyAtt = function(){
+if (da !== 0) {
+branchPeople.forEach(function(p){
+var n = p.nights || 0;
+if (n > 0) { p.points = Math.max(0, (p.points||0) + da*n); fsSavePerson(S.code, p); }
+});
+}
+};
+var finish = function(){
+fsAddHistory(S.code,'points','تنظیم سراسری: نماز ' + oldPrayer + '→' + newPrayer + ' | حضور ' + oldAtt + '→' + newAtt);
+toast('✅ امتیاز جدید روی ' + faNum(branchPeople.length) + ' نفر اعمال شد', 'success');
+showSuccess();
+renderPeople();
+};
+if (dp !== 0) {
+fbDb.collection('mosques').doc(S.code).collection('pray').get().then(function(snap){
+var counts = {};
+snap.forEach(function(d){
+(d.data().records||[]).forEach(function(r){
+var pid = r.split('|')[0];
+counts[pid] = (counts[pid]||0) + 1;
+});
+});
+branchPeople.forEach(function(p){
+var c = counts[p.id] || 0;
+if (c > 0) { p.points = Math.max(0, (p.points||0) + dp*c); fsSavePerson(S.code, p); }
+});
+applyAtt();
+finish();
+}).catch(function(){ applyAtt(); finish(); });
+} else {
+applyAtt();
+finish();
+}
 });
 }
 var rwCache = [];
@@ -1720,7 +1975,7 @@ fsGetRewards(S.code, function(rw) {
 rwCache = rw;
 $('rwEmpty').classList.toggle('hidden', rw.length > 0);
 $('rwList').innerHTML = rw.map(function(r) {
-return '<div class="list-item"><div style="font-size:1.5em">'+r.icon+'</div><div class="body"><div class="name">'+esc(r.name)+'</div><div class="meta">'+faNum(r.pointsRequired)+' امتیاز</div></div><button class="btn btn-danger btn-sm" data-action="delete-reward" data-id="'+r.id+'">🗑</button></div>';
+return '<div class="list-item"><div style="font-size:1.5em">'+r.icon+'</div><div class="body"><div class="name">'+esc(r.name)+'</div><div class="meta">'+faNum(r.pointsRequired)+' امتیاز</div></div><button class="btn btn-outline btn-sm" data-action="edit-reward" data-id="'+r.id+'">✏️</button><button class="btn btn-danger btn-sm" data-action="delete-reward" data-id="'+r.id+'">🗑</button></div>';
 }).join('');
 });
 }
@@ -1730,13 +1985,27 @@ if (!name || !pts) { toast('نام و امتیاز','warning'); return; }
 fsSaveReward(S.code, {id:uid(), name:name, pointsRequired:pts, icon:icon});
 $('newRwName').value = ''; $('newRwPts').value = ''; toast('✅','success');
 }
+function editReward(id) {
+var r = rwCache.find(function(x){ return x.id === id; }); if (!r) return;
+var nn = prompt('نام جایزه:', r.name);
+if (nn === null) return;
+var np = prompt('امتیاز لازم برای دریافت:', r.pointsRequired);
+if (np === null) return;
+var npts = parseInt(np, 10);
+if (isNaN(npts) || npts < 1) { toast('امتیاز معتبر نیست','warning'); return; }
+r.name = nn.trim() || r.name;
+r.pointsRequired = npts;
+fsSaveReward(S.code, r);
+fsAddHistory(S.code,'points','ویرایش جایزه: ' + r.name + ' → ' + npts + ' امتیاز');
+toast('✅ جایزه ویرایش شد','success');
+}
 function deleteReward(id, btn) { twoTap(btn, function() { fsDeleteReward(S.code, id); toast('🗑','info'); }); }
 var rsCache = [];
 function renderReasons() {
 fsGetReasons(S.code, function(rs) {
 rsCache = rs;
 $('rsList').innerHTML = rs.map(function(r) {
-return '<div class="list-item"><div class="body"><div class="name">'+esc(r.name)+'</div></div><div class="badge badge-gold">'+faNum(r.points)+' ⭐</div><button class="btn btn-danger btn-sm" data-action="delete-reason" data-id="'+r.id+'">🗑</button></div>';
+return '<div class="list-item"><div class="body"><div class="name">'+esc(r.name)+'</div></div><div class="badge badge-gold">'+faNum(r.points)+' ⭐</div><button class="btn btn-outline btn-sm" data-action="edit-reason" data-id="'+r.id+'">✏️</button><button class="btn btn-danger btn-sm" data-action="delete-reason" data-id="'+r.id+'">🗑</button></div>';
 }).join('');
 });
 }
@@ -1745,6 +2014,17 @@ var name = $('newRsName').value.trim(); var pts = parseFloat($('newRsPts').value
 if (!name || isNaN(pts)) { toast('عنوان و امتیاز','warning'); return; }
 fsSaveReason(S.code, {id:uid(), name:name, points:pts});
 $('newRsName').value = ''; $('newRsPts').value = ''; toast('✅','success');
+}
+function editReason(id) {
+var r = rsCache.find(function(x){ return x.id === id; }); if (!r) return;
+var v = prompt('امتیاز جدید برای «' + r.name + '»:', r.points);
+if (v === null) return;
+var n = parseFloat(v);
+if (isNaN(n)) { toast('عدد معتبر نیست','warning'); return; }
+r.points = n;
+fsSaveReason(S.code, r);
+fsAddHistory(S.code,'points','ویرایش دلیل: ' + r.name + ' → ' + n);
+toast('✅ امتیاز «' + r.name + '» به ' + faNum(n) + ' تغییر کرد','success');
 }
 function deleteReason(id, btn) { twoTap(btn, function() { fsDeleteReason(S.code, id); toast('🗑','info'); }); }
 var annCache = [];
@@ -1857,6 +2137,7 @@ if (topBannerInterval) clearInterval(topBannerInterval);
 topBannerInterval = setInterval(function(){ idx++; update(); }, 5000);
 }
 function renderTeenAll() { renderTeenHome(); renderLeader(); renderTeenAnns(); }
+/* 🎁 نمایش جوایز + بولد کردن جایزه‌ای که کاربر به آن نزدیک شده */
 function renderTeenHome() {
 fsGetPeople(S.code, function(people) {
 var me = people.find(function(x){ return x.id === S.personId; }); if (!me) return;
@@ -1882,18 +2163,58 @@ $('teenDhuhrC').textContent = faNum(dhuhrC);
 $('teenMaghribC').textContent = faNum(maghribC);
 });
 fsGetRewards(S.code, function(rw) {
-var nr = null, got = null;
+var nr = null;
 rw.forEach(function(r) { if ((me.points||0) < r.pointsRequired && (!nr || r.pointsRequired < nr.pointsRequired)) nr = r; });
+var got = null;
 rw.forEach(function(r) { if ((me.points||0) >= r.pointsRequired) got = r; });
+var distance = nr ? nr.pointsRequired - (me.points||0) : 0;
+var threshold = nr ? Math.max(3, Math.ceil(nr.pointsRequired * 0.2)) : 0;
+var isNear = !!nr && distance <= threshold;
+var card = $('teenRewardCard');
+card.classList.toggle('near', isNear);
 if (nr) {
 var pct = Math.min(100, Math.round((me.points||0) / nr.pointsRequired * 100));
+if (isNear) {
+$('rewardTitle').innerHTML = '🔥 ' + nr.icon + ' به جایزه «' + esc(nr.name) + '» نزدیک شدی!';
+$('rewardSub').textContent = 'فقط ' + faNum(distance) + ' امتیاز مانده! ادامه بده 💪';
+} else {
 $('rewardTitle').innerHTML = nr.icon + ' ' + esc(nr.name);
-$('rewardSub').textContent = faNum(nr.pointsRequired - (me.points||0)) + ' امتیاز تا دریافت';
+$('rewardSub').textContent = faNum(distance) + ' امتیاز تا دریافت';
+}
 $('rewardProgress').style.width = pct + '%';
 } else if (got) {
+card.classList.remove('near');
 $('rewardTitle').innerHTML = '🏆 مستحق: ' + esc(got.name);
 $('rewardSub').textContent = 'برای دریافت به مدیر مراجعه کنید';
 $('rewardProgress').style.width = '100%';
+} else {
+card.classList.remove('near');
+$('rewardTitle').innerHTML = '🎁 جایزه‌ای تعریف نشده';
+$('rewardSub').textContent = '';
+$('rewardProgress').style.width = '0%';
+}
+$('teenRewardsList').innerHTML = rw.slice().sort(function(a,b){ return (a.pointsRequired||0)-(b.pointsRequired||0); }).map(function(r) {
+var isGot = (me.points||0) >= r.pointsRequired;
+var isNr = nr && r.id === nr.id;
+var pct2 = Math.min(100, Math.round((me.points||0) / (r.pointsRequired||1) * 100));
+return '<div class="list-item' + (isNr ? ' reward-near-item' : '') + '" style="' + (isGot ? 'opacity:.75' : '') + '">' +
+'<div style="font-size:1.6em">' + (r.icon||'🎁') + '</div>' +
+'<div class="body"><div class="name"><b>' + esc(r.name) + '</b>' +
+(isGot ? ' <span class="badge badge-success">✅ رسیدی!</span>' : (isNr ? ' <span class="badge badge-new">🔥 نزدیک شدی!</span>' : '')) +
+'</div><div class="meta">' + faNum(r.pointsRequired) + ' امتیاز' + (isGot ? '' : ' | ' + faNum(Math.max(0, r.pointsRequired - (me.points||0))) + ' مانده') + '</div>' +
+'<div class="progress-bar"><div class="progress-fill" style="width:' + pct2 + '%"></div></div></div></div>';
+}).join('') || '<div class="empty"><div class="empty-icon">🎁</div><div>جایزه‌ای تعریف نشده</div></div>';
+if (isNear) {
+var nk = 'nearNotified_' + S.code + '_' + S.personId;
+var notified = LS.get(nk, []);
+if (notified.indexOf(nr.id) < 0) {
+notified.push(nr.id); LS.set(nk, notified);
+var nearReward = nr, nearDist = distance;
+setTimeout(function(){
+toast('🔥 ' + S.personName + ' عزیز، تو به جایزه «' + nearReward.name + '» نزدیک شدی! فقط ' + faNum(nearDist) + ' امتیاز مانده 🎁', 'success');
+showSuccess();
+}, 1400);
+}
 }
 updateMotivation();
 });
@@ -1963,9 +2284,10 @@ if (cfg.autoAzan !== undefined) $('cfgAutoAzan').checked = cfg.autoAzan;
 if (cfg.fajr !== undefined) $('cfgFajr').checked = cfg.fajr;
 if (cfg.dhuhr !== undefined) $('cfgDhuhr').checked = cfg.dhuhr;
 if (cfg.maghrib !== undefined) $('cfgMaghrib').checked = cfg.maghrib;
+if (cfg.volume !== undefined) $('cfgVolume').value = cfg.volume;
 }
 function saveConfig() {
-LS.set('cfg_' + S.code, {autoAzan: $('cfgAutoAzan').checked, fajr: $('cfgFajr').checked, dhuhr: $('cfgDhuhr').checked, maghrib: $('cfgMaghrib').checked});
+LS.set('cfg_' + S.code, {autoAzan: $('cfgAutoAzan').checked, fajr: $('cfgFajr').checked, dhuhr: $('cfgDhuhr').checked, maghrib: $('cfgMaghrib').checked, volume: parseInt($('cfgVolume').value, 10)});
 toast('✅ ذخیره شد','success');
 }
 function loadTeenSettings() {
@@ -1977,8 +2299,8 @@ if (s.maghrib !== undefined) $('teenMaghrib').checked = s.maghrib;
 if (s.volume !== undefined) $('teenVolume').value = s.volume;
 }
 function saveTeenSettings() {
-LS.set('teen_' + S.code + '_' + S.personId, {autoAzan: $('teenAutoAzan').checked, fajr: $('teenFajr').checked, dhuhr: $('teenDhuhr').checked, maghrib: $('teenMaghrib').checked, volume: parseInt($('teenVolume').value)});
-toast('✅','success');
+LS.set('teen_' + S.code + '_' + S.personId, {autoAzan: $('teenAutoAzan').checked, fajr: $('teenFajr').checked, dhuhr: $('teenDhuhr').checked, maghrib: $('teenMaghrib').checked, volume: parseInt($('teenVolume').value, 10)});
+toast('✅ تنظیمات اذان ذخیره شد','success');
 }
 function loadPublicSettings() {
 var s = LS.get('public_settings', {});
@@ -1989,8 +2311,8 @@ if (s.maghrib !== undefined) $('pubMaghrib').checked = s.maghrib;
 if (s.volume !== undefined) $('pubVolume').value = s.volume;
 }
 function savePublicSettings() {
-LS.set('public_settings', {autoAzan: $('pubAutoAzan').checked, fajr: $('pubFajr').checked, dhuhr: $('pubDhuhr').checked, maghrib: $('pubMaghrib').checked, volume: parseInt($('pubVolume').value)});
-toast('✅','success');
+LS.set('public_settings', {autoAzan: $('pubAutoAzan').checked, fajr: $('pubFajr').checked, dhuhr: $('pubDhuhr').checked, maghrib: $('pubMaghrib').checked, volume: parseInt($('pubVolume').value, 10)});
+toast('✅ تنظیمات اذان ذخیره شد','success');
 }
 var qiblaBrng = 0, qiblaHandler = null;
 function qiblaBearing(lat, lon) {
@@ -2142,7 +2464,7 @@ var should = true;
 if (S.role === 'teen') { var s1 = LS.get('teen_' + S.code + '_' + S.personId, {}); should = s1.autoAzan !== false && s1[c.id] !== false; }
 else if (S.role === 'public') { var s2 = LS.get('public_settings', {}); should = s2.autoAzan !== false && s2[c.id] !== false; }
 else if (S.role === 'manager') { var s3 = LS.get('cfg_' + S.code, {}); should = s3.autoAzan !== false && s3[c.id] !== false; }
-if (should) showAzanNotification(c.name, (S.mosque ? S.mosque.name : 'مسجد آقا منیر'));
+if (should) showAzanNotification(c.name, (S.mosque ? S.mosque.name : 'سامانه جامع اطلاع رسانی مساجد'));
 }
 }
 }
@@ -2236,6 +2558,9 @@ else if (a === 'super-login') superLogin();
 else if (a === 'super-toggle') superToggle(el.dataset.id, el);
 else if (a === 'super-delete') superDelete(el.dataset.id, el);
 else if (a === 'super-delete-all') superDeleteAll(el);
+else if (a === 'super-clear-history') superClearHistory(el.dataset.id, el);
+else if (a === 'super-clear-all-history') superClearAllHistory(el);
+else if (a === 'mgr-clear-history') mgrClearHistory(el);
 else if (a === 'super-enter') superEnter(el.dataset.id);
 else if (a === 'send-push') sendPush();
 else if (a === 'save-dua') saveDua();
@@ -2261,8 +2586,11 @@ else if (a === 'toggle-att') toggleAtt(el.dataset.id);
 else if (a === 'mark-all') markAll();
 else if (a === 'clear-att') clearAtt();
 else if (a === 'add-reward') addReward();
+else if (a === 'edit-reward') editReward(el.dataset.id);
 else if (a === 'delete-reward') deleteReward(el.dataset.id, el);
+else if (a === 'save-global-pts') saveGlobalPts();
 else if (a === 'add-reason') addReason();
+else if (a === 'edit-reason') editReason(el.dataset.id);
 else if (a === 'delete-reason') deleteReason(el.dataset.id, el);
 else if (a === 'add-ann') addAnn();
 else if (a === 'edit-ann') editAnn(el.dataset.id);
@@ -2295,7 +2623,7 @@ var a = el.dataset.change;
 if (a === 'save-config') saveConfig();
 else if (a === 'save-teen') saveTeenSettings();
 else if (a === 'save-public') savePublicSettings();
-else if (a === 'save-reciter') { LS.set('azan_reciter', el.value); fillReciterSelects(); toast('🎙 قاری تغییر کرد','success'); }
+else if (a === 'save-reciter') { LS.set('azan_reciter', el.value); azanBuffer = null; azanLoadPromise = null; fillReciterSelects(); loadAzanBuffer().catch(function(){}); toast('🎙 قاری تغییر کرد','success'); }
 });
 document.addEventListener('input', function(e) {
 var el = e.target.closest ? e.target.closest('[data-input]') : null; if (!el) return;
@@ -2393,13 +2721,10 @@ $('installBanner').classList.add('hidden');
 LS.set('install_dismissed', true);
 toast('✅ اپ با موفقیت روی گوشی نصب شد!', 'success');
 });
-document.addEventListener('click', function() {
-if (!azanUnlocked) {
-var a = $('azanAudio');
-a.muted = true;
-a.play().then(function(){ a.pause(); a.muted = false; azanUnlocked = true; }).catch(function(){});
-}
-}, {once: true});
+/* فعال‌سازی صدا با اولین تعامل کاربر (کلیک/لمس) تا سرِ وقت اذان بدون اجازه پخش شود */
+['click','touchstart'].forEach(function(ev){
+document.addEventListener(ev, unlockAllAudio, {once:true, capture:true});
+});
 boot();
 </script>
 </div>
