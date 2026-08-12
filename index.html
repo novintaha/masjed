@@ -68,9 +68,6 @@ textarea{resize:vertical;min-height:70px}
 .start-img{width:140px;height:140px;border-radius:70px 70px 20px 20px;border:4px solid #e0c87a;margin:0 auto 16px;object-fit:cover;animation:float 3s ease-in-out infinite;box-shadow:0 4px 14px rgba(0,0,0,.2)}
 .start-title{font-size:1.4em;font-weight:800;color:#0f3d2a;margin-bottom:4px}
 .start-sub{font-size:.88em;color:#5c4030;margin-bottom:14px}
-.credit{font-size:.72em;color:#888;padding:8px 14px;background:#fdf8f0;border-radius:10px;margin-bottom:18px}
-.credit b{color:#1a6b4a}
-.credit .phone{direction:ltr;display:inline-block;font-weight:700}
 .branch-tabs{display:flex;gap:6px;margin-bottom:14px}
 .branch-tab{flex:1;padding:12px;border-radius:12px;background:#fdf8f0;border:2px solid #e0d5c0;font-weight:700;font-size:.9em;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:6px}
 .branch-tab.active{background:linear-gradient(135deg,#1a6b4a,#0f3d2a);color:#fff;border-color:#1a6b4a}
@@ -245,7 +242,7 @@ textarea{resize:vertical;min-height:70px}
 .daily-dhikr-day{font-size:1.1em;font-weight:800;margin-bottom:12px}
 .daily-dhikr-arabic{font-size:2em;font-weight:800;line-height:1.6;margin-bottom:8px;text-shadow:0 2px 4px rgba(0,0,0,.3)}
 .daily-dhikr-fa{font-size:1.1em;color:#e0c87a;margin-bottom:12px}
-.daily-dhikr-count{font-size:.85em;opacity:.8}
+.daily-dhikr-count{font-size:.85em;opacity:.9}
 .theme-fab{position:fixed;bottom:16px;left:16px;z-index:3500;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#c8963e,#8b6914);color:#fff;font-size:1.4em;box-shadow:0 6px 18px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center}
 body[data-theme="dark"]{background:#101613;color:#e8e6e1}
 body[data-theme="dark"] .card,body[data-theme="dark"] .start-box,body[data-theme="dark"] .modal{background:#1a221d;border-color:#2c3a32;box-shadow:0 2px 10px rgba(0,0,0,.4)}
@@ -289,7 +286,6 @@ body[data-theme="dark"] .help-list li{background:#141b17;border-color:#2c3a32}
 <img class="start-img" src="mosque.webp" onerror="this.onerror=null;this.src='https://i.ibb.co/S2b6YjQ/unnamed.jpg'" alt="مسجد">
 <div class="start-title">سامانه جامع اطلاع رسانی مساجد</div>
 <div class="start-sub">سامانه هوشمند امتیازدهی، اذان و اطلاع‌رسانی</div>
-<div class="credit">طراح: <b>محمد وزیری</b> | <span class="ring">📞</span> <span class="phone">09909936883</span></div>
 <div class="branch-tabs">
 <button class="branch-tab active" data-action="branch" data-branch="برادران">👦 برادران</button>
 <button class="branch-tab" data-action="branch" data-branch="خواهران">👧 خواهران</button>
@@ -470,6 +466,7 @@ body[data-theme="dark"] .help-list li{background:#141b17;border-color:#2c3a32}
 <div class="card"><h3>➕ جایزه جدید</h3>
 <div class="flex gap-2 mb-2"><input type="text" id="newRwName" placeholder="نام جایزه"><input type="number" id="newRwPts" placeholder="امتیاز" style="max-width:100px"></div>
 <div class="flex gap-2"><select id="newRwIcon" style="max-width:90px"><option>📖</option><option>🎁</option><option>🕋</option><option>📿</option><option>⚽</option><option>🏆</option><option>💰</option></select><button class="btn btn-gold full-w" data-action="add-reward">➕</button></div>
+<div class="text-xs text-muted mt-2">💡 برای ویرایش نام یا امتیاز هر جایزه، دکمه ✏️ کنار آن را بزنید</div>
 </div>
 <div class="card"><h3>🎁 لیست جوایز</h3><div id="rwList"></div><div id="rwEmpty" class="empty hidden"><div class="empty-icon">🎁</div><div>جایزه‌ای نیست</div></div></div>
 </div>
@@ -482,11 +479,17 @@ body[data-theme="dark"] .help-list li{background:#141b17;border-color:#2c3a32}
 <div class="card"><h3>📣 اطلاعیه عمومی (اهالی همین مسجد)</h3>
 <textarea id="pubAnnText" placeholder="متن اطلاعیه عمومی..."></textarea>
 <div class="flex gap-2 mt-2"><select id="pubAnnTarget" style="max-width:120px"><option>همه</option><option>برادران</option><option>خواهران</option></select><input type="number" id="pubAnnExp" placeholder="ساعت" style="max-width:90px" value="0"><button class="btn btn-primary" data-action="add-pubann">📣</button></div>
-<button class="btn btn-outline btn-sm mt-2" data-action="copy-public-link">🔗 کپی لینک عمومی این مسجد</button>
 <div id="pubAnnList" class="mt-3"></div>
 </div>
 </div>
 <div class="panel" id="mgr-cfg">
+<div class="card"><h3>🔗 لینک‌های اختصاصی این مسجد</h3>
+<div class="setting-row"><label>🧒 لینک ورود نوجوانان</label><button class="btn btn-outline btn-sm" data-action="copy-link" data-kind="teen">📋 کپی</button></div>
+<div class="setting-row"><label>🕌 لینک ورود مدیران</label><button class="btn btn-outline btn-sm" data-action="copy-link" data-kind="manager">📋 کپی</button></div>
+<div class="setting-row"><label>🌍 لینک عمومی (اهالی مسجد)</label><button class="btn btn-outline btn-sm" data-action="copy-link" data-kind="public">📋 کپی</button></div>
+<div class="setting-row"><label>✨ لینک کوتاه عمومی (با نام مسجد)</label><button class="btn btn-gold btn-sm" data-action="copy-link" data-kind="short">📋 کپی</button></div>
+<div class="text-xs text-muted mt-2">💡 لینک کوتاه، نام مسجد را دارد و مستقیم بخش عمومی همین مسجد را باز می‌کند. برای حذف کامل عبارت github از لینک‌ها، دامنه اختصاصی وصل کنید (آموزش در پیام طراح).</div>
+</div>
 <div class="card" style="border:2px solid #c8963e"><h3>✏️ امتیازات سراسری</h3>
 <div class="setting-row"><label>🕌 امتیاز هر نماز</label><input type="number" id="cfgPrayerPts" value="1" style="max-width:100px"></div>
 <div class="setting-row"><label>🌙 امتیاز هر حضور شب</label><input type="number" id="cfgAttPts" value="0" style="max-width:100px"></div>
@@ -506,6 +509,7 @@ body[data-theme="dark"] .help-list li{background:#141b17;border-color:#2c3a32}
 <div class="card"><h3>🎯 دلایل امتیاز</h3>
 <div id="rsList"></div>
 <div class="flex gap-2 mt-2"><input type="text" id="newRsName" placeholder="عنوان" style="flex:2"><input type="number" id="newRsPts" placeholder="امتیاز" style="flex:1"><button class="btn btn-primary" data-action="add-reason">➕</button></div>
+<div class="text-xs text-muted mt-2">💡 برای ویرایش امتیاز هر دلیل، دکمه ✏️ کنار آن را بزنید</div>
 </div>
 </div>
 <div class="panel" id="mgr-hist">
@@ -620,7 +624,6 @@ body[data-theme="dark"] .help-list li{background:#141b17;border-color:#2c3a32}
 <div class="setting-row"><label>🎙 قاری اذان</label><select id="pubReciter" data-change="save-reciter" style="max-width:160px"></select></div>
 <div class="setting-row"><label>🔉 حجم صدا</label></div>
 <div class="vol-wrap"><span>🔈</span><input type="range" min="0" max="100" value="80" id="pubVolume" data-change="save-public" class="vol-slider"><span>🔊</span></div>
-<div class="text-xs text-muted mt-2">💡 با غیرفعال کردن هر گزینه، آن اذان برای شما پخش نمی‌شود</div>
 <button class="btn btn-outline mt-3 full-w" data-action="test-azan">🔊 تست اذان</button>
 </div>
 </div>
@@ -852,7 +855,6 @@ var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()})
 }
 function fsSaveAnn(code, a) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('anns').doc(a.id).set(a, {merge:true}); }
 function fsDeleteAnn(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('anns').doc(id).delete(); }
-/* اطلاعیه‌های عمومی — مستقل برای هر مسجد */
 var pubAnnCache = [];
 function listenPubAnns(code) {
 if (!fbDb || !code) return;
@@ -924,21 +926,21 @@ toast(n.text, 'success'); showSuccess();
 });
 }, function(){});
 }
-/* ذکر روزهای هفته — مطابق روز جاری */
+/* ذکر روزهای هفته — نام ائمه هر روز بدون عبارت «به نام» */
 var DAILY_DHIKR = {
-6: {day:'شنبه', fa:'یا رَبَّ العالمین (ای پروردگار جهانیان)', ar:'یَا رَبَّ الْعَالَمِینَ', count:100, desc:'به نام پیامبر اسلام (ص)'},
-0: {day:'یکشنبه', fa:'یا ذاالجلالِ وَ الإکرام (ای صاحب جلال و بزرگواری)', ar:'یَا ذَاالْجَلَالِ وَالْإِکْرَامِ', count:100, desc:'به نام امام علی (ع) و حضرت زهرا (س)'},
-1: {day:'دوشنبه', fa:'یا قاضیَ الحاجات (ای برآورنده حاجت‌ها)', ar:'یَا قَاضِيَ الْحَاجَاتِ', count:100, desc:'به نام امام حسن (ع) و امام حسین (ع)'},
-2: {day:'سه‌شنبه', fa:'یا أرحَمَ الرَّاحِمین (ای مهربان‌ترین مهربانان)', ar:'یَا أَرْحَمَ الرَّاحِمِینَ', count:100, desc:'به نام امام سجاد، امام باقر و امام صادق (ع)'},
-3: {day:'چهارشنبه', fa:'یا حَیُّ یا قَیُّوم (ای زنده، ای پاینده)', ar:'یَا حَيُّ يَا قَيُّومُ', count:100, desc:'به نام امام کاظم، امام رضا، امام جواد و امام هادی (ع)'},
-4: {day:'پنجشنبه', fa:'لا إلهَ إلاَّ اللهُ المَلِکُ الحَقُّ المُبین (خدایی جز خدا نیست، فرمانروای حق و آشکار)', ar:'لَا إِلٰهَ إِلَّا اللهُ الْمَلِکُ الْحَقُّ الْمُبِینُ', count:100, desc:'به نام امام حسن عسکری (ع)'},
-5: {day:'جمعه', fa:'خدایا بر محمد و خاندانش درود فرست و فرجشان را نزدیک گردان', ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَ آلِ مُحَمَّدٍ وَ عَجِّلْ فَرَجَهُمْ', count:100, desc:'متعلق به امام زمان (عج)'}
+6: {day:'شنبه', fa:'یا رَبَّ العالمین (ای پروردگار جهانیان)', ar:'یَا رَبَّ الْعَالَمِینَ', count:100, imams:'پیامبر اسلام (ص)'},
+0: {day:'یکشنبه', fa:'یا ذاالجلالِ وَ الإکرام (ای صاحب جلال و بزرگواری)', ar:'یَا ذَاالْجَلَالِ وَالْإِکْرَامِ', count:100, imams:'امام علی (ع) و حضرت زهرا (س)'},
+1: {day:'دوشنبه', fa:'یا قاضیَ الحاجات (ای برآورنده حاجت‌ها)', ar:'یَا قَاضِيَ الْحَاجَاتِ', count:100, imams:'امام حسن (ع) و امام حسین (ع)'},
+2: {day:'سه‌شنبه', fa:'یا أرحَمَ الرَّاحِمین (ای مهربان‌ترین مهربانان)', ar:'یَا أَرْحَمَ الرَّاحِمِینَ', count:100, imams:'امام سجاد، امام باقر و امام صادق (ع)'},
+3: {day:'چهارشنبه', fa:'یا حَیُّ یا قَیُّوم (ای زنده، ای پاینده)', ar:'یَا حَيُّ يَا قَيُّومُ', count:100, imams:'امام کاظم، امام رضا، امام جواد و امام هادی (ع)'},
+4: {day:'پنجشنبه', fa:'لا إلهَ إلاَّ اللهُ المَلِکُ الحَقُّ المُبین (خدایی جز خدا نیست، فرمانروای حق و آشکار)', ar:'لَا إِلٰهَ إِلَّا اللهُ الْمَلِکُ الْحَقُّ الْمُبِینُ', count:100, imams:'امام حسن عسکری (ع)'},
+5: {day:'جمعه', fa:'خدایا بر محمد و خاندانش درود فرست و فرجشان را نزدیک گردان', ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَ آلِ مُحَمَّدٍ وَ عَجِّلْ فَرَجَهُمْ', count:100, imams:'امام زمان (عج)'}
 };
 function getTodayDhikr() { return DAILY_DHIKR[new Date().getDay()]; }
 function renderDailyDhikr() {
 var card = $('dailyDhikrCard'); if (!card) return;
 var dh = getTodayDhikr();
-card.innerHTML = '<div class="daily-dhikr-label">✨ ذکر مخصوص امروز</div><div class="daily-dhikr-day">📅 ' + dh.day + '</div><div class="daily-dhikr-arabic">' + dh.ar + '</div><div class="daily-dhikr-fa">' + dh.fa + '</div><div class="daily-dhikr-count">📿 ' + faNum(dh.count) + ' مرتبه | ' + dh.desc + '</div>';
+card.innerHTML = '<div class="daily-dhikr-label">✨ ذکر مخصوص امروز</div><div class="daily-dhikr-day">📅 ' + dh.day + '</div><div class="daily-dhikr-arabic">' + dh.ar + '</div><div class="daily-dhikr-fa">' + dh.fa + '</div><div class="daily-dhikr-count">📿 ' + faNum(dh.count) + ' مرتبه | ✨ ' + dh.imams + '</div>';
 }
 function cacheDuas() { if (window.DUAS_FULL) LS.set('duas_cache', window.DUAS_FULL); }
 function getDuas() { if (window.DUAS_FULL) return window.DUAS_FULL; return LS.get('duas_cache', []); }
@@ -1074,7 +1076,6 @@ fbDb.collection('customDuas').doc(id).delete().then(function(){ toast('🗑 حذ
 renderDuaAdmin();
 });
 }
-/* حدیث زنده از اینترنت (Firestore + hadiths.json گیت‌هاب) */
 function loadHadith() {
 $('hadithBar').classList.remove('hidden');
 $('hadithText').textContent = 'در حال دریافت حدیث...';
@@ -1101,46 +1102,6 @@ if (!t) { toast('متن حدیث را بنویسید','warning'); return; }
 fbDb.collection('hadiths').add({text:t, ts:Date.now()}).then(function(){
 toast('✅ حدیث اضافه شد','success'); $('newHadith').value='';
 });
-}
-function openHelp() {
-var items = [];
-var title = '📖 راهنما';
-if (S.role === 'manager') {
-title = '📖 راهنمای مدیر مسجد';
-items = [
-'👥 تب «افراد»: با نام، نمازگزار اضافه کنید؛ رمز ورودش خودکار ساخته می‌شود (نام + عدد ابجد).',
-'🕌 دکمه طلایی کنار هر نفر: ثبت نماز صبح/ظهر/مغرب با امتیاز تعریف‌شده.',
-'🌙 تب «حضور»: حضور امشب را ثبت کنید؛ «همه حاضر» برای ثبت گروهی.',
-'✏️ تب «تنظیمات» → «امتیازات سراسری»: امتیاز هر نماز یا حضور را عوض کنید؛ فقط از لحظه ذخیره به بعد اعمال می‌شود.',
-'🎁 تب «جوایز» و 🎯 دلایل امتیاز: با دکمه ✏️ امتیاز هر کدام را ویرایش کنید.',
-'📢 تب «اطلاعیه»: اطلاعیه داخلی فقط برای نمازگزاران خودتان؛ اطلاعیه عمومی فقط برای اهالی همین مسجد.',
-'🔗 دکمه «کپی لینک عمومی»: لینک اختصاصی مسجدتان را بگیرید و برای اهالی بفرستید.',
-' تب «تاریخچه»: همه عملیات ثبت می‌شود و با دکمه «پاک کردن» خلوت می‌شود.'
-];
-} else if (S.role === 'teen') {
-title = '📖 راهنمای نوجوان';
-items = [
-'🔓 ورود با نام + عدد ابجد (مثلاً: محمد 92).',
-'🏠 صفحه خانه: امتیاز، شب‌های حضور، رتبه و کارت QR شما.',
-'🎁 جوایز: لیست جوایز را ببین؛ وقتی به جایزه‌ای نزدیک شوی، بولد و قرمز می‌شود و پیام تبریک می‌گیری.',
-'📢 اطلاعیه‌ها: پیام‌های مدیر مسجدت؛ اطلاعیه‌های جدید با نشان قرمز مشخص‌اند.',
-'🎮 بازی: دانستنی‌های دینی با امتیاز.',
-'⚙️ تنظیمات: اذان خودکار، انتخاب قاری و حجم صدا دست خودت است.'
-];
-} else {
-title = '📖 راهنمای بخش عمومی';
-items = [
-'🕌 این بخش مخصوص اهالی همین مسجد است؛ با لینک اختصاصی مسجد خودتان وارد شده‌اید.',
-'🧭 قبله‌نما: دکمه فعال‌سازی را بزنید؛ مرورگر اجازه موقعیت می‌خواهد — «Allow» را بزنید تا جهت دقیق قبله نمایش داده شود.',
-'📿 ذکرشمار: دکمه بزرگ را بزنید؛ ذکر مخصوص هر روزِ هفته بالای صفحه نمایش داده می‌شود.',
-'🤲 ادعیه و زیارات با متن درشت و صوت اختیاری.',
-'📣 اطلاعیه‌ها: فقط اطلاعیه‌های مسجد خودتان را می‌بینید.',
-'⚙️ تب تنظیمات: اذان خودکار، قاری و حجم صدا را دلخواه کنید.'
-];
-}
-$('helpTitle').textContent = title;
-$('helpBody').innerHTML = items.map(function(i){ return '<li>' + i + '</li>'; }).join('');
-openModal('helpModal');
 }
 function openResetPass(code) {
 resetPassCode = code;
@@ -1197,7 +1158,6 @@ for (var i=0;i<RECITERS.length;i++) if (RECITERS[i].id === sel) chosenRec = RECI
 var chosen = chosenRec ? [chosenRec.url] : [];
 var rest = RECITERS.map(function(r){ return r.url; }).filter(function(u){ return chosen.indexOf(u) < 0; });
 var local = ['اذان.mp3', 'azan.mp3'];
-/* اگر کاربر قاری را خودش انتخاب کرده، اولویت با قاری است؛ وگرنه اولویت با فایل لوکال */
 if (LS.get('azan_reciter_explicit', false)) return chosen.concat(local).concat(rest);
 return local.concat(chosen).concat(rest);
 }
@@ -1254,7 +1214,6 @@ toast('📣 ' + n.text, 'success');
 });
 }, function(){});
 }
-/* 🔊 سیستم پخش اذان */
 var azanUnlocked = false;
 var audioCtx = null;
 var azanBuffer = null;
@@ -1498,12 +1457,22 @@ var items = [{p:'Fajr',n:'🌅 فجر'},{p:'Dhuhr',n:'🌞 ظهر'},{p:'Maghrib'
 bar.innerHTML = items.map(function(x){ return '<div class="prayer-item" data-p="'+x.p+'"><div class="prayer-name">'+x.n+'</div><div class="prayer-time">--:--</div></div>'; }).join('');
 }
 var mosqueCache = [];
+var pendingHash = '';
+try { pendingHash = decodeURIComponent((location.hash || '').replace('#', '')); } catch(e) {}
+function tryHashEnter() {
+if (!pendingHash || S.role) return false;
+var m = mosqueCache.find(function(x){ return (x.name||'').trim() === pendingHash; });
+if (!m) m = mosqueCache.find(function(x){ return (x.name||'').indexOf(pendingHash) >= 0; });
+if (m) { S.publicCode = m.code; LS.set('public_code', m.code); enterPublic(); return true; }
+return false;
+}
 function loadMosquesFromFirestore() {
 if (!fbDb) return;
 fbDb.collection('mosques').where('status', '==', 'active').onSnapshot(function(snap) {
 mosqueCache = []; snap.forEach(function(doc){ mosqueCache.push({id:doc.id, ...doc.data()}); });
 if ($('mgrSearch')) searchMosques($('mgrSearch').value, 'mgr');
 if ($('pubSearch')) searchMosques($('pubSearch').value, 'pub');
+tryHashEnter();
 }, function(){});
 }
 function searchMosques(query, type) {
@@ -1524,6 +1493,7 @@ enterPublic();
 return;
 }
 S.code = code; S.mosque = mosque;
+document.querySelectorAll('#'+type+'MosqueResults .mosque-item').forEach(function(el){ el.classList.toggle('selected', el.dataset.code === code); });
 var displayEl = $(type + 'SelectedMosque');
 displayEl.innerHTML = '<div class="smi">🕌</div><div class="smn">'+esc(mosque.name)+'</div>';
 if (type === 'mgr') $('mgrPinBox').classList.remove('hidden');
@@ -1751,7 +1721,6 @@ goTo('teen');
 renderDates(); renderPrayerBar(); loadPrayerTimes(); renderTeenAll(); loadTeenSettings(); renderQuizStart();
 listenPersonNotifs(); showTeenWelcome();
 }
-/* بخش عمومی — مخصوص هر مسجد با لینک اختصاصی */
 function enterPublic() {
 if (!S.publicCode) { goTo('publicHome'); return; }
 S.role = 'public';
@@ -1956,6 +1925,18 @@ fsAddHistory(S.code,'points','تنظیم سراسری جدید: نماز ' + faN
 centerToast('✅ تغییر ثبت شد؛ از این لحظه به بعد اعمال می‌شود');
 renderPeople();
 }
+/* لینک‌های اختصاصی هر بخش */
+function copyLink(kind) {
+var base = location.origin + location.pathname;
+var url = '';
+if (kind === 'teen') url = base + '?role=teen&branch=' + (S.branch === 'خواهران' ? 'girls' : 'boys');
+else if (kind === 'manager') url = base + '?role=manager';
+else if (kind === 'public') url = base + '?role=public&m=' + S.code;
+else url = base + '#' + encodeURIComponent((S.mosque.name||'').trim());
+if (navigator.clipboard && navigator.clipboard.writeText) {
+navigator.clipboard.writeText(url).then(function(){ centerToast('🔗 لینک کپی شد'); });
+} else { prompt('لینک را کپی کنید:', url); }
+}
 var rwCache = [];
 function renderRewards() {
 fsGetRewards(S.code, function(rw) {
@@ -1983,6 +1964,7 @@ if (isNaN(npts) || npts < 1) { toast('امتیاز معتبر نیست','warning
 r.name = nn.trim() || r.name;
 r.pointsRequired = npts;
 fsSaveReward(S.code, r);
+fsAddHistory(S.code,'points','ویرایش جایزه: ' + r.name + ' → ' + npts + ' امتیاز');
 centerToast('✅ تغییر ثبت شد');
 }
 function deleteReward(id, btn) { twoTap(btn, function() { fsDeleteReward(S.code, id); toast('🗑','info'); }); }
@@ -2009,6 +1991,7 @@ var n = parseFloat(v);
 if (isNaN(n)) { toast('عدد معتبر نیست','warning'); return; }
 r.points = n;
 fsSaveReason(S.code, r);
+fsAddHistory(S.code,'points','ویرایش دلیل: ' + r.name + ' → ' + n);
 centerToast('✅ تغییر ثبت شد');
 }
 function deleteReason(id, btn) { twoTap(btn, function() { fsDeleteReason(S.code, id); toast('🗑','info'); }); }
@@ -2062,12 +2045,6 @@ toast('📣 منتشر شد (فقط اهالی همین مسجد)','success'); $
 }).catch(function(err){ toast('❌ خطا: ' + (err.message || ''), 'danger'); });
 }
 function deletePubAnn(id, btn) { twoTap(btn, function() { fsDeletePubAnn(S.code, id); toast('🗑','info'); }); }
-function copyPublicLink() {
-var url = location.origin + location.pathname + '?role=public&m=' + S.code;
-if (navigator.clipboard && navigator.clipboard.writeText) {
-navigator.clipboard.writeText(url).then(function(){ centerToast('🔗 لینک عمومی مسجد کپی شد'); });
-} else { prompt('لینک عمومی مسجد شما (کپی کنید):', url); }
-}
 function renderPublicAnns() {
 var now = Date.now();
 var list = pubAnnCache.filter(function(a){ return (a.target === 'همه' || a.target === S.branch) && (!a.expireAt || a.expireAt > now); });
@@ -2255,6 +2232,46 @@ else if (points >= 50) { type = 'milestone'; n = points; }
 el.innerHTML = '<div class="mot-text">' + getMotivationMsg(S.personName, type, n) + '</div><div class="mot-foot">✨ ' + new Date().toLocaleDateString('fa-IR') + '</div>';
 }
 function showMotivational(name, type, n) { toast(getMotivationMsg(name, type, n), 'success'); }
+function openHelp() {
+var items = [];
+var title = '📖 راهنما';
+if (S.role === 'manager') {
+title = '📖 راهنمای مدیر مسجد';
+items = [
+'👥 تب «افراد»: با نام، نمازگزار اضافه کنید؛ رمز ورودش خودکار ساخته می‌شود (نام + عدد ابجد).',
+'🕌 دکمه طلایی کنار هر نفر: ثبت نماز صبح/ظهر/مغرب با امتیاز تعریف‌شده.',
+'🌙 تب «حضور»: حضور امشب را ثبت کنید؛ «همه حاضر» برای ثبت گروهی.',
+'✏️ تب «تنظیمات» → «امتیازات سراسری»: امتیاز هر نماز یا حضور را عوض کنید؛ فقط از لحظه ذخیره به بعد اعمال می‌شود.',
+'🎁 تب «جوایز» و 🎯 دلایل امتیاز: با دکمه ✏️ نام یا امتیاز هر کدام را ویرایش کنید.',
+'🔗 تب «تنظیمات» → «لینک‌های اختصاصی»: لینک جداگانه نوجوانان، مدیران و عمومی را کپی و برای هر گروه بفرستید.',
+'📢 تب «اطلاعیه»: اطلاعیه داخلی فقط برای نمازگزاران خودتان؛ اطلاعیه عمومی فقط برای اهالی همین مسجد.',
+'📜 تب «تاریخچه»: همه عملیات ثبت می‌شود و با دکمه «پاک کردن» خلوت می‌شود.'
+];
+} else if (S.role === 'teen') {
+title = '📖 راهنمای نوجوان';
+items = [
+'🔓 ورود با نام + عدد ابجد (مثلاً: محمد 92).',
+'🏠 صفحه خانه: امتیاز، شب‌های حضور، رتبه و کارت QR شما.',
+'🎁 جوایز: لیست جوایز را ببین؛ وقتی به جایزه‌ای نزدیک شوی، بولد و قرمز می‌شود و پیام تبریک می‌گیری.',
+'📢 اطلاعیه‌ها: پیام‌های مدیر مسجدت؛ اطلاعیه‌های جدید با نشان قرمز مشخص‌اند.',
+'🎮 بازی: دانستنی‌های دینی با امتیاز.',
+'⚙️ تنظیمات: اذان خودکار، انتخاب قاری و حجم صدا دست خودت است.'
+];
+} else {
+title = '📖 راهنمای بخش عمومی';
+items = [
+'🕌 این بخش مخصوص اهالی همین مسجد است؛ با لینک اختصاصی مسجد خودتان وارد شده‌اید.',
+'🧭 قبله‌نما: دکمه فعال‌سازی را بزنید؛ مرورگر اجازه موقعیت می‌خواهد — «Allow» را بزنید تا جهت دقیق قبله نمایش داده شود.',
+'📿 ذکرشمار: دکمه بزرگ را بزنید؛ ذکر مخصوص هر روزِ هفته بالای صفحه نمایش داده می‌شود.',
+'🤲 ادعیه و زیارات با متن درشت و صوت اختیاری.',
+'📣 اطلاعیه‌ها: فقط اطلاعیه‌های مسجد خودتان را می‌بینید.',
+'⚙️ تب تنظیمات: اذان خودکار، قاری و حجم صدا را دلخواه کنید.'
+];
+}
+$('helpTitle').textContent = title;
+$('helpBody').innerHTML = items.map(function(i){ return '<li>' + i + '</li>'; }).join('');
+openModal('helpModal');
+}
 function loadConfig() {
 var cfg = LS.get('cfg_' + S.code, {});
 if (cfg.autoAzan !== undefined) $('cfgAutoAzan').checked = cfg.autoAzan;
@@ -2316,7 +2333,7 @@ status.innerHTML = usedDefault
 ? '🧭 جهت قبله: <b>' + faNum(Math.round(qiblaBrng)) + '°</b> از شمال (پیش‌فرض: اصفهان — برای دقت بیشتر، اجازه موقعیت بدهید)'
 : '✅ موقعیت شما دریافت شد<br>جهت قبله: <b>' + faNum(Math.round(qiblaBrng)) + '°</b> از شمال — گوشی را صاف نگه دارید';
 startOrientation();
-btn.disabled = false; btn.textContent = ' فعال‌سازی مجدد قبله‌نما'; btn.classList.remove('btn-primary'); btn.classList.add('btn-success');
+btn.disabled = false; btn.textContent = '📍 فعال‌سازی مجدد قبله‌نما'; btn.classList.remove('btn-primary'); btn.classList.add('btn-success');
 };
 if ('geolocation' in navigator) {
 navigator.geolocation.getCurrentPosition(function(pos){
@@ -2549,7 +2566,7 @@ else if (a === 'send-push') sendPush();
 else if (a === 'add-hadith') addHadith();
 else if (a === 'reload-hadith') loadHadith();
 else if (a === 'open-help') openHelp();
-else if (a === 'copy-public-link') copyPublicLink();
+else if (a === 'copy-link') copyLink(el.dataset.kind);
 else if (a === 'save-dua') saveDua();
 else if (a === 'dua-new') duaNew();
 else if (a === 'dua-edit') duaEdit(el.dataset.id);
@@ -2638,7 +2655,7 @@ try {
 var q = new URLSearchParams(location.search).get('role');
 if (q) return q;
 var h = (location.hash || '').replace('#', '');
-if (h) return h;
+if (h === 'teen' || h === 'manager' || h === 'public' || h === 'super') return h;
 } catch(e) {}
 return '';
 }
@@ -2699,10 +2716,11 @@ setTimeout(initFcmPushFlow, 2000);
 var rp = getRoleParam();
 if (rp === 'teen') { setTimeout(function(){ goTo('teenLogin'); }, 900); return; }
 if (rp === 'manager') { setTimeout(function(){ goTo('mgrAuth'); }, 900); return; }
-if (rp === 'public') { setTimeout(function(){ enterPublic(); }, 900); return; }
 if (rp === 'super') { setTimeout(function(){ goTo('superLogin'); }, 900); return; }
+if (rp === 'public') { setTimeout(function(){ enterPublic(); }, 900); return; }
 var restored = restoreSession();
-if (!restored) setTimeout(function(){ goTo('start'); }, 900);
+if (!restored && !pendingHash) setTimeout(function(){ goTo('start'); }, 900);
+if (!restored && pendingHash) setTimeout(function(){ if (!S.role) { if (!tryHashEnter()) goTo('start'); } }, 2500);
 }
 window.addEventListener('beforeinstallprompt', function(e){
 e.preventDefault();
