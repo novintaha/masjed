@@ -1,5 +1,5 @@
-var CACHE = 'masjed-v56';
-var SHELL = ['./', './index.html', './duas-data.js'];
+var CACHE = 'masjed-v57';
+var SHELL = ['./', './index.html', './duas-data.js', './manifest.json'];
 var AZAN_CACHE = ['https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
 
 self.addEventListener('install', function(e) {
@@ -21,6 +21,7 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   var url = e.request.url;
+  if (url.indexOf('hadiths.json') !== -1) return;
   if (url.indexOf('googleapis.com') !== -1 || url.indexOf('firebase') !== -1 || url.indexOf('gstatic.com') !== -1) return;
   if (e.request.mode === 'navigate') {
     e.respondWith(
@@ -57,7 +58,7 @@ firebase.initializeApp({
 });
 firebase.messaging().onBackgroundMessage(function(payload) {
   var n = payload.notification || {};
-  self.registration.showNotification(n.title || '🕌 مسجد آقا منیر', {
+  self.registration.showNotification(n.title || '🕌 سامانه جامع اطلاع رسانی مساجد', {
     body: n.body || '', icon: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg',
     badge: 'https://i.ibb.co/S2b6YjQ/unnamed.jpg', vibrate: [200,100,200,100,200], dir: 'rtl', lang: 'fa'
   });
