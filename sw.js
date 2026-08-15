@@ -46,8 +46,8 @@ self.addEventListener('fetch', function(e) {
   }
 });
 
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js');
+importScripts('./libs/firebase-app-compat.js');
+importScripts('./libs/firebase-messaging-compat.js');
 firebase.initializeApp({
   apiKey: "AIzaSyDT0sQ_ZcT_Jl9_vvjgsgVojP_TCCLaEFM",
   authDomain: "masjed-a6505.firebaseapp.com",
