@@ -1566,6 +1566,13 @@ if (pin !== pin2) { toast('تکرار رمز یکسان نیست','warning'); re
 var dup = mosqueCache.find(function(m){ return (m.name||'').trim() === name && (m.address||'').trim() === address && m.branch === S.branch; });
 if (dup) { toast('⚠️ این مسجد قبلاً با همین نام و آدرس ثبت شده (کد: '+dup.code+')','warning'); return; }
 btn.disabled = true; btn.textContent = '⏳ در حال ساخت...';
+var settled = false;
+var safetyTimer = setTimeout(function(){
+if (settled) return;
+settled = true;
+btn.disabled = false; btn.textContent = '✅ ساخت مسجد';
+toast('⚠️ ساخت طول کشید؛ لیست مساجد را چک کنید — احتمالاً انجام شده','warning');
+}, 15000);
 var code = 'M' + Math.floor(1000 + Math.random()*9000);
 var adminEmail = 'mosque-' + code.toLowerCase() + '@masjed.app';
 try {
@@ -1578,27 +1585,38 @@ await new Promise(function(r){ setTimeout(r, 1500); });
 }
 }
 var adminUid = cred.user.uid;
-await fbDb.collection('mosques').doc(code).set({
+var reasons = [{id:uid(),name:'نماز جماعت',points:1},{id:uid(),name:'شرکت در کلاس',points:5},{id:uid(),name:'حفظ قرآن',points:10},{id:uid(),name:'کمک به نظافت',points:3},{id:uid(),name:'فعالیت فرهنگی',points:4}];
+var rewards = [{id:uid(),name:'کتاب دعا',pointsRequired:20,icon:'📖'},{id:uid(),name:'هدیه ویژه',pointsRequired:50,icon:'🎁'}];
+var batch = fbDb.batch();
+var mosqueRef = fbDb.collection('mosques').doc(code);
+batch.set(mosqueRef, {
 code: code, name: name, address: address, adminUid: adminUid,
 adminEmail: adminEmail, pin: pin, branch: S.branch, status: 'active',
 prayerPoints: 1, attPoints: 0,
 createdAt: new Date().toISOString()
 });
-var reasons = [{id:uid(),name:'نماز جماعت',points:1},{id:uid(),name:'شرکت در کلاس',points:5},{id:uid(),name:'حفظ قرآن',points:10},{id:uid(),name:'کمک به نظافت',points:3},{id:uid(),name:'فعالیت فرهنگی',points:4}];
-var rewards = [{id:uid(),name:'کتاب دعا',pointsRequired:20,icon:'📖'},{id:uid(),name:'هدیه ویژه',pointsRequired:50,icon:'🎁'}];
-for (var r of reasons) await fbDb.collection('mosques').doc(code).collection('reasons').doc(r.id).set(r);
-for (var w of rewards) await fbDb.collection('mosques').doc(code).collection('rewards').doc(w.id).set(w);
+reasons.forEach(function(r){ batch.set(mosqueRef.collection('reasons').doc(r.id), r); });
+rewards.forEach(function(w){ batch.set(mosqueRef.collection('rewards').doc(w.id), w); });
+await batch.commit();
+if (settled) return;
+settled = true;
+clearTimeout(safetyTimer);
 S.code = code; S.mosque = {code:code,name:name,address:address,adminUid:adminUid,adminEmail:adminEmail,pin:pin,status:'active',prayerPoints:1,attPoints:0};
 S.role = 'manager';
 LS.set('session', {role:'manager', code:code, branch:S.branch});
 toast('✅ مسجد ساخته شد! کد: ' + code + ' | رمز: ' + pin, 'success');
+btn.disabled = false; btn.textContent = '✅ ساخت مسجد';
 showSuccess(); enterManager();
 } catch(e) {
-var msg = e.message || 'خطا';
-if (e.code === 'auth/email-already-in-use') msg = 'این کد قبلاً استفاده شده';
-else if (e.code === 'auth/network-request-failed') msg = 'خطای شبکه! لطفاً اینترنت/VPN را بررسی کنید';
+if (settled) return;
+settled = true;
+clearTimeout(safetyTimer);
+var msg = e && e.message ? e.message : 'خطا';
+if (e && e.code === 'auth/email-already-in-use') msg = 'این کد قبلاً استفاده شده';
+else if (e && e.code === 'auth/network-request-failed') msg = 'خطای شبکه! لطفاً اینترنت/VPN را بررسی کنید';
 toast('خطا: ' + msg, 'danger');
-} finally { btn.disabled = false; btn.textContent = '✅ ساخت مسجد'; }
+btn.disabled = false; btn.textContent = '✅ ساخت مسجد';
+}
 }
 function teenLogin() {
 var name = $('teenName').value.trim();
