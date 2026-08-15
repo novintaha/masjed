@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>پچ‌کننده SDK فایربیس</title>
+<style>
+body{font-family:Tahoma,sans-serif;padding:20px;max-width:700px;margin:auto;background:#f5f5f5}
+.box{background:#fff;padding:20px;border-radius:12px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+input[type=file]{padding:10px;width:100%;margin:8px 0}
+input[type=text]{padding:10px;width:100%;border:2px solid #1a6b4a;border-radius:8px;font-size:16px;direction:ltr}
+button{background:#1a6b4a;color:#fff;padding:12px 24px;border:none;border-radius:8px;font-size:16px;cursor:pointer;margin:5px}
+button:hover{background:#0f3d2a}
+.status{padding:10px;margin:5px 0;border-radius:8px;font-family:monospace}
+.ok{background:#d4edda;color:#155724}
+.err{background:#f8d7da;color:#721c24}
+</style>
+</head>
+<body>
+<h1>🔧 پچ‌کننده SDK فایربیس</h1>
+
+<div class="box">
+  <label><b>۱. آدرس Worker خودت را وارد کن (بدون https://):</b></label>
+  <input type="text" id="workerHost" placeholder="masjed.pastokala.workers.dev" value="">
+</div>
+
+<div class="box">
+  <label><b>۲. فایل firebase-auth-compat.js را انتخاب کن:</b></label>
+  <input type="file" id="f1" accept=".js">
+  <button onclick="patch(1)">🔨 پچ Auth</button>
+  <div id="s1"></div>
+</div>
+
+<div class="box">
+  <label><b>۳. فایل firebase-firestore-compat.js را انتخاب کن:</b></label>
+  <input type="file" id="f2" accept=".js">
+  <button onclick="patch(2)">🔨 پچ Firestore</button>
+  <div id="s2"></div>
+</div>
+
+<div class="box">
+  <label><b>۴. فایل firebase-app-compat.js (بدون تغییر):</b></label>
+  <input type="file" id="f3" accept=".js">
+  <button onclick="copy(3)">📋 آماده کپی</button>
+  <div id="s3"></div>
+</div>
+
+<div class="box">
+  <label><b>۵. فایل firebase-messaging-compat.js (بدون تغییر):</b></label>
+  <input type="file" id="f4" accept=".js">
+  <button onclick="copy(4)">📋 آماده کپی</button>
+  <div id="s4"></div>
+</div>
+
+<script>
+function download(name, content){
+  var blob = new Blob([content], {type:'text/javascript'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+}
+
+function readFile(id){
+  return new Promise(function(res,rej){
+    var f = document.getElementById(id).files[0];
+    if(!f) return rej('فایلی انتخاب نشده');
+    var r = new FileReader();
+    r.onload = function(){ res(r.result); };
+    r.readAsText(f);
+  });
+}
+
+function show(id, msg, ok){
+  var el = document.getElementById(id);
+  el.innerHTML = '<div class="status '+(ok?'ok':'err')+'">'+msg+'</div>';
+}
+
+async function patch(n){
+  var host = document.getElementById('workerHost').value.trim();
+  if(!host){ alert('اول آدرس Worker را وارد کن'); return; }
+  try{
+    var txt = await readFile('f'+n);
+    var original = txt;
+    if(n === 1){
+      // auth
+      txt = txt.replace(
+        /identitytoolkit\.googleapis\.com/g,
+        host + '/id'
+      );
+      txt = txt.replace(
+        /securetoken\.googleapis\.com/g,
+        host + '/st'
+      );
+      txt = txt.replace(
+        /www\.googleapis\.com\/identity\/toolkit/g,
+        host + '/id'
+      );
+      download('firebase-auth-compat.js', txt);
+      show('s1', '✅ پچ شد و دانلود شد. حالا این فایل را در پوشه libs/ گیت‌هاب آپلود کن.', true);
+    } else if(n === 2){
+      // firestore
+      txt = txt.replace(
+        /firestore\.googleapis\.com/g,
+        host + '/fs'
+      );
+      download('firebase-firestore-compat.js', txt);
+      show('s2', '✅ پچ شد و دانلود شد. حالا این فایل را در پوشه libs/ گیت‌هاب آپلود کن.', true);
+    }
+  } catch(e){ show('s'+n, '❌ خطا: '+e, false); }
+}
+
+async function copy(n){
+  try{
+    var txt = await readFile('f'+n);
+    var name = n===3 ? 'firebase-app-compat.js' : 'firebase-messaging-compat.js';
+    download(name, txt);
+    show('s'+n, '✅ بدون تغییر دانلود شد. در پوشه libs/ آپلود کن.', true);
+  } catch(e){ show('s'+n, '❌ خطا: '+e, false); }
+}
+</script>
+</body>
+</html>
