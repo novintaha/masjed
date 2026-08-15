@@ -821,6 +821,10 @@ messagingSenderId: "23821410712",
 appId: "1:23821410712:web:1789bb8cc4659377544bed"
 });
 fbDb = firebase.firestore();
+fbDb.settings({
+  experimentalForceLongPolling: true,
+  useFetchStreams: false
+});
 fbDb.enablePersistence({ synchronizeTabs: true }).catch(function(e){});
 } catch(e) {}
 function fsGetPeople(code, cb) {
