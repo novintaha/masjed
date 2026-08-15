@@ -758,6 +758,82 @@ memStore[k] = v;
 try { localStorage.setItem('masjid_' + k, JSON.stringify(v)); } catch(e) {}
 }
 };
+
+/* ===== لایه داده stateless ===== */
+var POLL = {};
+function pollSnap(key, fetchFn, cb, ms){
+  if (!POLL[key]) {
+    POLL[key] = { cb: cb, last: null, timer: null, loading: false };
+    var load = function() {
+      if (!POLL[key] || POLL[key].loading) return;
+      POLL[key].loading = true;
+      fetchFn(function(data) {
+        if (!POLL[key]) return;
+        POLL[key].loading = false;
+        var j = JSON.stringify(data);
+        if (POLL[key].last !== j) {
+          POLL[key].last = j;
+          var f = POLL[key].cb;
+          if (typeof f === 'function') {
+            try { f(data); } catch(e) { console.error('poll callback error:', e); }
+          }
+        }
+      });
+    };
+    load();
+    POLL[key].timer = setInterval(load, ms || 6000);
+  } else {
+    // هر کلید polling فقط یک listener فعال دارد؛ ورود مجدد یا render مجدد callback قبلی را انباشته نمی‌کند.
+    POLL[key].cb = cb;
+  }
+  if (POLL[key].last !== null) {
+    try { cb(JSON.parse(POLL[key].last)); } catch(e) { console.error('poll immediate callback error:', e); }
+  }
+}
+
+function pollSnapOnce(fetchFn, cb){
+  try {
+    fetchFn(function(data){
+      try { cb(data); } catch(e) { console.error('one-shot callback error:', e); }
+    });
+  } catch(e) {
+    console.error('one-shot fetch error:', e);
+    try { cb([]); } catch(e2) {}
+  }
+}
+function wSet(ref, data, merge) {
+  if (!fbDb) return Promise.resolve();
+  var b = fbDb.batch();
+  if (merge) b.set(ref, data, {merge: true});
+  else b.set(ref, data);
+  return b.commit().catch(function(e){ console.error('wSet error:', e); });
+}
+function wUpdate(ref, obj) {
+  if (!fbDb) return Promise.resolve();
+  var b = fbDb.batch();
+  b.update(ref, obj);
+  return b.commit().catch(function(e){ console.error('wUpdate error:', e); });
+}
+function wDel(ref) {
+  if (!fbDb) return Promise.resolve();
+  var b = fbDb.batch();
+  b.delete(ref);
+  return b.commit().catch(function(e){ console.error('wDel error:', e); });
+}
+function wAdd(col, data) {
+  if (!fbDb) return Promise.resolve();
+  var b = fbDb.batch();
+  b.set(col.doc(), data);
+  return b.commit().catch(function(e){ console.error('wAdd error:', e); });
+}
+
+function clearPolls() {
+  Object.keys(POLL).forEach(function(key) {
+    if (POLL[key].timer) clearInterval(POLL[key].timer);
+  });
+  POLL = {};
+}
+
 var ABJAD = {'ا':1,'أ':1,'إ':1,'آ':1,'ب':2,'پ':2,'ج':3,'چ':3,'د':4,'ه':5,'و':6,'ز':7,'ژ':7,'ح':8,'ط':9,'ی':10,'ک':20,'گ':20,'ل':30,'م':40,'ن':50,'س':60,'ع':70,'ف':80,'ص':90,'ق':100,'ر':200,'ش':300,'ت':400,'ث':500,'خ':600,'ذ':700,'ض':800,'ظ':900,'غ':1000};
 var abjad = function(str){ if(!str) return 0; var sum=0; for(var i=0;i<str.length;i++){ var c=str[i]; if(ABJAD[c]) sum+=ABJAD[c]; } return sum; };
 var makePassword = function(name){ return name.trim() + ' ' + abjad(name.trim()); };
@@ -827,123 +903,260 @@ fbDb.settings({
 });
 fbDb.enablePersistence({ synchronizeTabs: true }).catch(function(e){});
 } catch(e) {}
+
+/* ----- توابع داده: listener برای polling + fetch یک‌باره برای رندرها ----- */
+function fsGetCollectionOnce(code, collectionName, cb, orderByTime) {
+  if (!fbDb) { cb([]); return; }
+  var ref = fbDb.collection('mosques').doc(code).collection(collectionName);
+  var query = orderByTime ? ref.orderBy('time','desc').limit(100) : ref;
+  query.get().then(function(s) {
+    var l = [];
+    s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+    try { cb(l); } catch(e) { console.error('fsGetCollectionOnce callback error:', collectionName, e); }
+  }).catch(function(e) {
+    console.error('fsGetCollectionOnce error:', collectionName, e);
+    try { cb([]); } catch(e2) { console.error('fsGetCollectionOnce error callback:', e2); }
+  });
+}
 function fsGetPeople(code, cb) {
-if (!fbDb) { cb([]); return; }
-fbDb.collection('mosques').doc(code).collection('people').onSnapshot(function(snap) {
-var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-}, function(){ cb([]); });
+  pollSnap('people:' + code, function(cb2) {
+    if (!fbDb) { cb2([]); return; }
+    fbDb.collection('mosques').doc(code).collection('people').get().then(function(s) {
+      var l = [];
+      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, cb);
 }
-function fsSavePerson(code, p) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('people').doc(p.id).set(p, {merge:true}); }
-function fsDeletePerson(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('people').doc(id).delete(); }
+function fsSavePerson(code, p) { wSet(fbDb.collection('mosques').doc(code).collection('people').doc(p.id), p, true); }
+function fsDeletePerson(code, id) { wDel(fbDb.collection('mosques').doc(code).collection('people').doc(id)); }
+
 function fsGetRewards(code, cb) {
-if (!fbDb) { cb([]); return; }
-fbDb.collection('mosques').doc(code).collection('rewards').onSnapshot(function(snap) {
-var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-}, function(){ cb([]); });
+  pollSnap('rw:' + code, function(cb2) {
+    if (!fbDb) { cb2([]); return; }
+    fbDb.collection('mosques').doc(code).collection('rewards').get().then(function(s) {
+      var l = [];
+      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, cb);
 }
-function fsSaveReward(code, r) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('rewards').doc(r.id).set(r, {merge:true}); }
-function fsDeleteReward(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('rewards').doc(id).delete(); }
+function fsSaveReward(code, r) { wSet(fbDb.collection('mosques').doc(code).collection('rewards').doc(r.id), r, true); }
+function fsDeleteReward(code, id) { wDel(fbDb.collection('mosques').doc(code).collection('rewards').doc(id)); }
+
 function fsGetReasons(code, cb) {
-if (!fbDb) { cb([]); return; }
-fbDb.collection('mosques').doc(code).collection('reasons').onSnapshot(function(snap) {
-var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-}, function(){ cb([]); });
+  pollSnap('rs:' + code, function(cb2) {
+    if (!fbDb) { cb2([]); return; }
+    fbDb.collection('mosques').doc(code).collection('reasons').get().then(function(s) {
+      var l = [];
+      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, cb);
 }
-function fsSaveReason(code, r) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('reasons').doc(r.id).set(r, {merge:true}); }
-function fsDeleteReason(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('reasons').doc(id).delete(); }
+function fsSaveReason(code, r) { wSet(fbDb.collection('mosques').doc(code).collection('reasons').doc(r.id), r, true); }
+function fsDeleteReason(code, id) { wDel(fbDb.collection('mosques').doc(code).collection('reasons').doc(id)); }
+
 function fsGetAtt(code, key, cb) {
-if (!fbDb) { cb([]); return; }
-fbDb.collection('mosques').doc(code).collection('att').doc(key).get().then(function(doc) {
-if (doc.exists) cb(doc.data().ids || []); else cb([]);
-}).catch(function(){ cb([]); });
+  if (!fbDb) { cb([]); return; }
+  fbDb.collection('mosques').doc(code).collection('att').doc(key).get().then(function(d) {
+    cb(d.exists ? (d.data().ids || []) : []);
+  }).catch(function(){ cb([]); });
 }
-function fsSaveAtt(code, key, ids) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('att').doc(key).set({ids:ids}, {merge:true}); }
+function fsSaveAtt(code, key, ids) { wSet(fbDb.collection('mosques').doc(code).collection('att').doc(key), {ids: ids}, true); }
+
 function fsGetPray(code, key, cb) {
-if (!fbDb) { cb([]); return; }
-fbDb.collection('mosques').doc(code).collection('pray').doc(key).get().then(function(doc) {
-if (doc.exists) cb(doc.data().records || []); else cb([]);
-}).catch(function(){ cb([]); });
+  if (!fbDb) { cb([]); return; }
+  fbDb.collection('mosques').doc(code).collection('pray').doc(key).get().then(function(d) {
+    cb(d.exists ? (d.data().records || []) : []);
+  }).catch(function(){ cb([]); });
 }
-function fsSavePray(code, key, records) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('pray').doc(key).set({records:records}, {merge:true}); }
+function fsSavePray(code, key, records) { wSet(fbDb.collection('mosques').doc(code).collection('pray').doc(key), {records: records}, true); }
+
 function fsGetAnns(code, cb) {
-if (!fbDb) { cb([]); return; }
-fbDb.collection('mosques').doc(code).collection('anns').onSnapshot(function(snap) {
-var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-}, function(){ cb([]); });
+  pollSnap('ann:' + code, function(cb2) {
+    if (!fbDb) { cb2([]); return; }
+    fbDb.collection('mosques').doc(code).collection('anns').get().then(function(s) {
+      var l = [];
+      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, cb);
 }
-function fsSaveAnn(code, a) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('anns').doc(a.id).set(a, {merge:true}); }
-function fsDeleteAnn(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('anns').doc(id).delete(); }
+function fsSaveAnn(code, a) { wSet(fbDb.collection('mosques').doc(code).collection('anns').doc(a.id), a, true); }
+function fsDeleteAnn(code, id) { wDel(fbDb.collection('mosques').doc(code).collection('anns').doc(id)); }
+
 var pubAnnCache = [];
 function listenPubAnns(code) {
-if (!fbDb || !code) return;
-fbDb.collection('mosques').doc(code).collection('pubAnns').onSnapshot(function(snap) {
-pubAnnCache = []; snap.forEach(function(doc){ pubAnnCache.push({id:doc.id, ...doc.data()}); });
-updateTopBanner();
-if (S.role === 'manager') renderPubAnnsMgr();
-if (S.role === 'public') renderPublicAnns();
-if (S.role === 'teen') renderTeenAnns();
-}, function(){});
+  if (!fbDb || !code) return;
+  pollSnap('pubann:' + code, function(cb2) {
+    fbDb.collection('mosques').doc(code).collection('pubAnns').get().then(function(s) {
+      var l = [];
+      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, function(list) {
+    pubAnnCache = list;
+    updateTopBanner();
+    if (S.role === 'manager') renderPubAnnsMgr();
+    if (S.role === 'public') renderPublicAnns();
+    if (S.role === 'teen') renderTeenAnns();
+  });
 }
-function fsSavePubAnn(code, a) { if (!fbDb) return; return fbDb.collection('mosques').doc(code).collection('pubAnns').doc(a.id).set(a, {merge:true}); }
-function fsDeletePubAnn(code, id) { if (!fbDb) return; fbDb.collection('mosques').doc(code).collection('pubAnns').doc(id).delete(); }
+function fsSavePubAnn(code, a) { return wSet(fbDb.collection('mosques').doc(code).collection('pubAnns').doc(a.id), a, true); }
+function fsDeletePubAnn(code, id) { return wDel(fbDb.collection('mosques').doc(code).collection('pubAnns').doc(id)); }
+
 function fsGetHistory(code, cb) {
-if (!fbDb) { cb([]); return; }
-fbDb.collection('mosques').doc(code).collection('history').orderBy('time', 'desc').limit(100).onSnapshot(function(snap) {
-var list = []; snap.forEach(function(doc){ list.push({id:doc.id, ...doc.data()}); }); cb(list);
-}, function(){ cb([]); });
+  pollSnap('hist:' + code, function(cb2) {
+    if (!fbDb) { cb2([]); return; }
+    fbDb.collection('mosques').doc(code).collection('history').orderBy('time','desc').limit(100).get().then(function(s) {
+      var l = [];
+      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, cb);
+}
+function fsAddHistory(code, type, text) {
+  wAdd(fbDb.collection('mosques').doc(code).collection('history'), {type: type, text: text, time: new Date().toISOString()}).then(function(){ trimHistory(code); });
 }
 var HISTORY_LIMIT = 300;
 function trimHistory(code) {
-if (!fbDb) return;
-try {
-var col = fbDb.collection('mosques').doc(code).collection('history');
-if (typeof col.count === 'function') {
-col.count().get().then(function(s){
-var n = s.data().count;
-if (n > HISTORY_LIMIT) {
-col.orderBy('time','asc').limit(n - HISTORY_LIMIT).get().then(function(snap){
-if (snap.empty) return;
-var b = fbDb.batch();
-snap.forEach(function(d){ b.delete(d.ref); });
-b.commit().catch(function(){});
-}).catch(function(){});
-}
-}).catch(function(){});
-}
-} catch(e) {}
-}
-function fsAddHistory(code, type, text) {
-if (!fbDb) return;
-fbDb.collection('mosques').doc(code).collection('history').add({ type: type, text: text, time: new Date().toISOString() }).then(function(){ trimHistory(code); }).catch(function(){});
+  if (!fbDb) return;
+  try {
+    var col = fbDb.collection('mosques').doc(code).collection('history');
+    if (typeof col.count === 'function') {
+      col.count().get().then(function(s) {
+        var n = s.data().count;
+        if (n > HISTORY_LIMIT) {
+          col.orderBy('time','asc').limit(n - HISTORY_LIMIT).get().then(function(snap) {
+            if (snap.empty) return;
+            var b = fbDb.batch();
+            snap.forEach(function(d){ b.delete(d.ref); });
+            b.commit().catch(function(){});
+          }).catch(function(){});
+        }
+      }).catch(function(){});
+    }
+  } catch(e) {}
 }
 function clearMosqueHistory(code) {
-if (!fbDb) return Promise.resolve(0);
-return fbDb.collection('mosques').doc(code).collection('history').get().then(function(snap){
-if (snap.empty) return 0;
-var n = snap.size;
-var b = fbDb.batch();
-snap.forEach(function(d){ b.delete(d.ref); });
-return b.commit().then(function(){ return n; });
-});
+  if (!fbDb) return Promise.resolve(0);
+  return fbDb.collection('mosques').doc(code).collection('history').get().then(function(snap) {
+    if (snap.empty) return 0;
+    var n = snap.size;
+    var b = fbDb.batch();
+    snap.forEach(function(d){ b.delete(d.ref); });
+    return b.commit().then(function(){ return n; });
+  });
 }
 function sendPersonNotif(code, personId, text) {
-if (!fbDb || !code || !personId) return;
-fbDb.collection('mosques').doc(code).collection('notifs').add({ personId: personId, text: text, ts: Date.now(), read: false }).catch(function(){});
+  if (!fbDb || !code || !personId) return;
+  wAdd(fbDb.collection('mosques').doc(code).collection('notifs'), {personId: personId, text: text, ts: Date.now(), read: false});
 }
 function listenPersonNotifs() {
-if (!fbDb || !S.code || !S.personId) return;
-var last = LS.get('notif_seen_' + S.personId, 0);
-fbDb.collection('mosques').doc(S.code).collection('notifs').where('personId', '==', S.personId).orderBy('ts', 'desc').limit(10)
-.onSnapshot(function(snap) {
-snap.forEach(function(doc) {
-var n = doc.data();
-if ((n.ts || 0) > last) {
-last = n.ts; LS.set('notif_seen_' + S.personId, last);
-toast(n.text, 'success'); showSuccess();
+  if (!fbDb || !S.code || !S.personId) return;
+  pollSnap('notif:' + S.code + ':' + S.personId, function(cb2) {
+    fbDb.collection('mosques').doc(S.code).collection('notifs').where('personId','==',S.personId).orderBy('ts','desc').limit(10).get().then(function(s) {
+      var l = [];
+      s.forEach(function(d){ l.push(d.data()); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, function(list) {
+    var last = LS.get('notif_seen_' + S.personId, 0);
+    list.forEach(function(n) {
+      if ((n.ts || 0) > last) {
+        last = n.ts; LS.set('notif_seen_' + S.personId, last);
+        toast(n.text, 'success'); showSuccess();
+      }
+    });
+  }, 5000);
 }
-});
-}, function(){});
+
+function listenPushes(code) {
+  if (!fbDb || !code) return;
+  pollSnap('push:' + code, function(cb2) {
+    fbDb.collection('mosques').doc(code).collection('pushes').orderBy('ts','desc').limit(10).get().then(function(s) {
+      var l = [];
+      s.forEach(function(d){ l.push(d.data()); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, function(list) {
+    var last = LS.get('push_seen_' + code, 0);
+    list.forEach(function(n) {
+      if ((n.ts || 0) > last) {
+        if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
+        last = n.ts; LS.set('push_seen_' + code, last);
+        toast('📨 ' + n.text, 'success');
+      }
+    });
+  }, 8000);
+  pollSnap('pushglobal', function(cb2) {
+    fbDb.collection('globalPushes').orderBy('ts','desc').limit(10).get().then(function(s) {
+      var l = [];
+      s.forEach(function(d){ l.push(d.data()); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, function(list) {
+    var last = LS.get('push_global_seen', 0);
+    list.forEach(function(n) {
+      if ((n.ts || 0) > last) {
+        if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
+        last = n.ts; LS.set('push_global_seen', last);
+        toast('📣 ' + n.text, 'success');
+      }
+    });
+  }, 8000);
 }
+
+function loadMosquesFromFirestore() {
+  pollSnap('mosques', function(cb2) {
+    if (!fbDb) { cb2([]); return; }
+    fbDb.collection('mosques').where('status','==','active').get().then(function(s) {
+      var l = [];
+      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, function(list) {
+    mosqueCache = list;
+    if ($('mgrSearch')) searchMosques($('mgrSearch').value, 'mgr');
+    if ($('pubSearch')) searchMosques($('pubSearch').value, 'pub');
+    tryHashEnter();
+  }, 6000);
+}
+function loadSuperList() {
+  pollSnap('super', function(cb2) {
+    if (!fbDb) { cb2([]); return; }
+    fbDb.collection('mosques').get().then(function(s) {
+      var l = [];
+      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, function(list) {
+    superCache = list;
+    renderSuperList();
+    var act = superCache.filter(function(m){ return m.status !== 'disabled'; }).length;
+    $('superStats').innerHTML = '🕌 کل مساجد: <b>' + faNum(superCache.length) + '</b> | ✅ فعال: <b>' + faNum(act) + '</b> | 🛑 قطع: <b>' + faNum(superCache.length-act) + '</b>';
+  }, 8000);
+}
+function loadCustomDuas(cb) {
+  pollSnap('customduas', function(cb2) {
+    if (!fbDb) { cb2([]); return; }
+    fbDb.collection('customDuas').get().then(function(s) {
+      var l = [];
+      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
+      cb2(l);
+    }).catch(function(){ cb2([]); });
+  }, function(l) {
+    window._customDuas = l;
+    cb(l);
+    // رندر مجدد ادعیه در صورت نیاز
+    if (S.role === 'public') renderDuas('pubDuaContainer');
+    if (S.role === 'teen') renderDuas('teenDuaContainer');
+    if (S.role === 'super') renderDuaAdmin();
+  }, 10000);
+}
+
+/* ===== بقیه کد ===== */
 var DAILY_DHIKR = {
 6: {day:'شنبه', fa:'یا رَبَّ العالمین (ای پروردگار جهانیان)', ar:'یَا رَبَّ الْعَالَمِینَ', count:100},
 0: {day:'یکشنبه', fa:'یا ذاالجلالِ وَ الإکرام (ای صاحب جلال و بزرگواری)', ar:'یَا ذَاالْجَلَالِ وَالْإِکْرَامِ', count:100},
@@ -1019,7 +1232,6 @@ $('pfRank').textContent=r?faNum(r):'—';
 });
 }
 window._customDuas = [];
-function loadCustomDuas(cb){ if(!fbDb){cb([]);return;} fbDb.collection('customDuas').onSnapshot(function(snap){ var l=[]; snap.forEach(function(d){ l.push({id:d.id,...d.data()}); }); window._customDuas=l; cb(l); }, function(){cb([]);}); }
 function renderDuaAdmin(){
 var defaultList = (typeof window.DUAS_FULL !== 'undefined') ? window.DUAS_FULL : [];
 var customList = window._customDuas || [];
@@ -1053,8 +1265,7 @@ if (!t || !x) { toast('عنوان و متن','warning'); return; }
 var id = $('duaEditId').value || uid();
 var icon = $('duaIcon').value || '📜';
 var html = x.split(NL).map(function(l){ return l.trim() ? '<p>'+l+'</p>' : ''; }).join('');
-fbDb.collection('customDuas').doc(id).set({id:id, title:t, icon:icon, text:html, ts:Date.now()})
-.then(function(){
+wSet(fbDb.collection('customDuas').doc(id), {id:id, title:t, icon:icon, text:html, ts:Date.now()}, false).then(function(){
 toast('✅ ذخیره شد','success');
 $('duaTitle').value=''; $('duaText').value=''; $('duaIcon').value=''; $('duaEditId').value='';
 renderDuaAdmin();
@@ -1088,7 +1299,7 @@ hidden = hidden.filter(function(x){ return x !== id; });
 LS.set('hidden_duas', hidden);
 toast('✅ ادعیه پیش‌فرض دوباره نمایش داده می‌شود', 'success');
 } else {
-fbDb.collection('customDuas').doc(id).delete().then(function(){ toast('🗑 حذف شد', 'info'); });
+wDel(fbDb.collection('customDuas').doc(id)).then(function(){ toast('🗑 حذف شد', 'info'); });
 }
 renderDuaAdmin();
 });
@@ -1117,7 +1328,7 @@ function saveLinks(){
 if (!linksCode) return;
 var obj = {};
 LINK_KINDS.forEach(function(k){ obj[k] = $('lk-'+k).value.trim(); });
-fbDb.collection('mosques').doc(linksCode).update({customLinks: obj}).then(function(){
+wUpdate(fbDb.collection('mosques').doc(linksCode), {customLinks: obj}).then(function(){
 var idx = superCache.findIndex(function(x){ return x.code === linksCode; });
 if (idx >= 0) superCache[idx].customLinks = obj;
 centerToast('✅ لینک‌ها ذخیره شد و در پنل مدیر اعمال می‌شود');
@@ -1160,7 +1371,7 @@ var mosqueCode = m.code, mosqueName = m.name;
 toast('⏳ در حال تغییر رمز...','info');
 firebase.auth().signInWithEmailAndPassword(m.adminEmail, oldPin)
 .then(function(){ return firebase.auth().currentUser.updatePassword(newPin); })
-.then(function(){ return fbDb.collection('mosques').doc(mosqueCode).update({ pin: newPin, lastPasswordChange: new Date().toISOString() }); })
+.then(function(){ return wUpdate(fbDb.collection('mosques').doc(mosqueCode), { pin: newPin, lastPasswordChange: new Date().toISOString() }); })
 .then(function(){ return firebase.auth().signOut(); })
 .then(function(){
 closeModal('resetPassModal');
@@ -1207,44 +1418,17 @@ var branch = $('pushBranch').value;
 var text = $('pushText').value.trim();
 if (!text) { toast('متن پیام را وارد کنید', 'warning'); return; }
 if (mosqueVal === '__ALL__') {
-fbDb.collection('globalPushes').add({ text: text, branch: branch, ts: Date.now(), from: 'super' })
+wAdd(fbDb.collection('globalPushes'), { text: text, branch: branch, ts: Date.now(), from: 'super' })
 .then(function(){ toast('📨 پوش به همه مساجد ارسال شد', 'success'); $('pushText').value = ''; })
 .catch(function(e){ toast('خطا: ' + e.message, 'danger'); });
 } else {
-fbDb.collection('mosques').doc(mosqueVal).collection('pushes').add({ text: text, branch: branch, ts: Date.now(), from: 'super' })
+wAdd(fbDb.collection('mosques').doc(mosqueVal).collection('pushes'), { text: text, branch: branch, ts: Date.now(), from: 'super' })
 .then(function(){
 var m = superCache.find(function(x){ return x.code === mosqueVal; });
 toast('📨 پوش به ' + (m ? m.name : 'مسجد') + ' ارسال شد', 'success');
 $('pushText').value = '';
 }).catch(function(e){ toast('خطا: ' + e.message, 'danger'); });
 }
-}
-function listenPushes(code){
-if (!fbDb || !code) return;
-var lastLocal = LS.get('push_seen_' + code, 0);
-var lastGlobal = LS.get('push_global_seen', 0);
-fbDb.collection('mosques').doc(code).collection('pushes').orderBy('ts', 'desc').limit(10)
-.onSnapshot(function(snap){
-snap.forEach(function(doc){
-var n = doc.data();
-if ((n.ts || 0) > lastLocal) {
-if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
-lastLocal = n.ts; LS.set('push_seen_' + code, lastLocal);
-toast('📨 ' + n.text, 'success');
-}
-});
-}, function(){});
-fbDb.collection('globalPushes').orderBy('ts', 'desc').limit(10)
-.onSnapshot(function(snap){
-snap.forEach(function(doc){
-var n = doc.data();
-if ((n.ts || 0) > lastGlobal) {
-if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
-lastGlobal = n.ts; LS.set('push_global_seen', lastGlobal);
-toast('📣 ' + n.text, 'success');
-}
-});
-}, function(){});
 }
 var azanUnlocked = false;
 var audioCtx = null;
@@ -1498,15 +1682,6 @@ if (!m) m = mosqueCache.find(function(x){ return (x.name||'').indexOf(pendingHas
 if (m) { S.publicCode = m.code; LS.set('public_code', m.code); enterPublic(); return true; }
 return false;
 }
-function loadMosquesFromFirestore() {
-if (!fbDb) return;
-fbDb.collection('mosques').where('status', '==', 'active').onSnapshot(function(snap) {
-mosqueCache = []; snap.forEach(function(doc){ mosqueCache.push({id:doc.id, ...doc.data()}); });
-if ($('mgrSearch')) searchMosques($('mgrSearch').value, 'mgr');
-if ($('pubSearch')) searchMosques($('pubSearch').value, 'pub');
-tryHashEnter();
-}, function(){});
-}
 function searchMosques(query, type) {
 var q = (query || '').trim().toLowerCase();
 var resultsEl = $(type + 'MosqueResults'); if (!resultsEl) return;
@@ -1554,70 +1729,133 @@ else if (e.code === 'auth/network-request-failed') msg = 'خطای شبکه. ا�
 toast('❌ ' + msg, 'danger');
 }
 }
+
+/* ===== اصلاح شده: تابع createMosque با batch و پرچم settled و تایمر ===== */
 async function createMosque() {
-var btn = $('btnCreate');
-var name = $('setupName').value.trim();
-var address = $('setupAddress').value.trim();
-var pin = $('setupPin').value.trim();
-var pin2 = $('setupPin2').value.trim();
-if (!name) { toast('نام مسجد را وارد کنید','warning'); return; }
-if (pin.length < 6) { toast('رمز حداقل ۶ کاراکتر','warning'); return; }
-if (pin !== pin2) { toast('تکرار رمز یکسان نیست','warning'); return; }
-var dup = mosqueCache.find(function(m){ return (m.name||'').trim() === name && (m.address||'').trim() === address && m.branch === S.branch; });
-if (dup) { toast('⚠️ این مسجد قبلاً با همین نام و آدرس ثبت شده (کد: '+dup.code+')','warning'); return; }
-btn.disabled = true; btn.textContent = '⏳ در حال ساخت...';
-var settled = false;
-var safetyTimer = setTimeout(function(){
-if (settled) return;
-settled = true;
-btn.disabled = false; btn.textContent = '✅ ساخت مسجد';
-toast('⚠️ ساخت طول کشید؛ لیست مساجد را چک کنید — احتمالاً انجام شده','warning');
-}, 15000);
-var code = 'M' + Math.floor(1000 + Math.random()*9000);
-var adminEmail = 'mosque-' + code.toLowerCase() + '@masjed.app';
-try {
-var cred = null;
-for (var attempt = 0; attempt < 3 && !cred; attempt++) {
-try { cred = await firebase.auth().createUserWithEmailAndPassword(adminEmail, pin); }
-catch (err2) {
-if (attempt === 2) throw err2;
-await new Promise(function(r){ setTimeout(r, 1500); });
+  var btn = $('btnCreate');
+  var name = $('setupName').value.trim();
+  var address = $('setupAddress').value.trim();
+  var pin = $('setupPin').value.trim();
+  var pin2 = $('setupPin2').value.trim();
+
+  if (!name) { toast('نام مسجد را وارد کنید','warning'); return; }
+  if (pin.length < 6) { toast('رمز حداقل ۶ کاراکتر','warning'); return; }
+  if (pin !== pin2) { toast('تکرار رمز یکسان نیست','warning'); return; }
+
+  var dup = mosqueCache.find(function(m){ return (m.name||'').trim() === name && (m.address||'').trim() === address && m.branch === S.branch; });
+  if (dup) { toast('⚠️ این مسجد قبلاً با همین نام و آدرس ثبت شده (کد: '+dup.code+')','warning'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ در حال ساخت...';
+  var settled = false;
+
+  // تایمر ۱۵ ثانیه‌ای برای آزادسازی دکمه در صورت گیر کردن
+  var safetyTimer = setTimeout(function(){
+    if (settled) return;
+    settled = true;
+    btn.disabled = false;
+    btn.textContent = '✅ ساخت مسجد';
+    toast('⚠️ ساخت طول کشید؛ لیست مساجد را چک کنید — احتمالاً انجام شده','warning');
+  }, 15000);
+
+  var code = 'M' + Math.floor(1000 + Math.random() * 9000);
+  var adminEmail = 'mosque-' + code.toLowerCase() + '@masjed.app';
+
+  try {
+    // ثبت کاربر در Firebase Auth (با چند بار تلاش)
+    var cred = null;
+    for (var attempt = 0; attempt < 3 && !cred; attempt++) {
+      try {
+        cred = await firebase.auth().createUserWithEmailAndPassword(adminEmail, pin);
+      } catch (err2) {
+        if (attempt === 2) throw err2;
+        await new Promise(function(r){ setTimeout(r, 1500); });
+      }
+    }
+    var adminUid = cred.user.uid;
+
+    // داده‌های اولیه
+    var reasons = [
+      {id: uid(), name: 'نماز جماعت', points: 1},
+      {id: uid(), name: 'شرکت در کلاس', points: 5},
+      {id: uid(), name: 'حفظ قرآن', points: 10},
+      {id: uid(), name: 'کمک به نظافت', points: 3},
+      {id: uid(), name: 'فعالیت فرهنگی', points: 4}
+    ];
+    var rewards = [
+      {id: uid(), name: 'کتاب دعا', pointsRequired: 20, icon: '📖'},
+      {id: uid(), name: 'هدیه ویژه', pointsRequired: 50, icon: '🎁'}
+    ];
+
+    // یک batch واحد برای همه نوشتن‌ها
+    var batch = fbDb.batch();
+    var mosqueRef = fbDb.collection('mosques').doc(code);
+
+    batch.set(mosqueRef, {
+      code: code,
+      name: name,
+      address: address,
+      adminUid: adminUid,
+      adminEmail: adminEmail,
+      pin: pin,
+      branch: S.branch,
+      status: 'active',
+      prayerPoints: 1,
+      attPoints: 0,
+      createdAt: new Date().toISOString()
+    });
+
+    reasons.forEach(function(r) {
+      batch.set(mosqueRef.collection('reasons').doc(r.id), r);
+    });
+    rewards.forEach(function(w) {
+      batch.set(mosqueRef.collection('rewards').doc(w.id), w);
+    });
+
+    // اجرای batch
+    await batch.commit();
+
+    if (settled) return;
+    settled = true;
+    clearTimeout(safetyTimer);
+
+    // ذخیره اطلاعات جلسه
+    S.code = code;
+    S.mosque = {
+      code: code,
+      name: name,
+      address: address,
+      adminUid: adminUid,
+      adminEmail: adminEmail,
+      pin: pin,
+      status: 'active',
+      prayerPoints: 1,
+      attPoints: 0
+    };
+    S.role = 'manager';
+    LS.set('session', { role: 'manager', code: code, branch: S.branch });
+
+    toast('✅ مسجد ساخته شد! کد: ' + code + ' | رمز: ' + pin, 'success');
+    btn.disabled = false;
+    btn.textContent = '✅ ساخت مسجد';
+    showSuccess();
+    enterManager();
+
+  } catch (e) {
+    if (settled) return;
+    settled = true;
+    clearTimeout(safetyTimer);
+
+    var msg = e && e.message ? e.message : 'خطا';
+    if (e && e.code === 'auth/email-already-in-use') msg = 'این کد قبلاً استفاده شده';
+    else if (e && e.code === 'auth/network-request-failed') msg = 'خطای شبکه! لطفاً اینترنت/VPN را بررسی کنید';
+    toast('خطا: ' + msg, 'danger');
+    btn.disabled = false;
+    btn.textContent = '✅ ساخت مسجد';
+  }
 }
-}
-var adminUid = cred.user.uid;
-var reasons = [{id:uid(),name:'نماز جماعت',points:1},{id:uid(),name:'شرکت در کلاس',points:5},{id:uid(),name:'حفظ قرآن',points:10},{id:uid(),name:'کمک به نظافت',points:3},{id:uid(),name:'فعالیت فرهنگی',points:4}];
-var rewards = [{id:uid(),name:'کتاب دعا',pointsRequired:20,icon:'📖'},{id:uid(),name:'هدیه ویژه',pointsRequired:50,icon:'🎁'}];
-var batch = fbDb.batch();
-var mosqueRef = fbDb.collection('mosques').doc(code);
-batch.set(mosqueRef, {
-code: code, name: name, address: address, adminUid: adminUid,
-adminEmail: adminEmail, pin: pin, branch: S.branch, status: 'active',
-prayerPoints: 1, attPoints: 0,
-createdAt: new Date().toISOString()
-});
-reasons.forEach(function(r){ batch.set(mosqueRef.collection('reasons').doc(r.id), r); });
-rewards.forEach(function(w){ batch.set(mosqueRef.collection('rewards').doc(w.id), w); });
-await batch.commit();
-if (settled) return;
-settled = true;
-clearTimeout(safetyTimer);
-S.code = code; S.mosque = {code:code,name:name,address:address,adminUid:adminUid,adminEmail:adminEmail,pin:pin,status:'active',prayerPoints:1,attPoints:0};
-S.role = 'manager';
-LS.set('session', {role:'manager', code:code, branch:S.branch});
-toast('✅ مسجد ساخته شد! کد: ' + code + ' | رمز: ' + pin, 'success');
-btn.disabled = false; btn.textContent = '✅ ساخت مسجد';
-showSuccess(); enterManager();
-} catch(e) {
-if (settled) return;
-settled = true;
-clearTimeout(safetyTimer);
-var msg = e && e.message ? e.message : 'خطا';
-if (e && e.code === 'auth/email-already-in-use') msg = 'این کد قبلاً استفاده شده';
-else if (e && e.code === 'auth/network-request-failed') msg = 'خطای شبکه! لطفاً اینترنت/VPN را بررسی کنید';
-toast('خطا: ' + msg, 'danger');
-btn.disabled = false; btn.textContent = '✅ ساخت مسجد';
-}
-}
+/* ===== پایان اصلاح createMosque ===== */
+
 function teenLogin() {
 var name = $('teenName').value.trim();
 var pw = $('teenPw').value.trim();
@@ -1630,7 +1868,7 @@ if (num !== abjad(name)) { toast('رمز اشتباه! عدد ابجد «'+name+
 var found = false;
 mosqueCache.forEach(function(m) {
 if (found) return;
-fsGetPeople(m.code, function(people) {
+fsGetPeopleOnce(m.code, function(people) {
 var person = people.find(function(p){ return p.name === name && p.branch === S.branch; });
 if (person && !found) {
 found = true;
@@ -1653,15 +1891,6 @@ S.role = 'super'; enterSuper();
 }).catch(function(e){ toast('❌ ' + (e.code === 'auth/too-many-requests' ? 'تلاش زیاد!' : e.code === 'auth/network-request-failed' ? 'خطای شبکه' : 'ایمیل یا رمز اشتباه است'), 'danger'); });
 }
 function enterSuper() { goTo('super'); loadSuperList(); renderDuaAdmin(); }
-function loadSuperList() {
-fbDb.collection('mosques').onSnapshot(function(snap) {
-superCache = [];
-snap.forEach(function(doc){ superCache.push({id:doc.id, ...doc.data()}); });
-renderSuperList();
-var act = superCache.filter(function(m){ return m.status !== 'disabled'; }).length;
-$('superStats').innerHTML = '🕌 کل مساجد: <b>' + faNum(superCache.length) + '</b> | ✅ فعال: <b>' + faNum(act) + '</b> | 🛑 قطع: <b>' + faNum(superCache.length - act) + '</b>';
-});
-}
 function renderSuperList() {
 var q = ($('superSearch') ? $('superSearch').value : '').trim().toLowerCase();
 var list = superCache;
@@ -1687,19 +1916,19 @@ superCache.map(function(m){ return '<option value="'+m.code+'">'+esc(m.name)+' (
 function superToggle(id, btn) {
 var m = superCache.find(function(x){ return x.code === id; }); if (!m) return;
 var ns = m.status === 'disabled' ? 'active' : 'disabled';
-fbDb.collection('mosques').doc(id).update({status: ns}).then(function(){
+wUpdate(fbDb.collection('mosques').doc(id), {status: ns}).then(function(){
 toast(ns === 'disabled' ? '🛑 مسجد قطع شد' : '✅ مسجد فعال شد', 'success');
 });
 }
 function superDelete(id, btn) {
-twoTap(btn, function() { fbDb.collection('mosques').doc(id).delete().then(function(){ toast('🗑 مسجد حذف شد','info'); }); });
+twoTap(btn, function() { wDel(fbDb.collection('mosques').doc(id)).then(function(){ toast('🗑 مسجد حذف شد','info'); }); });
 }
 function superDeleteAll(btn) {
 twoTap(btn, function() {
 if (!confirm('⚠️ حذف همه مساجد؟')) return;
 var count = 0;
 superCache.forEach(function(m) {
-fbDb.collection('mosques').doc(m.code).delete().then(function(){ count++; toast('🗑 حذف شد: ' + count + ' از ' + superCache.length, 'info'); });
+wDel(fbDb.collection('mosques').doc(m.code)).then(function(){ count++; toast('🗑 حذف شد: ' + count + ' از ' + superCache.length, 'info'); });
 });
 });
 }
@@ -1762,6 +1991,11 @@ $('hdrChip').classList.remove('hidden');
 $('hadithBar').classList.add('hidden');
 listenPushes(S.code);
 listenPubAnns(S.code);
+// بارگذاری اطلاعیه‌های داخلی برای نوجوان
+fsGetAnnsOnce(S.code, function() {
+  renderTeenAnns();
+  updateTopBanner();
+});
 $('hdrTitle').textContent = S.mosque.name;
 $('hdrSub').textContent = S.branch + ' | ' + S.personName;
 $('hdrChip').textContent = '🧒 ' + S.personName;
@@ -1787,7 +2021,7 @@ goTo('publicHome');
 }).catch(function(){ toast('خطا در اتصال','danger'); goTo('publicHome'); });
 }
 function showTeenWelcome() {
-fsGetPeople(S.code, function(people) {
+fsGetPeopleOnce(S.code, function(people) {
 var me = people.find(function(x){ return x.id === S.personId; }); if (!me) return;
 fsGetPray(S.code, todayStr(), function(pray) {
 var fajr=0,dhuhr=0,maghrib=0;
@@ -1808,7 +2042,7 @@ var pplCache = [];
 function prayerPts() { return (S.mosque && S.mosque.prayerPoints !== undefined) ? S.mosque.prayerPoints : 1; }
 function attPtsVal() { return (S.mosque && S.mosque.attPoints !== undefined) ? S.mosque.attPoints : 0; }
 function renderPeople() {
-fsGetPeople(S.code, function(list) {
+fsGetPeopleOnce(S.code, function(list) {
 pplCache = list;
 var q = ($('searchPpl') ? $('searchPpl').value : '') || '';
 q = q.trim().toLowerCase();
@@ -1830,10 +2064,12 @@ var p = {id:uid(), name:name, branch:S.branch, points:0, nights:0, streak:0, las
 fsSavePerson(S.code, p); fsAddHistory(S.code, 'add', 'افزودن: ' + name + ' (' + S.branch + ')');
 toast('✅ ' + name + ' اضافه شد! رمز: ' + makePassword(name), 'success');
 $('newName').value = ''; $('pwHint').classList.add('hidden'); showSuccess();
+// رندر مجدد لیست افراد
+renderPeople();
 }
 var attCache = [];
 function renderAttendance() {
-fsGetPeople(S.code, function(ppl) {
+fsGetPeopleOnce(S.code, function(ppl) {
 fsGetAtt(S.code, todayStr(), function(att) {
 attCache = att;
 var filtered = ppl.filter(function(x){ return x.branch === S.branch; });
@@ -1859,9 +2095,11 @@ sendPersonNotif(S.code, p.id, '🌙 حضور امشب شما ثبت شد! آفر
 fsSavePerson(S.code, p);
 }
 toast('🌙 ثبت شد','success');
+// رندر مجدد حضور
+renderAttendance();
 }
 function markAll() {
-fsGetPeople(S.code, function(list) {
+fsGetPeopleOnce(S.code, function(list) {
 fsGetAtt(S.code, todayStr(), function(att) {
 var added = 0, newAtt = att.slice();
 var apt = attPtsVal();
@@ -1876,10 +2114,12 @@ fsSavePerson(S.code, p); sendPersonNotif(S.code, p.id, '🌙 حضور امشب �
 fsSaveAtt(S.code, todayStr(), newAtt);
 fsAddHistory(S.code,'att_all','حضور گروهی ('+added+')');
 toast('✅ ' + faNum(added) + ' نفر','success'); showSuccess();
+// رندر مجدد حضور
+renderAttendance();
 });
 });
 }
-function clearAtt() { twoTap($('clearAttBtn'), function() { fsSaveAtt(S.code, todayStr(), []); toast('🗑 پاک شد','info'); }); }
+function clearAtt() { twoTap($('clearAttBtn'), function() { fsSaveAtt(S.code, todayStr(), []); toast('🗑 پاک شد','info'); renderAttendance(); }); }
 var curPerson = null;
 function openPersonMenu(id) {
 var p = pplCache.find(function(x){ return x.id === id; }); if (!p) return;
@@ -1887,7 +2127,7 @@ curPerson = id;
 $('pmName').textContent = '👤 ' + p.name;
 $('pmPts').textContent = '⭐ ' + faNum(p.points||0);
 $('pmNights').textContent = '🌙 ' + faNum(p.nights||0);
-fsGetReasons(S.code, function(rs) {
+fsGetReasonsOnce(S.code, function(rs) {
 $('pmReasons').innerHTML = rs.map(function(r) {
 return '<div class="list-item" data-action="pm-give" data-id="'+r.id+'" style="margin-bottom:4px"><div class="body"><div class="name">'+esc(r.name)+'</div></div><div class="badge badge-gold">+'+faNum(r.points)+'</div></div>';
 }).join('');
@@ -1896,7 +2136,7 @@ fsGetAtt(S.code, todayStr(), function(att) { $('pmAttBtn').innerHTML = att.index
 openModal('personModal');
 }
 function pmGive(rid) {
-fsGetReasons(S.code, function(rs) {
+fsGetReasonsOnce(S.code, function(rs) {
 var r = rs.find(function(x){ return x.id === rid; });
 var p = pplCache.find(function(x){ return x.id === curPerson; });
 if (!r || !p) return;
@@ -1905,6 +2145,8 @@ fsSavePerson(S.code, p);
 fsAddHistory(S.code,'points', p.name + ' +' + r.points + ' (' + r.name + ')');
 sendPersonNotif(S.code, p.id, '🎉 ' + r.points + ' امتیاز گرفتی! (' + r.name + ')');
 toast('✅ +' + faNum(r.points), 'success'); showSuccess(); closeModal('personModal');
+// رندر مجدد لیست افراد و تابلو
+renderPeople(); renderTeenHome();
 });
 }
 function pmCustom() {
@@ -1916,6 +2158,7 @@ fsSavePerson(S.code, p);
 fsAddHistory(S.code,'points', p.name + ' ' + (v>0?'+':'') + v);
 sendPersonNotif(S.code, p.id, '⭐ ' + (v>0?'+':'') + v + ' امتیاز دریافت کردی!');
 toast('✅ ثبت شد','success'); $('pmCustom').value = ''; closeModal('personModal');
+renderPeople(); renderTeenHome();
 }
 function pmSetPoints() {
 var v = parseInt($('pmSetPoints').value, 10);
@@ -1926,6 +2169,7 @@ fsSavePerson(S.code, p);
 fsAddHistory(S.code,'points', p.name + ' امتیاز به ' + v + ' تنظیم شد');
 sendPersonNotif(S.code, p.id, '⭐ امتیاز شما به ' + faNum(v) + ' تنظیم شد');
 toast('✅ امتیاز ویرایش شد','success'); $('pmSetPoints').value = ''; closeModal('personModal');
+renderPeople(); renderTeenHome();
 }
 function pmAtt() { toggleAtt(curPerson); closeModal('personModal'); }
 function pmReset(btn) {
@@ -1935,10 +2179,11 @@ p.points = 0; fsSavePerson(S.code, p);
 fsAddHistory(S.code,'reset', p.name + ' امتیاز صفر شد');
 sendPersonNotif(S.code, p.id, '🎁 امتیازت صفر شد');
 toast('🔄 امتیاز صفر شد','success'); closeModal('personModal');
+renderPeople(); renderTeenHome();
 });
 }
 function pmDelete(btn) {
-twoTap(btn, function() { fsDeletePerson(S.code, curPerson); fsAddHistory(S.code,'delete','حذف فرد'); toast('🗑 حذف شد','info'); closeModal('personModal'); });
+twoTap(btn, function() { fsDeletePerson(S.code, curPerson); fsAddHistory(S.code,'delete','حذف فرد'); toast('🗑 حذف شد','info'); closeModal('personModal'); renderPeople(); });
 }
 function openPrayerModal(id) {
 var p = pplCache.find(function(x){ return x.id === id; }); if (!p) return;
@@ -1963,6 +2208,7 @@ fsAddHistory(S.code,'prayer', (p?p.name:'') + ' نماز ' + prayer);
 if (S.role === 'teen' && S.personId === id) showMotivational(p ? p.name : '', 'prayer');
 else if (p) sendPersonNotif(S.code, p.id, '🕌 نماز ' + prayer + ' برایت ثبت شد! (+' + faNum(pts) + ' امتیاز)');
 toast('🕌 نماز ' + prayer + ' ثبت شد (+' + faNum(pts) + ')', 'success'); showSuccess(); closeModal('prayerModal');
+renderPeople(); renderTeenHome();
 });
 }
 function saveGlobalPts() {
@@ -1971,14 +2217,14 @@ var newAtt = parseFloat($('cfgAttPts').value);
 if (isNaN(newPrayer) || newPrayer < 0 || isNaN(newAtt) || newAtt < 0) { toast('مقادیر معتبر وارد کنید','warning'); return; }
 S.mosque.prayerPoints = newPrayer;
 S.mosque.attPoints = newAtt;
-if (fbDb) fbDb.collection('mosques').doc(S.code).update({ prayerPoints: newPrayer, attPoints: newAtt }).catch(function(){});
+wUpdate(fbDb.collection('mosques').doc(S.code), { prayerPoints: newPrayer, attPoints: newAtt }).catch(function(){});
 fsAddHistory(S.code,'points','تنظیم سراسری جدید: نماز ' + faNum(newPrayer) + ' | حضور شب ' + faNum(newAtt));
 centerToast('✅ تغییر ثبت شد؛ از این لحظه به بعد اعمال می‌شود');
 renderPeople();
 }
 var rwCache = [];
 function renderRewards() {
-fsGetRewards(S.code, function(rw) {
+fsGetRewardsOnce(S.code, function(rw) {
 rwCache = rw;
 $('rwEmpty').classList.toggle('hidden', rw.length > 0);
 $('rwList').innerHTML = rw.map(function(r) {
@@ -2009,7 +2255,7 @@ centerToast('✅ تغییر ثبت شد');
 function deleteReward(id, btn) { twoTap(btn, function() { fsDeleteReward(S.code, id); toast('🗑','info'); }); }
 var rsCache = [];
 function renderReasons() {
-fsGetReasons(S.code, function(rs) {
+fsGetReasonsOnce(S.code, function(rs) {
 rsCache = rs;
 $('rsList').innerHTML = rs.map(function(r) {
 return '<div class="list-item"><div class="body"><div class="name">'+esc(r.name)+'</div></div><div class="badge badge-gold">'+faNum(r.points)+' ⭐</div><button class="btn btn-outline btn-sm" data-action="edit-reason" data-id="'+r.id+'">✏️</button><button class="btn btn-danger btn-sm" data-action="delete-reason" data-id="'+r.id+'">🗑</button></div>';
@@ -2036,7 +2282,7 @@ centerToast('✅ تغییر ثبت شد');
 function deleteReason(id, btn) { twoTap(btn, function() { fsDeleteReason(S.code, id); toast('🗑','info'); }); }
 var annCache = [];
 function renderAnns() {
-fsGetAnns(S.code, function(anns) {
+fsGetAnnsOnce(S.code, function(anns) {
 annCache = anns;
 var now = Date.now();
 var list = anns.filter(function(a){ return a.branch === S.branch && (!a.expireAt || a.expireAt > now); });
@@ -2095,7 +2341,7 @@ return '<div class="ann-item"><div class="ann-head"><div class="ann-title">📣 
 }
 function renderHistory() {
 var icons = {add:'➕',delete:'🗑',points:'⭐',att:'🌙',att_all:'🌙',prayer:'🕌',ann:'📢',reset:'🔄',password_change:'🔑'};
-fsGetHistory(S.code, function(h) {
+fsGetHistoryOnce(S.code, function(h) {
 $('histEmpty').classList.toggle('hidden', h.length > 0);
 var shown = h.slice(0, histShown);
 var html = shown.map(function(x) {
@@ -2105,7 +2351,7 @@ if (h.length > histShown) html += '<button class="btn btn-outline full-w mt-2" d
 $('histList').innerHTML = html;
 });
 }
-/* ===== بنر برترین نمازگزار — پویا، هر دو بخش، بدون هاردکد ===== */
+/* ===== بنر برترین نمازگزار ===== */
 function updateChampBanner() {
 var el = $('champBanner'); if (!el) return;
 if (!S.role || !S.code || !fbDb) { el.classList.add('hidden'); return; }
@@ -2144,9 +2390,18 @@ update();
 if (topBannerInterval) clearInterval(topBannerInterval);
 topBannerInterval = setInterval(function(){ idx++; update(); }, 5000);
 }
-function renderTeenAll() { renderTeenHome(); renderLeader(); renderTeenAnns(); }
+function renderTeenAll() {
+renderTeenHome();
+renderLeader();
+renderTeenAnns();
+// اطمینان از بارگذاری اطلاعیه‌ها برای نوجوان
+fsGetAnnsOnce(S.code, function() {
+  renderTeenAnns();
+  updateTopBanner();
+});
+}
 function renderTeenHome() {
-fsGetPeople(S.code, function(people) {
+fsGetPeopleOnce(S.code, function(people) {
 var me = people.find(function(x){ return x.id === S.personId; }); if (!me) return;
 S.me = me;
 $('teenPts').textContent = faNum(me.points||0);
@@ -2169,7 +2424,7 @@ $('teenFajrC').textContent = faNum(fajrC);
 $('teenDhuhrC').textContent = faNum(dhuhrC);
 $('teenMaghribC').textContent = faNum(maghribC);
 });
-fsGetRewards(S.code, function(rw) {
+fsGetRewardsOnce(S.code, function(rw) {
 var nr = null;
 rw.forEach(function(r) { if ((me.points||0) < r.pointsRequired && (!nr || r.pointsRequired < nr.pointsRequired)) nr = r; });
 var card = $('teenRewardCard');
@@ -2201,8 +2456,6 @@ return '<div class="list-item' + (isNr ? ' reward-near-item' : '') + '" style="'
 '</div><div class="meta">' + faNum(r.pointsRequired) + ' امتیاز' + (isGot ? '' : ' | ' + faNum(Math.max(0, r.pointsRequired - (me.points||0))) + ' مانده') + '</div>' +
 '<div class="progress-bar"><div class="progress-fill" style="width:' + pct2 + '%"></div></div></div></div>';
 }).join('') || '<div class="empty"><div class="empty-icon">🎁</div><div>جایزه‌ای تعریف نشده</div></div>';
-if (nr && isNearSafe()) {}
-function isNearSafe(){ return false; }
 if (nr) {
 var distance2 = nr.pointsRequired - (me.points||0);
 var threshold2 = Math.max(3, Math.ceil(nr.pointsRequired * 0.2));
@@ -2225,7 +2478,7 @@ updateChampBanner();
 });
 }
 function renderLeader() {
-fsGetPeople(S.code, function(people) {
+fsGetPeopleOnce(S.code, function(people) {
 var sorted = people.filter(function(x){ return x.branch === S.branch; }).slice().sort(function(a,b){ return (b.points||0)-(a.points||0); }).slice(0,10);
 $('leaderList').innerHTML = sorted.map(function(x, i) {
 var md = i === 0 ? '🥇' : (i === 2 ? '🥉' : faNum(i+1));
@@ -2306,7 +2559,7 @@ $('hadithText').textContent = hadithList[Math.floor(Math.random() * hadithList.l
 function addHadith() {
 var t = $('newHadith').value.trim();
 if (!t) { toast('متن حدیث را بنویسید','warning'); return; }
-fbDb.collection('hadiths').add({text:t, ts:Date.now()}).then(function(){
+wAdd(fbDb.collection('hadiths'), {text:t, ts:Date.now()}).then(function(){
 toast('✅ حدیث اضافه شد','success'); $('newHadith').value=''; loadHadith();
 });
 }
@@ -2523,6 +2776,7 @@ if (passed) { toast('🎉 سطح '+faNum(quizCur.lv)+' تیک خورد','success
 }
 function quizBack(){ renderQuiz(); }
 function logout() {
+clearPolls(); // پاک کردن تمام pollها
 S.role = null; S.code = null; S.mosque = null; S.personId = null;
 LS.set('session', null); goTo('start'); toast('👋','info');
 }
@@ -2578,10 +2832,7 @@ function saveFcmToken(token) {
 if (!fbDb) return;
 var safeId = token.split('/').join('_');
 var doSave = function() {
-fbDb.collection('fcmTokens').doc(safeId).set({
-token: token, branch: S.branch || 'عمومی', role: S.role || 'public',
-updatedAt: new Date().toISOString()
-}, { merge: true }).catch(function(){});
+wSet(fbDb.collection('fcmTokens').doc(safeId), { token: token, branch: S.branch || 'عمومی', role: S.role || 'public', updatedAt: new Date().toISOString() }, true);
 };
 if (firebase.auth().currentUser) doSave();
 else firebase.auth().signInAnonymously().then(doSave).catch(function(){});
