@@ -770,6 +770,10 @@ function pollSnap(key, fetchFn, cb, ms){
       fetchFn(function(data) {
         if (!POLL[key]) return;
         POLL[key].loading = false;
+
+        // null یعنی خطای موقت شبکه/Firestore؛ cache فعلی را پاک نکن.
+        if (data === null || data === undefined) return;
+
         var j = JSON.stringify(data);
         if (POLL[key].last !== j) {
           POLL[key].last = j;
@@ -783,7 +787,7 @@ function pollSnap(key, fetchFn, cb, ms){
     load();
     POLL[key].timer = setInterval(load, ms || 6000);
   } else {
-    // هر کلید polling فقط یک listener فعال دارد؛ ورود مجدد یا render مجدد callback قبلی را انباشته نمی‌کند.
+    // هر کلید polling فقط یک listener فعال دارد؛ callback قبلی انباشته نمی‌شود.
     POLL[key].cb = cb;
   }
   if (POLL[key].last !== null) {
@@ -821,7 +825,7 @@ function wDel(ref) {
   return b.commit().catch(function(e){ console.error('wDel error:', e); });
 }
 function wAdd(col, data) {
-  if (!fbDb) return Promise.resolve();
+  if (!fbDb || !col || !data) return Promise.resolve();
   var b = fbDb.batch();
   b.set(col.doc(), data);
   return b.commit().catch(function(e){ console.error('wAdd error:', e); });
@@ -886,28 +890,46 @@ $('installBanner').classList.add('hidden');
 LS.set('install_dismissed', true);
 }
 var SUPER_UID = 'GjleuLj5u6eI6V6zCR0y4Eb5cj03';
-var fbApp = null, fbDb = null;
-try {
-fbApp = firebase.initializeApp({
+var FIREBASE_CONFIG = {
 apiKey: "AIzaSyDT0sQ_ZcT_Jl9_vvjgsgVojP_TCCLaEFM",
 authDomain: "masjed-a6505.firebaseapp.com",
 projectId: "masjed-a6505",
 storageBucket: "masjed-a6505.firebasestorage.app",
 messagingSenderId: "23821410712",
 appId: "1:23821410712:web:1789bb8cc4659377544bed"
-});
+};
+var fbApp = null, fbDb = null, creatorApp = null, creatorAuth = null;
+try {
+fbApp = firebase.initializeApp(FIREBASE_CONFIG);
 fbDb = firebase.firestore();
 fbDb.settings({
-  experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: true,
   useFetchStreams: false
 });
-fbDb.enablePersistence({ synchronizeTabs: true }).catch(function(e){});
-} catch(e) {}
+fbDb.enablePersistence({ synchronizeTabs: true }).catch(function(e){
+  console.warn('Firestore persistence disabled:', e);
+});
+
+/*
+ * Auth مستقل برای ساخت حساب مدیر مسجد.
+ * createUserWithEmailAndPassword بعد از موفقیت همان Auth instance را
+ * به کاربر جدید وارد می‌کند؛ بنابراین از Auth ثانویه استفاده می‌کنیم تا
+ * نشست فعلی سوپرادمین/مدیر اصلی عوض نشود.
+ */
+try {
+  creatorApp = firebase.initializeApp(FIREBASE_CONFIG, 'mosqueCreator');
+  creatorAuth = creatorApp.auth();
+} catch(e) {
+  try { creatorAuth = creatorApp ? creatorApp.auth() : null; } catch(e2) { creatorAuth = null; }
+}
+} catch(e) {
+  console.error('Firebase initialization error:', e);
+}
 
 /* ----- توابع داده: listener برای polling + fetch یک‌باره برای رندرها ----- */
 function fsGetCollectionOnce(code, collectionName, cb, orderByTime) {
-  if (!fbDb) { cb([]); return; }
-  var ref = fbDb.collection('mosques').doc(code).collection(collectionName);
+  if (!fbDb || !code || !collectionName) { cb([]); return; }
+  var ref = fbDb.collection('mosques').doc(String(code)).collection(collectionName);
   var query = orderByTime ? ref.orderBy('time','desc').limit(100) : ref;
   query.get().then(function(s) {
     var l = [];
@@ -918,6 +940,11 @@ function fsGetCollectionOnce(code, collectionName, cb, orderByTime) {
     try { cb([]); } catch(e2) { console.error('fsGetCollectionOnce error callback:', e2); }
   });
 }
+function fsGetPeopleOnce(code, cb) { fsGetCollectionOnce(code, 'people', cb, false); }
+function fsGetRewardsOnce(code, cb) { fsGetCollectionOnce(code, 'rewards', cb, false); }
+function fsGetReasonsOnce(code, cb) { fsGetCollectionOnce(code, 'reasons', cb, false); }
+function fsGetAnnsOnce(code, cb) { fsGetCollectionOnce(code, 'anns', cb, false); }
+function fsGetHistoryOnce(code, cb) { fsGetCollectionOnce(code, 'history', cb, true); }
 function fsGetPeople(code, cb) {
   pollSnap('people:' + code, function(cb2) {
     if (!fbDb) { cb2([]); return; }
@@ -925,11 +952,11 @@ function fsGetPeople(code, cb) {
       var l = [];
       s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){ console.warn("fsGetPeople poll:", e); cb2(null); });
   }, cb);
 }
-function fsSavePerson(code, p) { wSet(fbDb.collection('mosques').doc(code).collection('people').doc(p.id), p, true); }
-function fsDeletePerson(code, id) { wDel(fbDb.collection('mosques').doc(code).collection('people').doc(id)); }
+function fsSavePerson(code, p) { if (!code || !p || !p.id) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(String(code)).collection('people').doc(String(p.id)), p, true); }
+function fsDeletePerson(code, id) { if (!code || !id) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(String(code)).collection('people').doc(String(id))); }
 
 function fsGetRewards(code, cb) {
   pollSnap('rw:' + code, function(cb2) {
@@ -938,11 +965,11 @@ function fsGetRewards(code, cb) {
       var l = [];
       s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){ console.warn("fsGetRewards poll:", e); cb2(null); });
   }, cb);
 }
-function fsSaveReward(code, r) { wSet(fbDb.collection('mosques').doc(code).collection('rewards').doc(r.id), r, true); }
-function fsDeleteReward(code, id) { wDel(fbDb.collection('mosques').doc(code).collection('rewards').doc(id)); }
+function fsSaveReward(code, r) { if (!code || !r || !r.id) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(String(code)).collection('rewards').doc(String(r.id)), r, true); }
+function fsDeleteReward(code, id) { if (!code || !id) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(String(code)).collection('rewards').doc(String(id))); }
 
 function fsGetReasons(code, cb) {
   pollSnap('rs:' + code, function(cb2) {
@@ -951,11 +978,11 @@ function fsGetReasons(code, cb) {
       var l = [];
       s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){ console.warn("fsGetReasons poll:", e); cb2(null); });
   }, cb);
 }
-function fsSaveReason(code, r) { wSet(fbDb.collection('mosques').doc(code).collection('reasons').doc(r.id), r, true); }
-function fsDeleteReason(code, id) { wDel(fbDb.collection('mosques').doc(code).collection('reasons').doc(id)); }
+function fsSaveReason(code, r) { if (!code || !r || !r.id) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(String(code)).collection('reasons').doc(String(r.id)), r, true); }
+function fsDeleteReason(code, id) { if (!code || !id) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(String(code)).collection('reasons').doc(String(id))); }
 
 function fsGetAtt(code, key, cb) {
   if (!fbDb) { cb([]); return; }
@@ -980,7 +1007,7 @@ function fsGetAnns(code, cb) {
       var l = [];
       s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){ console.warn("fsGetAnns poll:", e); cb2(null); });
   }, cb);
 }
 function fsSaveAnn(code, a) { wSet(fbDb.collection('mosques').doc(code).collection('anns').doc(a.id), a, true); }
@@ -994,7 +1021,7 @@ function listenPubAnns(code) {
       var l = [];
       s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){ console.warn('pubAnns poll:', e); cb2(null); });
   }, function(list) {
     pubAnnCache = list;
     updateTopBanner();
@@ -1013,7 +1040,7 @@ function fsGetHistory(code, cb) {
       var l = [];
       s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){ console.warn("fsGetHistory poll:", e); cb2(null); });
   }, cb);
 }
 function fsAddHistory(code, type, text) {
@@ -1060,7 +1087,7 @@ function listenPersonNotifs() {
       var l = [];
       s.forEach(function(d){ l.push(d.data()); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){ console.warn('notifs poll:', e); cb2(null); });
   }, function(list) {
     var last = LS.get('notif_seen_' + S.personId, 0);
     list.forEach(function(n) {
@@ -1079,7 +1106,7 @@ function listenPushes(code) {
       var l = [];
       s.forEach(function(d){ l.push(d.data()); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){ console.warn('push poll:', e); cb2(null); });
   }, function(list) {
     var last = LS.get('push_seen_' + code, 0);
     list.forEach(function(n) {
@@ -1095,7 +1122,7 @@ function listenPushes(code) {
       var l = [];
       s.forEach(function(d){ l.push(d.data()); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){ console.warn('global push poll:', e); cb2(null); });
   }, function(list) {
     var last = LS.get('push_global_seen', 0);
     list.forEach(function(n) {
@@ -1110,19 +1137,23 @@ function listenPushes(code) {
 
 function loadMosquesFromFirestore() {
   pollSnap('mosques', function(cb2) {
-    if (!fbDb) { cb2([]); return; }
+    if (!fbDb) { cb2(null); return; }
     fbDb.collection('mosques').where('status','==','active').get().then(function(s) {
       var l = [];
       s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
       cb2(l);
-    }).catch(function(){ cb2([]); });
+    }).catch(function(e){
+      console.warn('loadMosquesFromFirestore:', e);
+      cb2(null);
+    });
   }, function(list) {
-    mosqueCache = list;
+    mosqueCache = Array.isArray(list) ? list : mosqueCache;
     if ($('mgrSearch')) searchMosques($('mgrSearch').value, 'mgr');
     if ($('pubSearch')) searchMosques($('pubSearch').value, 'pub');
     tryHashEnter();
-  }, 6000);
+  }, 4000);
 }
+
 function loadSuperList() {
   pollSnap('super', function(cb2) {
     if (!fbDb) { cb2([]); return; }
@@ -1415,6 +1446,7 @@ s.value = sel;
 function sendPush(){
 var mosqueVal = $('pushMosque').value;
 var branch = $('pushBranch').value;
+if (!mosqueVal) { toast('ابتدا یک مسجد را انتخاب کنید','warning'); return; }
 var text = $('pushText').value.trim();
 if (!text) { toast('متن پیام را وارد کنید', 'warning'); return; }
 if (mosqueVal === '__ALL__') {
@@ -1709,30 +1741,59 @@ async function mgrLogin() {
 if (!S.code) { toast('اول مسجد را انتخاب کنید','warning'); return; }
 var pin = $('mgrPin').value.trim();
 if (!pin) { toast('رمز را وارد کنید','warning'); return; }
+var code = String(S.code).trim();
+if (!code) { toast('کد مسجد نامعتبر است','danger'); return; }
+
 try {
-var doc = await fbDb.collection('mosques').doc(S.code).get();
-if (!doc.exists) { toast('مسجد یافت نشد','danger'); return; }
-var data = doc.data();
-if (data.status === 'disabled') { toast('🛑 این مسجد غیرفعال شده است','danger'); return; }
-var adminEmail = data.adminEmail;
-if (!adminEmail) { toast('مسجد قدیمی است','warning'); return; }
-await firebase.auth().signInWithEmailAndPassword(adminEmail, pin);
-if (firebase.auth().currentUser.uid !== data.adminUid) { toast('رمز اشتباه است','danger'); return; }
-S.role = 'manager'; S.mosque = data;
-LS.set('session', {role:'manager', code:S.code, branch:S.branch});
-showSuccess(); enterManager();
+  // ایمیل مدیر از کد مسجد قابل محاسبه است؛ یک رفت‌وبرگشت اضافی حذف می‌شود.
+  var adminEmail = 'mosque-' + code.toLowerCase() + '@masjed.app';
+  var cred = await firebase.auth().signInWithEmailAndPassword(adminEmail, pin);
+
+  var doc = await fbDb.collection('mosques').doc(code).get();
+  if (!doc.exists) {
+    await firebase.auth().signOut().catch(function(){});
+    toast('مسجد یافت نشد','danger');
+    return;
+  }
+
+  var data = doc.data();
+  if (data.status === 'disabled') {
+    await firebase.auth().signOut().catch(function(){});
+    toast('🛑 این مسجد غیرفعال شده است','danger');
+    return;
+  }
+
+  if (cred.user.uid !== data.adminUid) {
+    await firebase.auth().signOut().catch(function(){});
+    toast('رمز یا اطلاعات مدیر معتبر نیست','danger');
+    return;
+  }
+
+  S.role = 'manager';
+  S.code = code;
+  S.mosque = data;
+  mosqueCache = mosqueCache.filter(function(m){ return m.code !== code; }).concat([{id: code, ...data}]);
+  LS.set('session', {role:'manager', code:code, branch:S.branch});
+  showSuccess();
+  enterManager();
 } catch(e) {
-var msg = e.message || 'خطا';
-if (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') msg = 'رمز اشتباه است';
-else if (e.code === 'auth/too-many-requests') msg = 'تلاش زیاد! ۵ دقیقه صبر کن';
-else if (e.code === 'auth/network-request-failed') msg = 'خطای شبکه. اینترنت/VPN را بررسی کنید';
-toast('❌ ' + msg, 'danger');
+  var msg = e.message || 'خطا';
+  if (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') msg = 'رمز اشتباه است';
+  else if (e.code === 'auth/too-many-requests') msg = 'تلاش زیاد! ۵ دقیقه صبر کنید';
+  else if (e.code === 'auth/network-request-failed') msg = 'خطای شبکه. اینترنت/VPN را بررسی کنید';
+  toast('❌ ' + msg, 'danger');
 }
 }
 
-/* ===== اصلاح شده: تابع createMosque با batch و پرچم settled و تایمر ===== */
+/* ===== اصلاحح شده: تابع createMosque با batch و پرچم settled و تایمر ===== */
+var mosqueCreateInFlight = false;
 async function createMosque() {
   var btn = $('btnCreate');
+  if (mosqueCreateInFlight) {
+    toast('⏳ ساخت یک مسجد هنوز در حال انجام است؛ لطفاً صبر کنید','warning');
+    return;
+  }
+
   var name = $('setupName').value.trim();
   var address = $('setupAddress').value.trim();
   var pin = $('setupPin').value.trim();
@@ -1742,39 +1803,52 @@ async function createMosque() {
   if (pin.length < 6) { toast('رمز حداقل ۶ کاراکتر','warning'); return; }
   if (pin !== pin2) { toast('تکرار رمز یکسان نیست','warning'); return; }
 
-  var dup = mosqueCache.find(function(m){ return (m.name||'').trim() === name && (m.address||'').trim() === address && m.branch === S.branch; });
-  if (dup) { toast('⚠️ این مسجد قبلاً با همین نام و آدرس ثبت شده (کد: '+dup.code+')','warning'); return; }
+  var dup = mosqueCache.find(function(m){
+    return (m.name||'').trim() === name &&
+           (m.address||'').trim() === address &&
+           m.branch === S.branch;
+  });
+  if (dup) {
+    toast('⚠️ این مسجد قبلاً با همین نام و آدرس ثبت شده (کد: '+dup.code+')','warning');
+    return;
+  }
 
+  if (!fbDb) { toast('❌ اتصال Firebase برقرار نیست','danger'); return; }
+  if (!creatorAuth) { toast('❌ سرویس ساخت حساب مدیر در دسترس نیست','danger'); return; }
+
+  mosqueCreateInFlight = true;
   btn.disabled = true;
   btn.textContent = '⏳ در حال ساخت...';
-  var settled = false;
 
-  // تایمر ۱۵ ثانیه‌ای برای آزادسازی دکمه در صورت گیر کردن
+  var timedOut = false;
   var safetyTimer = setTimeout(function(){
-    if (settled) return;
-    settled = true;
-    btn.disabled = false;
-    btn.textContent = '✅ ساخت مسجد';
-    toast('⚠️ ساخت طول کشید؛ لیست مساجد را چک کنید — احتمالاً انجام شده','warning');
+    timedOut = true;
+    btn.disabled = true;
+    btn.textContent = '⏳ هنوز در حال ساخت...';
+    toast('⚠️ ساخت بیشتر از ۱۵ ثانیه زمان برد؛ عملیات ادامه دارد و از ساخت مجدد خودداری کنید','warning');
   }, 15000);
 
   var code = 'M' + Math.floor(1000 + Math.random() * 9000);
   var adminEmail = 'mosque-' + code.toLowerCase() + '@masjed.app';
 
   try {
-    // ثبت کاربر در Firebase Auth (با چند بار تلاش)
+    /*
+     * نکته حیاتی:
+     * استفاده از firebase.auth() برای createUserWithEmailAndPassword
+     * کاربر جدید را روی همان Auth جاری وارد می‌کند. برای جلوگیری از
+     * جابجا شدن نشست مدیر/سوپرادمین، ساخت حساب در Auth ثانویه انجام می‌شود.
+     */
     var cred = null;
     for (var attempt = 0; attempt < 3 && !cred; attempt++) {
       try {
-        cred = await firebase.auth().createUserWithEmailAndPassword(adminEmail, pin);
+        cred = await creatorAuth.createUserWithEmailAndPassword(adminEmail, pin);
       } catch (err2) {
         if (attempt === 2) throw err2;
-        await new Promise(function(r){ setTimeout(r, 1500); });
+        await new Promise(function(resolve){ setTimeout(resolve, 1000); });
       }
     }
-    var adminUid = cred.user.uid;
 
-    // داده‌های اولیه
+    var adminUid = cred.user.uid;
     var reasons = [
       {id: uid(), name: 'نماز جماعت', points: 1},
       {id: uid(), name: 'شرکت در کلاس', points: 5},
@@ -1787,7 +1861,6 @@ async function createMosque() {
       {id: uid(), name: 'هدیه ویژه', pointsRequired: 50, icon: '🎁'}
     ];
 
-    // یک batch واحد برای همه نوشتن‌ها
     var batch = fbDb.batch();
     var mosqueRef = fbDb.collection('mosques').doc(code);
 
@@ -1805,53 +1878,70 @@ async function createMosque() {
       createdAt: new Date().toISOString()
     });
 
-    reasons.forEach(function(r) {
+    reasons.forEach(function(r){
       batch.set(mosqueRef.collection('reasons').doc(r.id), r);
     });
-    rewards.forEach(function(w) {
+    rewards.forEach(function(w){
       batch.set(mosqueRef.collection('rewards').doc(w.id), w);
     });
 
-    // اجرای batch
     await batch.commit();
-
-    if (settled) return;
-    settled = true;
     clearTimeout(safetyTimer);
 
-    // ذخیره اطلاعات جلسه
-    S.code = code;
-    S.mosque = {
+    var newMosque = {
+      id: code,
       code: code,
       name: name,
       address: address,
       adminUid: adminUid,
       adminEmail: adminEmail,
       pin: pin,
+      branch: S.branch,
       status: 'active',
       prayerPoints: 1,
-      attPoints: 0
+      attPoints: 0,
+      createdAt: new Date().toISOString()
     };
+
+    /*
+     * Cache محلی را فوراً به‌روزرسانی کن تا مسجد تازه ساخته شده منتظر
+     * polling بعدی نماند و خطای موقت Firestore لیست قبلی را پاک نکند.
+     */
+    mosqueCache = mosqueCache.filter(function(m){ return m.code !== code; });
+    mosqueCache.push(newMosque);
+
+    if ($('mgrSearch')) searchMosques($('mgrSearch').value, 'mgr');
+    if ($('pubSearch')) searchMosques($('pubSearch').value, 'pub');
+
+    S.code = code;
+    S.mosque = newMosque;
     S.role = 'manager';
     LS.set('session', { role: 'manager', code: code, branch: S.branch });
 
-    toast('✅ مسجد ساخته شد! کد: ' + code + ' | رمز: ' + pin, 'success');
     btn.disabled = false;
     btn.textContent = '✅ ساخت مسجد';
+    mosqueCreateInFlight = false;
+
+    if (timedOut) {
+      toast('✅ ساخت مسجد با موفقیت کامل شد؛ کد: ' + code,'success');
+    } else {
+      toast('✅ مسجد ساخته شد! کد: ' + code + ' | رمز: ' + pin, 'success');
+    }
+
     showSuccess();
     enterManager();
 
   } catch (e) {
-    if (settled) return;
-    settled = true;
     clearTimeout(safetyTimer);
 
     var msg = e && e.message ? e.message : 'خطا';
-    if (e && e.code === 'auth/email-already-in-use') msg = 'این کد قبلاً استفاده شده';
+    if (e && e.code === 'auth/email-already-in-use') msg = 'کد تولیدشده تکراری بود؛ دوباره تلاش کنید';
     else if (e && e.code === 'auth/network-request-failed') msg = 'خطای شبکه! لطفاً اینترنت/VPN را بررسی کنید';
-    toast('خطا: ' + msg, 'danger');
+
+    toast('❌ ' + msg, 'danger');
     btn.disabled = false;
     btn.textContent = '✅ ساخت مسجد';
+    mosqueCreateInFlight = false;
   }
 }
 /* ===== پایان اصلاح createMosque ===== */
@@ -2829,8 +2919,9 @@ if (should) showAzanNotification(c.name, (S.mosque ? S.mosque.name : (S.publicMo
 }
 var VAPID_KEY = 'BEhV_K9DMXd2JQFtQMCDtrCXW2G4_jGUHN4h9izoVWq9M_DL-8P-_ozREh__rSU6JTgqwo1rwFJceueUvRIdmdA';
 function saveFcmToken(token) {
-if (!fbDb) return;
-var safeId = token.split('/').join('_');
+if (!fbDb || !token) return;
+var safeId = token.split('/').join('_').trim();
+if (!safeId) return;
 var doSave = function() {
 wSet(fbDb.collection('fcmTokens').doc(safeId), { token: token, branch: S.branch || 'عمومی', role: S.role || 'public', updatedAt: new Date().toISOString() }, true);
 };
