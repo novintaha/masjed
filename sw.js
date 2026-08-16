@@ -1,4 +1,4 @@
-var CACHE = 'masjed-v92';
+var CACHE = 'masjed-v99';
 var SHELL = ['./', './index.html', './duas-data.js', './manifest.json'];
 var AZAN_CACHE = ['https://archive.org/download/adhan.notifications/Mishary_Rashid_al_Afasy_Fajr_Adhan.mp3'];
 
