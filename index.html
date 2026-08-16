@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -731,11 +732,18 @@ body[data-theme="dark"] .help-list li{background:#141b17;border-color:#2c3a32}
 <div class="center-toast" id="centerToast">✅ تغییر ثبت شد</div>
 <div class="toast-box" id="toastBox"></div>
 <audio id="azanAudio" preload="auto"></audio>
+
+<!-- ===== Firebase SDKهای ضروری ===== -->
 <script src="firebase-app-compat.js"></script>
 <script src="firebase-auth-compat.js"></script>
-<script src="firebase-firestore-compat.js"></script>
 <script src="firebase-messaging-compat.js"></script>
+
+<!-- ===== جایگزین Firestore SDK با REST Client ===== -->
+<script src="rest-firestore.js"></script>
+
+<!-- ===== دیتای ادعیه ===== -->
 <script src="duas-data.js"></script>
+
 <script>
 'use strict';
 window.onerror = function(m){ var d=document.getElementById('dbg'); if(d) d.textContent='ERR: '+m; return false; };
@@ -759,82 +767,51 @@ try { localStorage.setItem('masjid_' + k, JSON.stringify(v)); } catch(e) {}
 }
 };
 
-/* ===== لایه داده یکپارچه (سند ۴) ===== */
-var POLL = {};
-function refreshPoll(key) {
-  if (!key || !POLL[key]) return;
-  POLL[key].last = null;
-  POLL[key].cbs = [];
-}
-function pollSnap(key, fetchFn, cb, ms){
-  if (!POLL[key]) {
-    POLL[key] = { cbs: [], last: null, active: true };
-    var load = function() {
-      if (!POLL[key] || !POLL[key].active) return;
-      fetchFn(function(data) {
-        if (!POLL[key] || !POLL[key].active) return;
-        var j = JSON.stringify(data);
-        if (POLL[key].last !== j) {
-          POLL[key].last = j;
-          var cbs = POLL[key].cbs.slice();
-          cbs.forEach(function(f){ f(data); });
-        }
-      });
-    };
-    load();
-    POLL[key].timer = setInterval(load, ms || 6000);
-  }
-  if (POLL[key].last !== null) cb(JSON.parse(POLL[key].last));
-  if (POLL[key].cbs.indexOf(cb) < 0) POLL[key].cbs.push(cb);
+/* ===== حذف کامل POLL و pollSnap (رفع نشتی حافظه) ===== */
+// دیگر نیازی به POLL نیست زیرا توابع fsGet* به‌صورت یک‌باره (Once) کار می‌کنند
+
+function clearPolls() {
+  // هیچ polling ای وجود ندارد
 }
 
-// توابع با پولینگ (یکسان برای همه)
+/* ===== توابع get یک‌باره (بدون نشتی حافظه) ===== */
 function fsGetPeople(code, cb) {
-  pollSnap('people:' + code, function(cb2) {
-    if (!fbDb) { cb2([]); return; }
-    fbDb.collection('mosques').doc(code).collection('people').get().then(function(s) {
-      var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, cb);
+  if (!fbDb) { cb([]); return; }
+  fbDb.collection('mosques').doc(code).collection('people').get().then(function(s) {
+    var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
+    cb(l);
+  }).catch(function(){ cb([]); });
 }
 function fsGetRewards(code, cb) {
-  pollSnap('rw:' + code, function(cb2) {
-    if (!fbDb) { cb2([]); return; }
-    fbDb.collection('mosques').doc(code).collection('rewards').get().then(function(s) {
-      var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, cb);
+  if (!fbDb) { cb([]); return; }
+  fbDb.collection('mosques').doc(code).collection('rewards').get().then(function(s) {
+    var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
+    cb(l);
+  }).catch(function(){ cb([]); });
 }
 function fsGetReasons(code, cb) {
-  pollSnap('rs:' + code, function(cb2) {
-    if (!fbDb) { cb2([]); return; }
-    fbDb.collection('mosques').doc(code).collection('reasons').get().then(function(s) {
-      var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, cb);
+  if (!fbDb) { cb([]); return; }
+  fbDb.collection('mosques').doc(code).collection('reasons').get().then(function(s) {
+    var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
+    cb(l);
+  }).catch(function(){ cb([]); });
 }
 function fsGetAnns(code, cb) {
-  pollSnap('ann:' + code, function(cb2) {
-    if (!fbDb) { cb2([]); return; }
-    fbDb.collection('mosques').doc(code).collection('anns').get().then(function(s) {
-      var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, cb);
+  if (!fbDb) { cb([]); return; }
+  fbDb.collection('mosques').doc(code).collection('anns').get().then(function(s) {
+    var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
+    cb(l);
+  }).catch(function(){ cb([]); });
 }
 function fsGetHistory(code, cb) {
-  pollSnap('hist:' + code, function(cb2) {
-    if (!fbDb) { cb2([]); return; }
-    fbDb.collection('mosques').doc(code).collection('history').orderBy('time','desc').limit(100).get().then(function(s) {
-      var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, cb);
+  if (!fbDb) { cb([]); return; }
+  fbDb.collection('mosques').doc(code).collection('history').orderBy('time','desc').limit(100).get().then(function(s) {
+    var l = []; s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
+    cb(l);
+  }).catch(function(){ cb([]); });
 }
 
+/* ===== توابع نوشتن با guard ===== */
 function wSet(ref, data, merge) {
   if (!fbDb) return Promise.resolve();
   var b = fbDb.batch();
@@ -861,31 +838,16 @@ function wAdd(col, data) {
   return b.commit().catch(function(e){ console.error('wAdd error:', e); });
 }
 
-function clearPolls() {
-  Object.keys(POLL).forEach(function(key) {
-    if (POLL[key].timer) clearInterval(POLL[key].timer);
-    POLL[key].active = false;
-  });
-  POLL = {};
-}
-
-/* ===== توابع با guard و refreshPoll ===== */
-function fsSavePerson(code, p) { if (!code || !p || !p.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('people').doc(p.id), p, true).then(function(){ refreshPoll('people:' + code); }); }
-function fsDeletePerson(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('people').doc(id)).then(function(){ refreshPoll('people:' + code); }); }
-function fsSaveReward(code, r) { if (!code || !r || !r.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('rewards').doc(r.id), r, true).then(function(){ refreshPoll('rw:' + code); }); }
-function fsDeleteReward(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('rewards').doc(id)).then(function(){ refreshPoll('rw:' + code); }); }
-function fsSaveReason(code, r) { if (!code || !r || !r.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('reasons').doc(r.id), r, true).then(function(){ refreshPoll('rs:' + code); }); }
-function fsDeleteReason(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('reasons').doc(id)).then(function(){ refreshPoll('rs:' + code); }); }
+function fsSavePerson(code, p) { if (!code || !p || !p.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('people').doc(p.id), p, true); }
+function fsDeletePerson(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('people').doc(id)); }
+function fsSaveReward(code, r) { if (!code || !r || !r.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('rewards').doc(r.id), r, true); }
+function fsDeleteReward(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('rewards').doc(id)); }
+function fsSaveReason(code, r) { if (!code || !r || !r.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('reasons').doc(r.id), r, true); }
+function fsDeleteReason(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('reasons').doc(id)); }
 function fsSaveAtt(code, key, ids) { if (!code || !key || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('att').doc(key), {ids: ids}, true); }
 function fsSavePray(code, key, records) { if (!code || !key || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('pray').doc(key), {records: records}, true); }
-function fsSaveAnn(code, a) { if (!code || !a || !a.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('anns').doc(a.id), a, true).then(function(){ refreshPoll('ann:' + code); }); }
-function fsDeleteAnn(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('anns').doc(id)).then(function(){ refreshPoll('ann:' + code); }); }
-function fsSavePubAnn(code, a) { if (!code || !a || !a.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('pubAnns').doc(a.id), a, true).then(function(){ refreshPoll('pubann:' + code); }); }
-function fsDeletePubAnn(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('pubAnns').doc(id)).then(function(){ refreshPoll('pubann:' + code); }); }
-function fsAddHistory(code, type, text) {
-  if (!code || !fbDb) return Promise.resolve();
-  return wAdd(fbDb.collection('mosques').doc(code).collection('history'), {type: type, text: text, time: new Date().toISOString()}).then(function(){ trimHistory(code); });
-}
+function fsSaveAnn(code, a) { if (!code || !a || !a.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('anns').doc(a.id), a, true); }
+function fsDeleteAnn(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('anns').doc(id)); }
 function fsGetAtt(code, key, cb) {
   if (!fbDb) { cb([]); return; }
   fbDb.collection('mosques').doc(code).collection('att').doc(key).get().then(function(d) {
@@ -899,24 +861,13 @@ function fsGetPray(code, key, cb) {
   }).catch(function(){ cb([]); });
 }
 
-var pubAnnCache = [];
-function listenPubAnns(code) {
-  if (!fbDb || !code) return;
-  pollSnap('pubann:' + code, function(cb2) {
-    fbDb.collection('mosques').doc(code).collection('pubAnns').get().then(function(s) {
-      var l = [];
-      s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, function(list) {
-    pubAnnCache = list;
-    updateTopBanner();
-    if (S.role === 'manager') renderPubAnnsMgr();
-    if (S.role === 'public') renderPublicAnns();
-    if (S.role === 'teen') renderTeenAnns();
-  });
-}
+function fsSavePubAnn(code, a) { if (!code || !a || !a.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('pubAnns').doc(a.id), a, true); }
+function fsDeletePubAnn(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('pubAnns').doc(id)); }
 
+function fsAddHistory(code, type, text) {
+  if (!code || !fbDb) return Promise.resolve();
+  return wAdd(fbDb.collection('mosques').doc(code).collection('history'), {type: type, text: text, time: new Date().toISOString()}).then(function(){ trimHistory(code); });
+}
 var HISTORY_LIMIT = 300;
 function trimHistory(code) {
   if (!fbDb) return;
@@ -951,106 +902,122 @@ function sendPersonNotif(code, personId, text) {
   if (!fbDb || !code || !personId) return;
   wAdd(fbDb.collection('mosques').doc(code).collection('notifs'), {personId: personId, text: text, ts: Date.now(), read: false});
 }
+
+var pubAnnCache = [];
+function listenPubAnns(code) {
+  if (!fbDb || !code) return;
+  // استفاده از get یک‌باره به‌جای poll
+  var load = function() {
+    fbDb.collection('mosques').doc(code).collection('pubAnns').get().then(function(s) {
+      var l = [];
+      s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
+      pubAnnCache = l;
+      updateTopBanner();
+      if (S.role === 'manager') renderPubAnnsMgr();
+      if (S.role === 'public') renderPublicAnns();
+      if (S.role === 'teen') renderTeenAnns();
+    }).catch(function(){});
+  };
+  load();
+  setInterval(load, 6000);
+}
+
 function listenPersonNotifs() {
   if (!fbDb || !S.code || !S.personId) return;
-  pollSnap('notif:' + S.code + ':' + S.personId, function(cb2) {
+  var last = LS.get('notif_seen_' + S.personId, 0);
+  var load = function() {
     fbDb.collection('mosques').doc(S.code).collection('notifs').where('personId','==',S.personId).orderBy('ts','desc').limit(10).get().then(function(s) {
-      var l = [];
-      s.forEach(function(d){ l.push(d.data()); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, function(list) {
-    var last = LS.get('notif_seen_' + S.personId, 0);
-    list.forEach(function(n) {
-      if ((n.ts || 0) > last) {
-        last = n.ts; LS.set('notif_seen_' + S.personId, last);
-        toast(n.text, 'success'); showSuccess();
-      }
-    });
-  }, 5000);
+      s.forEach(function(d) {
+        var n = d.data();
+        if ((n.ts || 0) > last) {
+          last = n.ts; LS.set('notif_seen_' + S.personId, last);
+          toast(n.text, 'success'); showSuccess();
+        }
+      });
+    }).catch(function(){});
+  };
+  load();
+  setInterval(load, 5000);
 }
 
 function listenPushes(code) {
   if (!fbDb || !code) return;
-  pollSnap('push:' + code, function(cb2) {
+  var lastLocal = LS.get('push_seen_' + code, 0);
+  var lastGlobal = LS.get('push_global_seen', 0);
+  var loadLocal = function() {
     fbDb.collection('mosques').doc(code).collection('pushes').orderBy('ts','desc').limit(10).get().then(function(s) {
-      var l = [];
-      s.forEach(function(d){ l.push(d.data()); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, function(list) {
-    var last = LS.get('push_seen_' + code, 0);
-    list.forEach(function(n) {
-      if ((n.ts || 0) > last) {
-        if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
-        last = n.ts; LS.set('push_seen_' + code, last);
-        toast('📨 ' + n.text, 'success');
-      }
-    });
-  }, 8000);
-  pollSnap('pushglobal', function(cb2) {
+      s.forEach(function(d) {
+        var n = d.data();
+        if ((n.ts || 0) > lastLocal) {
+          if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
+          lastLocal = n.ts; LS.set('push_seen_' + code, lastLocal);
+          toast('📨 ' + n.text, 'success');
+        }
+      });
+    }).catch(function(){});
+  };
+  var loadGlobal = function() {
     fbDb.collection('globalPushes').orderBy('ts','desc').limit(10).get().then(function(s) {
-      var l = [];
-      s.forEach(function(d){ l.push(d.data()); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, function(list) {
-    var last = LS.get('push_global_seen', 0);
-    list.forEach(function(n) {
-      if ((n.ts || 0) > last) {
-        if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
-        last = n.ts; LS.set('push_global_seen', last);
-        toast('📣 ' + n.text, 'success');
-      }
-    });
-  }, 8000);
+      s.forEach(function(d) {
+        var n = d.data();
+        if ((n.ts || 0) > lastGlobal) {
+          if (n.branch && n.branch !== '__ALL__' && n.branch !== S.branch) return;
+          lastGlobal = n.ts; LS.set('push_global_seen', lastGlobal);
+          toast('📣 ' + n.text, 'success');
+        }
+      });
+    }).catch(function(){});
+  };
+  loadLocal(); loadGlobal();
+  setInterval(loadLocal, 8000);
+  setInterval(loadGlobal, 8000);
 }
 
 function loadMosquesFromFirestore() {
-  pollSnap('mosques', function(cb2) {
-    if (!fbDb) { cb2([]); return; }
+  var load = function() {
+    if (!fbDb) return;
     fbDb.collection('mosques').where('status','==','active').get().then(function(s) {
       var l = [];
-      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, function(list) {
-    mosqueCache = list;
-    if ($('mgrSearch')) searchMosques($('mgrSearch').value, 'mgr');
-    if ($('pubSearch')) searchMosques($('pubSearch').value, 'pub');
-    tryHashEnter();
-  }, 6000);
+      s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
+      mosqueCache = l;
+      if ($('mgrSearch')) searchMosques($('mgrSearch').value, 'mgr');
+      if ($('pubSearch')) searchMosques($('pubSearch').value, 'pub');
+      tryHashEnter();
+    }).catch(function(){});
+  };
+  load();
+  setInterval(load, 6000);
 }
 function loadSuperList() {
-  pollSnap('super', function(cb2) {
-    if (!fbDb) { cb2([]); return; }
+  var load = function() {
+    if (!fbDb) return;
     fbDb.collection('mosques').get().then(function(s) {
       var l = [];
-      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, function(list) {
-    superCache = list;
-    renderSuperList();
-    var act = superCache.filter(function(m){ return m.status !== 'disabled'; }).length;
-    $('superStats').innerHTML = '🕌 کل مساجد: <b>' + faNum(superCache.length) + '</b> | ✅ فعال: <b>' + faNum(act) + '</b> | 🛑 قطع: <b>' + faNum(superCache.length-act) + '</b>';
-  }, 8000);
+      s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
+      superCache = l;
+      renderSuperList();
+      var act = superCache.filter(function(m){ return m.status !== 'disabled'; }).length;
+      $('superStats').innerHTML = '🕌 کل مساجد: <b>' + faNum(superCache.length) + '</b> | ✅ فعال: <b>' + faNum(act) + '</b> | 🛑 قطع: <b>' + faNum(superCache.length-act) + '</b>';
+    }).catch(function(){});
+  };
+  load();
+  setInterval(load, 8000);
 }
 function loadCustomDuas(cb) {
-  pollSnap('customduas', function(cb2) {
-    if (!fbDb) { cb2([]); return; }
+  var load = function() {
+    if (!fbDb) { cb([]); return; }
     fbDb.collection('customDuas').get().then(function(s) {
       var l = [];
-      s.forEach(function(d) { l.push({id: d.id, ...d.data()}); });
-      cb2(l);
-    }).catch(function(){ cb2([]); });
-  }, function(l) {
-    window._customDuas = l;
-    cb(l);
-    if (S.role === 'public') renderDuas('pubDuaContainer');
-    if (S.role === 'teen') renderDuas('teenDuaContainer');
-    if (S.role === 'super') renderDuaAdmin();
-  }, 10000);
+      s.forEach(function(d){ l.push({id: d.id, ...d.data()}); });
+      window._customDuas = l;
+      cb(l);
+      if (S.role === 'public') renderDuas('pubDuaContainer');
+      if (S.role === 'teen') renderDuas('teenDuaContainer');
+      if (S.role === 'super') renderDuaAdmin();
+    }).catch(function(){ cb([]); });
+  };
+  load();
+  setInterval(load, 10000);
 }
 
 /* ===== بقیه کد (بدون تغییر در منطق اصلی) ===== */
@@ -1116,13 +1083,8 @@ storageBucket: "masjed-a6505.firebasestorage.app",
 messagingSenderId: "23821410712",
 appId: "1:23821410712:web:1789bb8cc4659377544bed"
 });
-fbDb = firebase.firestore();
-fbDb.settings({
-  experimentalForceLongPolling: true,
-  useFetchStreams: false
-});
-// enablePersistence غیرفعال شد تا ترافیک channel اضافی تولید نشود
-// fbDb.enablePersistence({ synchronizeTabs: true }).catch(function(e){});
+// ===== استفاده از REST Client به‌جای Firestore SDK =====
+fbDb = createRestFirestore('masjed-a6505', 'https://masjed.pastokala.workers.dev/fs');
 } catch(e) {}
 
 var DAILY_DHIKR = {
@@ -3113,6 +3075,6 @@ document.addEventListener(ev, unlockAllAudio, {once:true, capture:true});
 });
 boot();
 </script>
-</div>
 </body>
 </html>
+```
