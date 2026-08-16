@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -779,6 +778,28 @@ try { localStorage.setItem('masjid_' + k, JSON.stringify(v)); } catch(e) {}
 }
 };
 
+/* ===== قطعه جاافتاده - ضروری برای boot ===== */
+var DAILY_DHIKR = {
+6:{day:'شنبه',fa:'یا رَبَّ العالمین (ای پروردگار جهانیان)',ar:'یَا رَبَّ الْعَالَمِینَ',count:100},
+0:{day:'یکشنبه',fa:'یا ذاالجلالِ وَ الإکرام (ای صاحب جلال و بزرگواری)',ar:'یَا ذَاالْجَلَالِ وَالْإِکْرَامِ',count:100},
+1:{day:'دوشنبه',fa:'یا قاضیَ الحاجات (ای برآورنده حاجت‌ها)',ar:'یَا قَاضِيَ الْحَاجَاتِ',count:100},
+2:{day:'سه‌شنبه',fa:'یا أرحَمَ الرَّاحِمین (ای مهربان‌ترین مهربانان)',ar:'یَا أَرْحَمَ الرَّاحِمِینَ',count:100},
+3:{day:'چهارشنبه',fa:'یا حَیُّ یا قَیُّوم (ای زنده، ای پاینده)',ar:'یَا حَيُّ يَا قَيُّومُ',count:100},
+4:{day:'پنج‌شنبه',fa:'لا إلهَ إلاَّ اللهُ المَلِکُ الحَقُّ المُبین',ar:'لَا إِلٰهَ إِلَّا اللهُ الْمَلِکُ الْحَقُّ الْمُبِینُ',count:100},
+5:{day:'جمعه',fa:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَ آلِ مُحَمَّدٍ',ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَ آلِ مُحَمَّدٍ وَ عَجِّلْ فَرَجَهُمْ',count:100}
+};
+function getTodayDhikr(){ return DAILY_DHIKR[new Date().getDay()]; }
+function renderDailyDhikr(){ var c=$('dailyDhikrCard'); if(!c) return; var d=getTodayDhikr(); c.innerHTML='<div class="daily-dhikr-label">✨ ذکر مخصوص امروز</div><div class="daily-dhikr-day">📅 '+d.day+'</div><div class="daily-dhikr-arabic">'+d.ar+'</div><div class="daily-dhikr-fa">'+d.fa+'</div><div class="daily-dhikr-count">📿 '+faNum(d.count)+' مرتبه</div>'; }
+function cacheDuas(){ if(window.DUAS_FULL) LS.set('duas_cache', window.DUAS_FULL); }
+function getDuas(){ if(window.DUAS_FULL) return window.DUAS_FULL; return LS.get('duas_cache', []); }
+function getParam(k){ try{ return new URLSearchParams(location.search).get(k);}catch(e){ return null; } }
+function applyTheme(t){ document.body.setAttribute('data-theme', t); LS.set('theme', t); }
+function openTheme(){ openModal('themeModal'); }
+function setBranch(b){ S.branch=b; LS.set('session_branch', b); document.querySelectorAll('.branch-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.branch===b); }); }
+function doTab(group,name,btn){ document.querySelectorAll('[data-action="tab"][data-group="'+group+'"]').forEach(function(t){ t.classList.remove('active'); }); btn.classList.add('active'); document.querySelectorAll('[id^="'+group+'-"]').forEach(function(p){ if(p.classList.contains('panel')) p.classList.remove('active'); }); var t=$(group+'-'+name); if(t) t.classList.add('active'); }
+function openModal(id){ var el=$(id); if(el) el.classList.add('show'); }
+function closeModal(id){ var el=$(id); if(el) el.classList.remove('show'); }
+
 /* ===== لایه داده stateless ===== */
 var POLL = {};
 function pollSnap(key, fetchFn, cb, ms){
@@ -809,7 +830,7 @@ POLL[key].active = false;
 });
 POLL = {};
 }
-function refreshPoll(key) { if (POLL[key]) POLL[key].last = null; }
+function refreshPoll(key){ if (POLL[key]) POLL[key].last = null; }
 function wSet(ref, data, merge) {
 if (!fbDb || !ref) return Promise.resolve();
 var b = fbDb.batch();
@@ -915,7 +936,6 @@ var l=[]; s.forEach(function(d){ l.push({id:d.id, ...d.data()}); }); cb2(l);
 }
 
 /* ===== نوشتن با guard کامل (جلوگیری از empty path) ===== */
-// تمام توابع fsSave* و fsDelete* با return اضافه شده
 function fsSavePerson(code, p) { if (!code || !p || !p.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('people').doc(p.id), p, true).then(function(){ refreshPoll('people:'+code); }); }
 function fsDeletePerson(code, id) { if (!code || !id || !fbDb) return Promise.resolve(); return wDel(fbDb.collection('mosques').doc(code).collection('people').doc(id)).then(function(){ refreshPoll('people:'+code); }); }
 function fsSaveReward(code, r) { if (!code || !r || !r.id || !fbDb) return Promise.resolve(); return wSet(fbDb.collection('mosques').doc(code).collection('rewards').doc(r.id), r, true).then(function(){ refreshPoll('rw:'+code); }); }
@@ -1105,15 +1125,11 @@ if (centerToastTimer) clearTimeout(centerToastTimer);
 centerToastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2200);
 }
 function showSuccess() { var o = $('successOverlay'); if (!o) return; o.classList.add('show'); setTimeout(function(){ o.classList.remove('show'); }, 1200); }
-function openModal(id) { var el=$(id); if (el) el.classList.add('show'); }
-function closeModal(id) { var el=$(id); if (el) el.classList.remove('show'); }
 function twoTap(btn, fn) {
 if (!btn || !btn.dataset) return;
 if (btn.dataset.armed === '1') { btn.dataset.armed=''; btn.classList.remove('armed'); btn.innerHTML=btn.dataset.orig||btn.innerHTML; fn(); }
 else { btn.dataset.orig=btn.innerHTML; btn.dataset.armed='1'; btn.classList.add('armed'); btn.innerHTML='⚠️ تأیید؟'; setTimeout(function(){ if(btn && btn.dataset && btn.dataset.armed==='1'){btn.dataset.armed='';btn.classList.remove('armed');btn.innerHTML=btn.dataset.orig||'';} },2600); }
 }
-function applyTheme(t){ document.body.setAttribute('data-theme', t); LS.set('theme', t); }
-function openTheme(){ openModal('themeModal'); }
 function doInstall(){
 if (deferredInstall) {
 deferredInstall.prompt();
@@ -1130,6 +1146,7 @@ alert(isIOS ? 'برای نصب: دکمه Share را بزنید و سپس «Add t
 var b=$('installBanner'); if (b) b.classList.add('hidden');
 LS.set('install_dismissed', true);
 }
+
 var SUPER_UID = 'GjleuLj5u6eI6V6zCR0y4Eb5cj03';
 var fbApp = null, fbDb = null;
 try {
@@ -1250,9 +1267,9 @@ prayerPoints: 1, attPoints: 0, createdAt: new Date().toISOString()
 reasons.forEach(function(r){ batch.set(mosqueRef.collection('reasons').doc(r.id), r); });
 rewards.forEach(function(w){ batch.set(mosqueRef.collection('rewards').doc(w.id), w); });
 await batch.commit();
+// آپدیت فوری کش مساجد
 var newMosque = {id: code, code: code, name: name, address: address, branch: S.branch, status: 'active', prayerPoints: 1, attPoints: 0};
-var exists = mosqueCache.some(function(m){ return m.code === code; });
-if (!exists) mosqueCache.push(newMosque);
+if (!mosqueCache.some(function(m){ return m.code === code; })) mosqueCache.push(newMosque);
 if ($('mgrSearch')) searchMosques($('mgrSearch').value, 'mgr');
 if ($('pubSearch')) searchMosques($('pubSearch').value, 'pub');
 if (settled) return;
@@ -1418,7 +1435,7 @@ $('cfgPrayerPts').value = (S.mosque.prayerPoints !== undefined) ? S.mosque.praye
 $('cfgAttPts').value = (S.mosque.attPoints !== undefined) ? S.mosque.attPoints : 0;
 goTo('manager');
 renderDates(); renderPrayerBar(); loadPrayerTimes(); loadConfig();
-renderAttendance();
+renderAttendance(); // رندر حضور
 }
 function enterTeen() {
 if (!S.mosque) { goTo('start'); return; }
@@ -1496,7 +1513,7 @@ $('pplList').innerHTML = html;
 function addPerson() {
 var name = $('newName').value.trim(); if (!name) { toast('نام را وارد کنید','warning'); return; }
 var p = {id:uid(), name:name, branch:S.branch, points:0, nights:0, streak:0, lastAtt:'', createdAt:todayStr()};
-fsSavePerson(S.code, p).then(function(){ renderPeople(); });
+fsSavePerson(S.code, p).then(function(){ renderPeople(); }); // رندر بعد از تکمیل نوشتن
 fsAddHistory(S.code, 'add', 'افزودن: ' + name + ' (' + S.branch + ')');
 toast('✅ ' + name + ' اضافه شد! رمز: ' + makePassword(name), 'success');
 $('newName').value = ''; $('pwHint').classList.add('hidden'); showSuccess();
